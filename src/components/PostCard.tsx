@@ -113,8 +113,6 @@ export function PostCard({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
       const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
       const [isSaved, setIsSaved] = useState(false);
-      const [isFollowing, setIsFollowing] = useState(false);
-      const [loadingFollow, setLoadingFollow] = useState(false);
       const [mentionResults, setMentionResults] = useState<any[]>([]);
       const [showMentions, setShowMentions] = useState(false);
       const [fullscreenMedia, setFullscreenMedia] = useState<{ url: string; type: string } | null>(null);
@@ -442,18 +440,6 @@ export function PostCard({
           .maybeSingle();
         
         setIsSaved(!!saveData);
-
-        // Check follow status
-        if (user_id && user_id !== authUser.id) {
-          const { data: followData } = await supabase
-            .from('follows')
-            .select('id')
-            .eq('follower_id', authUser.id)
-            .eq('following_id', user_id)
-            .maybeSingle();
-          
-          setIsFollowing(!!followData);
-        }
       } catch (err) {
         console.error('Error in checkStatus:', err);
       }
@@ -613,55 +599,6 @@ export function PostCard({
     } finally {
       setReposting(false);
       setShowRepostConfirm(false);
-    }
-  };
-
-  const handleFollow = async () => {
-    if (!currentUserId) {
-      toast.error('Please login to follow users');
-      return;
-    }
-
-    if (loadingFollow) return;
-    setLoadingFollow(true);
-
-    const wasFollowing = isFollowing;
-    setIsFollowing(!isFollowing);
-
-    try {
-      if (wasFollowing) {
-        await supabase
-          .from('follows')
-          .delete()
-          .eq('follower_id', currentUserId)
-          .eq('following_id', user_id);
-      } else {
-          await supabase
-            .from('follows')
-            .insert({
-              follower_id: currentUserId,
-              following_id: user_id
-            });
-            
-          // Sync follow to Drive
-          const driveFormData = new FormData();
-          driveFormData.append('type', 'interactions');
-          driveFormData.append('metadata', JSON.stringify({ type: 'follow', following_id: user_id, timestamp: new Date().toISOString() }));
-          fetch('/api/drive/sync', { method: 'POST', body: driveFormData }).catch(console.error);
-
-          await supabase
-            .from('notifications')
-            .insert({
-              user_id: user_id,
-              from_user_id: currentUserId,
-              type: 'follow'
-            });
-        }
-      } catch (error) {
-      setIsFollowing(wasFollowing);
-      toast.error('Failed to update follow');
-    } finally {
-      setLoadingFollow(false);
     }
   };
 
@@ -1276,19 +1213,6 @@ export function PostCard({
               </Link>
               
               <div className="relative flex-shrink-0 flex items-center gap-2">
-                {currentUserId && currentUserId !== user_id && (
-                  <button
-                    onClick={handleFollow}
-                    disabled={loadingFollow}
-                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 ${
-                      isFollowing 
-                        ? 'bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white border border-black/10 dark:border-white/10 hover:bg-zinc-200 dark:hover:bg-zinc-800' 
-                        : 'bg-black dark:bg-white text-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-200'
-                    }`}
-                  >
-                    {isFollowing ? 'Following' : 'Follow'}
-                  </button>
-                )}
                 <button 
                   onClick={() => setShowMenu(true)}
                   className="p-2 -mr-2 text-zinc-500 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors"
