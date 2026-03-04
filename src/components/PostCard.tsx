@@ -462,6 +462,50 @@ export function PostCard({
     checkStatus();
   }, [id, user_id]);
 
+  useEffect(() => {
+    if (!id) return;
+    
+    const channel = supabase
+      .channel(`post-updates:${id}`)
+      .on('postgres_changes', { 
+        event: 'UPDATE', 
+        schema: 'public', 
+        table: 'posts',
+        filter: `id=eq.${id}`
+      }, (payload) => {
+        if (payload.new) {
+          setLikesCount(payload.new.likes_count);
+          setCommentsCount(payload.new.comments_count);
+          setRepostsCount(payload.new.reposts_count);
+        }
+      })
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id]);
+
+  useEffect(() => {
+    if (!id || !showComments) return;
+
+    const channel = supabase
+      .channel(`post-comments:${id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'comments',
+        filter: `post_id=eq.${id}`
+      }, () => {
+        loadComments();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id, showComments]);
+
   const handleLike = async () => {
     if (!currentUserId) {
       toast.error('Please login to like posts');

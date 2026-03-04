@@ -171,7 +171,24 @@ export default function HomePage() {
     setOffset(0);
     setHasMore(true);
     fetchPosts(0, feedMode);
-  }, [feedMode]);
+
+    // Set up Realtime for posts
+    const channel = supabase
+      .channel('public:posts')
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'posts' 
+      }, () => {
+        // When a new post is added, refresh the first page
+        fetchPosts(0, feedMode);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [feedMode, fetchPosts]);
 
   const loadMorePosts = useCallback(() => {
     if (loadingMore || !hasMore) return;

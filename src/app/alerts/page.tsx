@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { BottomNav } from '@/components/BottomNav';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
@@ -48,44 +48,72 @@ export default function AlertsPage() {
     };
   }, [menuOpen]);
 
-  useEffect(() => {
-    async function fetchAlerts() {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        router.push('/login');
-        return;
-      }
-
-        const { data, error } = await supabase
-          .from('notifications')
-          .select(`
-            id,
-            type,
-            read,
-            created_at,
-            post_id,
-            from_user:profiles!notifications_from_user_id_fkey(full_name, avatar_url, username)
-          `)
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-
-
-      if (!error && data) {
-        setAlerts(data as unknown as Alert[]);
-        
-        await supabase
-          .from('notifications')
-          .update({ read: true })
-          .eq('user_id', user.id)
-          .eq('read', false);
-      }
-      
-      setLoading(false);
+  const fetchAlerts = useCallback(async (showLoading = true) => {
+    if (showLoading) setLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      router.push('/login');
+      return;
     }
 
-    fetchAlerts();
+      const { data, error } = await supabase
+        .from('notifications')
+        .select(`
+          id,
+          type,
+          read,
+          created_at,
+          post_id,
+          from_user:profiles!notifications_from_user_id_fkey(full_name, avatar_url, username)
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+
+    if (!error && data) {
+      setAlerts(data as unknown as Alert[]);
+      
+      await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('user_id', user.id)
+        .eq('read', false);
+    }
+    
+    setLoading(false);
   }, [router]);
+
+  useEffect(() => {
+    fetchAlerts();
+
+    // Subscribe to notifications changes
+    const setupRealtime = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const channel = supabase
+        .channel(`notifications:${user.id}`)
+        .on('postgres_changes', { 
+          event: '*', 
+          schema: 'public', 
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`
+        }, () => {
+          fetchAlerts(false); // Refresh without full loading spinner
+        })
+        .subscribe();
+
+      return channel;
+    };
+
+    let channel: any;
+    setupRealtime().then(c => channel = c);
+
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, [fetchAlerts]);
 
   const getAvatarSrc = (alert: Alert) => {
     return alert.from_user.avatar_url

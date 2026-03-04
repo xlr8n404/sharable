@@ -20,13 +20,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-    async redirects() {
+  async redirects() {
       return [
         {
           source: '/login',
@@ -45,17 +39,22 @@ const nextConfig: NextConfig = {
         },
       ];
     },
+  // Experimental turbo loader disabled to resolve 500 error
+  /*
   ...(loaderPath
     ? {
-        turbopack: {
-          rules: {
-            "*.{jsx,tsx}": {
-              loaders: [loaderPath],
+        experimental: {
+          turbo: {
+            rules: {
+              "*.{jsx,tsx}": {
+                loaders: [loaderPath],
+              },
             },
           },
         },
       }
     : {}),
+  */
 };
 
 export default nextConfig;
