@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { ArrowLeft, Image, X } from 'lucide-react';
+import { ArrowLeft, Image as ImageIcon, X } from 'lucide-react';
 import { Loader } from '@/components/ui/loader';
 import { useScrollDirection } from '@/hooks/use-scroll-direction';
 import Link from 'next/link';
@@ -362,7 +362,7 @@ export default function CreatePostPage() {
                   : 'border-black/10 dark:border-white/10 text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:border-black/20 dark:hover:border-white/20'
             }`}
           >
-            <Image className="w-6 h-6" />
+            <ImageIcon className="w-6 h-6" />
             <span className="text-sm font-medium">Add photo/video</span>
           </button>
         </div>
