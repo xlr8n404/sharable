@@ -146,19 +146,20 @@ export default function MessagesPage() {
     }
   }, [userId]);
 
-  useEffect(() => {
-    if (!userId) return;
-    fetchConversations(true);
+    useEffect(() => {
+      if (!userId) return;
+      fetchConversations(true);
 
-    const channel = supabase
-      .channel('conversations_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, () => fetchConversations())
-      .subscribe();
+      const channel = supabase
+        .channel('conversations_changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, () => fetchConversations())
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => fetchConversations())
+        .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [userId, fetchConversations]);
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }, [userId, fetchConversations]);
 
     // Fetch suggestions when tab is selected
     useEffect(() => {

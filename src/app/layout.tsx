@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import { Syne } from "next/font/google";
 import { ThemedToaster } from "@/components/ThemedToaster";
+import RealtimeNotifications from "@/components/RealtimeNotifications";
 
 const syne = Syne({
   subsets: ["latin"],
@@ -53,12 +54,13 @@ export default function RootLayout({
                 data-custom-data='{"appName": "YourApp", "version": "1.0.0", "greeting": "hi"}'
               />
               {children}
-              <ThemedToaster />
-              <VisualEditsMessenger />
-          </LanguageProvider>
-        </ThemeProvider>
-      </body>
-    </html>
-  );
+                <ThemedToaster />
+                <RealtimeNotifications />
+                <VisualEditsMessenger />
+            </LanguageProvider>
+          </ThemeProvider>
+        </body>
+      </html>
+    );
 }
 

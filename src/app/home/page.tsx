@@ -167,28 +167,36 @@ export default function HomePage() {
     }
   }, [profile, feedMode]);
 
-  useEffect(() => {
-    setOffset(0);
-    setHasMore(true);
-    fetchPosts(0, feedMode);
+    useEffect(() => {
+      setOffset(0);
+      setHasMore(true);
+      fetchPosts(0, feedMode);
 
-    // Set up Realtime for posts
-    const channel = supabase
-      .channel('public:posts')
-      .on('postgres_changes', { 
-        event: 'INSERT', 
-        schema: 'public', 
-        table: 'posts' 
-      }, () => {
-        // When a new post is added, refresh the first page
-        fetchPosts(0, feedMode);
-      })
-      .subscribe();
+      // Set up Realtime for posts
+      const channel = supabase
+        .channel('public:posts')
+        .on('postgres_changes', { 
+          event: '*', 
+          schema: 'public', 
+          table: 'posts' 
+        }, (payload) => {
+          if (payload.eventType === 'INSERT') {
+            // When a new post is added, refresh the first page
+            fetchPosts(0, feedMode);
+          } else if (payload.eventType === 'DELETE') {
+            // Remove deleted post from state
+            setPosts(prev => prev.filter(p => p.id !== payload.old.id));
+          } else if (payload.eventType === 'UPDATE') {
+            // Update modified post in state
+            setPosts(prev => prev.map(p => p.id === payload.new.id ? { ...p, ...payload.new } : p));
+          }
+        })
+        .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [feedMode, fetchPosts]);
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }, [feedMode, fetchPosts]);
 
   const loadMorePosts = useCallback(() => {
     if (loadingMore || !hasMore) return;
