@@ -1,0 +1,7 @@
+{
+  "projectId": "babafe1e-dcee-453e-9c3b-dd039c77a2f2",
+  "createdAt": 1741046400000,
+  "startupCommands": [
+    "npm install; npm run dev"
+  ]
+}
