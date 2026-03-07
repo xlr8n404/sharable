@@ -131,7 +131,7 @@ export async function GET(req: NextRequest) {
     const response = NextResponse.redirect(`${appUrl}/home`);
     response.cookies.set('sb-auth-token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: true,
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 30,
       path: '/',

@@ -1,7 +1,7 @@
 import { SignJWT, jwtVerify } from 'jose';
 import bcrypt from 'bcryptjs';
 
-const JWT_SECRET = new TextEncoder().encode(process.env.SUPABASE_SERVICE_ROLE_KEY || 'default-secret-key-123456');
+const JWT_SECRET = new TextEncoder().encode(process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'default-secret-key-123456');
 
 export function getAppUrl() {
   if (process.env.NEXT_PUBLIC_APP_URL && process.env.NEXT_PUBLIC_APP_URL !== 'http://localhost:3000') {

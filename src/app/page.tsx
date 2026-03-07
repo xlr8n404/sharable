@@ -68,13 +68,20 @@ export default function Home() {
 
   useEffect(() => {
     setMounted(true);
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        router.replace('/home');
-      } else {
+    const checkSession = async () => {
+      try {
+        const res = await fetch('/api/auth/session');
+        const data = await res.json();
+        if (data.user) {
+          router.replace('/home');
+        } else {
+          setChecking(false);
+        }
+      } catch (error) {
         setChecking(false);
       }
-    });
+    };
+    checkSession();
   }, [router]);
 
   if (checking) {
