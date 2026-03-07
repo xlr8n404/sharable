@@ -481,10 +481,7 @@ export default function ProfilePage() {
                       </div>
                         <div className="flex-1">
                           <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Full Name</p>
-                          <div className="flex items-center gap-1.5">
-                            <p className="font-semibold text-black dark:text-white">{profile?.full_name || 'Not set'}</p>
-                            <VerifiedBadge username={profile?.username} />
-                          </div>
+                          <p className="font-semibold text-black dark:text-white">{profile?.full_name || 'Not set'}</p>
                         </div>
 
                     </div>
@@ -495,10 +492,7 @@ export default function ProfilePage() {
                       </div>
                         <div className="flex-1">
                           <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Username</p>
-                          <div className="flex items-center gap-1.5">
-                            <p className="font-semibold text-black dark:text-white">@{profile?.username || 'Not set'}</p>
-                            <VerifiedBadge username={profile?.username} />
-                          </div>
+                          <p className="font-semibold text-black dark:text-white">@{profile?.username || 'Not set'}</p>
                         </div>
 
                     </div>
@@ -544,7 +538,7 @@ export default function ProfilePage() {
                           <Calendar size={22} strokeWidth={1.5} />
                         </div>
                         <div className="flex-1">
-                          <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Joining Date</p>
+                          <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Active From</p>
                           <p className="font-semibold text-black dark:text-white">{formatDate(profile?.created_at || '')}</p>
                         </div>
                       </div>
