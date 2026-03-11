@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { ArrowLeft, UserX } from 'lucide-react';
 import { Loader } from '@/components/ui/loader';
-import Link from 'next/link';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,6 +27,7 @@ interface BlockedUser {
 }
 
 export default function BlockedUsersPage() {
+  const router = useRouter();
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUnblockDialog, setShowUnblockDialog] = useState(false);
@@ -79,9 +79,9 @@ export default function BlockedUsersPage() {
   return (
       <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white selection:bg-black dark:selection:bg-white selection:text-white dark:selection:text-black">
         <header className="fixed top-0 left-0 right-0 z-50 px-4 h-16 flex items-center bg-transparent">
-          <Link href="/settings" className="p-2 -ml-2 text-black dark:text-white hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors">
+          <button onClick={() => router.back()} className="p-2 -ml-2 text-black dark:text-white hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors">
           <ArrowLeft className="w-5 h-5" />
-        </Link>
+        </button>
         <span className="ml-2 font-bold text-lg">Blocked Users</span>
       </header>
 

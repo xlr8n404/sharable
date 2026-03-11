@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { ArrowLeft, Eye, EyeOff, Lock, Check } from 'lucide-react';
 import { Loader } from '@/components/ui/loader';
@@ -17,6 +18,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 export default function ChangePasswordPage() {
+  const router = useRouter();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -70,9 +72,9 @@ export default function ChangePasswordPage() {
   return (
       <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white selection:bg-black dark:selection:bg-white selection:text-white dark:selection:text-black">
         <header className="fixed top-0 left-0 right-0 z-50 px-4 h-16 flex items-center bg-transparent">
-          <Link href="/settings" className="p-2 -ml-2 text-black dark:text-white hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors">
+          <button onClick={() => router.back()} className="p-2 -ml-2 text-black dark:text-white hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors">
           <ArrowLeft className="w-5 h-5" />
-        </Link>
+        </button>
         <span className="ml-2 font-bold text-lg">Change Password</span>
       </header>
 
