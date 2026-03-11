@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Heart, MessageCircle, Share2, MoreVertical, X, Send, Trash2, Clock, Reply, ChevronDown, ChevronUp, Bookmark, Copy, Download, Maximize2, Repeat } from 'lucide-react';
+import { Heart, MessageCircle, Share2, MoreVertical, X, Send, Trash2, Clock, Reply, ChevronDown, ChevronUp, Bookmark, Copy, Download, Maximize2, Repeat, TrendingUp, CornerRightDown } from 'lucide-react';
 import { Loader } from '@/components/ui/loader';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
@@ -63,6 +63,7 @@ interface Comment {
     username?: string;
   };
   replies?: CommentReply[];
+  votes_count?: number;
 }
 
 export function PostCard({ 
@@ -119,6 +120,8 @@ export function PostCard({
         const [scale, setScale] = useState(1);
         const [showHeartAnim, setShowHeartAnim] = useState(false);
         const [viewportHeight, setViewportHeight] = useState<number | null>(null);
+        const [votedComments, setVotedComments] = useState<Set<string>>(new Set());
+        const [showCommentMenu, setShowCommentMenu] = useState<string | null>(null);
         const commentsEndRef = useRef<HTMLDivElement>(null);
 
         const scrollToBottom = () => {
@@ -618,6 +621,34 @@ export function PostCard({
       .order('created_at', { ascending: true });
     
     if (!error && data) {
+      // Fetch vote counts for all comments
+      const commentIds = data.map((c: any) => c.id);
+      const { data: votesData } = await supabase
+        .from('comment_votes')
+        .select('comment_id')
+        .in('comment_id', commentIds);
+      
+      // Count votes per comment
+      const voteCountMap: Record<string, number> = {};
+      if (votesData) {
+        for (const vote of votesData) {
+          voteCountMap[vote.comment_id] = (voteCountMap[vote.comment_id] || 0) + 1;
+        }
+      }
+
+      // Check which comments the current user has voted on
+      if (currentUserId) {
+        const { data: userVotes } = await supabase
+          .from('comment_votes')
+          .select('comment_id')
+          .eq('user_id', currentUserId)
+          .in('comment_id', commentIds);
+        
+        if (userVotes) {
+          setVotedComments(new Set(userVotes.map(v => v.comment_id)));
+        }
+      }
+
       const topLevel: Comment[] = [];
       const repliesMap: Record<string, CommentReply[]> = {};
 
@@ -639,6 +670,7 @@ export function PostCard({
             user_id: c.user_id,
             user: c.user,
             replies: [],
+            votes_count: voteCountMap[c.id] || 0,
           });
         }
       }
@@ -646,6 +678,13 @@ export function PostCard({
       for (const comment of topLevel) {
         comment.replies = repliesMap[comment.id] || [];
       }
+
+      // Sort comments by votes (highest first), then by created_at
+      topLevel.sort((a, b) => {
+        const voteDiff = (b.votes_count || 0) - (a.votes_count || 0);
+        if (voteDiff !== 0) return voteDiff;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
 
       setComments(topLevel);
     }
@@ -655,6 +694,47 @@ export function PostCard({
   const handleOpenComments = () => {
     setShowComments(true);
     loadComments();
+  };
+
+  const handleVoteComment = async (commentId: string) => {
+    if (!currentUserId) {
+      toast.error('Please login to vote');
+      return;
+    }
+
+    const hasVoted = votedComments.has(commentId);
+    
+    if (hasVoted) {
+      // Remove vote
+      const { error } = await supabase
+        .from('comment_votes')
+        .delete()
+        .eq('comment_id', commentId)
+        .eq('user_id', currentUserId);
+
+      if (!error) {
+        setVotedComments(prev => {
+          const next = new Set(prev);
+          next.delete(commentId);
+          return next;
+        });
+        setComments(prev => prev.map(c => 
+          c.id === commentId ? { ...c, votes_count: (c.votes_count || 1) - 1 } : c
+        ));
+      }
+    } else {
+      // Add vote
+      const { error } = await supabase
+        .from('comment_votes')
+        .insert({ comment_id: commentId, user_id: currentUserId });
+
+      if (!error) {
+        setVotedComments(prev => new Set([...prev, commentId]));
+        setComments(prev => prev.map(c => 
+          c.id === commentId ? { ...c, votes_count: (c.votes_count || 0) + 1 } : c
+        ));
+      }
+    }
   };
 
   const handleSubmitComment = async () => {
@@ -867,11 +947,12 @@ export function PostCard({
     }
   };
 
-  function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, formatTime, deletingCommentId, setDeletingCommentId, handleDeleteComment, setReplyingTo, setNewComment, commentInputRef }: any) {
+  function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, formatTime, deletingCommentId, setDeletingCommentId, handleDeleteComment, setReplyingTo, setNewComment, commentInputRef, handleVoteComment, votedComments, showCommentMenu, setShowCommentMenu }: any) {
     const [isExpanded, setIsExpanded] = useState(false);
     const content = comment.content || '';
     const shouldTruncate = content.length > 115;
     const displayedContent = isExpanded || !shouldTruncate ? content : content.slice(0, 115);
+    const hasVoted = votedComments?.has(comment.id);
 
     return (
       <div className={`flex gap-4 ${isReply ? 'ml-8' : ''}`}>
@@ -891,36 +972,63 @@ export function PostCard({
             <VerifiedBadge username={comment.user.username} className="w-4 h-4 text-white" />
             <span className="text-zinc-500 text-base">{formatTime(comment.created_at)}</span>
 
-            {currentUserId === comment.user_id && (
-              <div className="ml-auto flex items-center gap-2">
-                {deletingCommentId === comment.id ? (
-                  <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2 duration-200">
-                    <button
-                      onClick={() => setDeletingCommentId(null)}
-                      className="text-base font-medium text-zinc-500 hover:text-black dark:hover:text-white"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleDeleteComment(comment.id, isReply, parentId);
-                        setDeletingCommentId(null);
-                      }}
-                      className="text-base font-medium text-red-500 hover:text-red-600"
-                    >
-                      Confirm
-                    </button>
-                  </div>
-                ) : (
+            <div className="ml-auto flex items-center gap-1">
+              {currentUserId === comment.user_id && deletingCommentId === comment.id ? (
+                <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2 duration-200">
                   <button
-                    onClick={() => setDeletingCommentId(comment.id)}
-                    className="p-1 text-zinc-400 hover:text-red-500 rounded-full hover:bg-red-500/10 transition-colors"
+                    onClick={() => setDeletingCommentId(null)}
+                    className="text-base font-medium text-zinc-500 hover:text-black dark:hover:text-white"
                   >
-                    <Trash2 className="w-5 h-5" strokeWidth={1.5} />
+                    Cancel
                   </button>
-                )}
-              </div>
-            )}
+                  <button
+                    onClick={() => {
+                      handleDeleteComment(comment.id, isReply, parentId);
+                      setDeletingCommentId(null);
+                    }}
+                    className="text-base font-medium text-red-500 hover:text-red-600"
+                  >
+                    Confirm
+                  </button>
+                </div>
+              ) : (
+                <div className="relative">
+                  <button
+                    onClick={() => setShowCommentMenu(showCommentMenu === comment.id ? null : comment.id)}
+                    className="p-1.5 text-zinc-400 hover:text-black dark:hover:text-white rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                  >
+                    <MoreVertical className="w-6 h-6" strokeWidth={1.5} />
+                  </button>
+                  {showCommentMenu === comment.id && (
+                    <div className="absolute right-0 top-full mt-1 bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded-xl shadow-xl z-20 overflow-hidden min-w-[140px]">
+                      {currentUserId === comment.user_id && (
+                        <button
+                          onClick={() => {
+                            setDeletingCommentId(comment.id);
+                            setShowCommentMenu(null);
+                          }}
+                          className="w-full flex items-center gap-2 px-4 py-3 text-red-500 hover:bg-red-500/10 transition-colors text-left"
+                        >
+                          <Trash2 className="w-5 h-5" strokeWidth={1.5} />
+                          <span className="text-base font-medium">Delete</span>
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(comment.content);
+                          toast.success('Comment copied');
+                          setShowCommentMenu(null);
+                        }}
+                        className="w-full flex items-center gap-2 px-4 py-3 text-zinc-700 dark:text-zinc-300 hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-left"
+                      >
+                        <Copy className="w-5 h-5" strokeWidth={1.5} />
+                        <span className="text-base font-medium">Copy</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
           <div 
             onClick={() => shouldTruncate && setIsExpanded(!isExpanded)}
@@ -936,27 +1044,42 @@ export function PostCard({
               )}
             </p>
           </div>
-          <button
-            onClick={() => {
-              const username = (comment.user as any)?.username;
-              setReplyingTo({ 
-                id: isReply ? (parentId || comment.id) : comment.id, 
-                name: username ? `@${username}` : (comment.user?.full_name || 'User') 
-              });
-              setNewComment(username ? `@${username} ` : '');
-              setTimeout(() => {
-                if (commentInputRef.current) {
-                  commentInputRef.current.focus();
-                  const len = commentInputRef.current.value.length;
-                  commentInputRef.current.setSelectionRange(len, len);
-                }
-              }, 10);
-            }}
-            className="flex items-center gap-1 mt-1 text-base text-zinc-500 hover:text-black dark:hover:text-white transition-colors"
-          >
-            <Reply className="w-6 h-6" strokeWidth={1.5} />
-            Reply
-          </button>
+          <div className="flex items-center gap-3 mt-1">
+            <button
+              onClick={() => {
+                const username = (comment.user as any)?.username;
+                setReplyingTo({ 
+                  id: isReply ? (parentId || comment.id) : comment.id, 
+                  name: username ? `@${username}` : (comment.user?.full_name || 'User') 
+                });
+                setNewComment(username ? `@${username} ` : '');
+                setTimeout(() => {
+                  if (commentInputRef.current) {
+                    commentInputRef.current.focus();
+                    const len = commentInputRef.current.value.length;
+                    commentInputRef.current.setSelectionRange(len, len);
+                  }
+                }, 10);
+              }}
+              className="flex items-center gap-1 text-base text-zinc-500 hover:text-black dark:hover:text-white transition-colors"
+            >
+              <Reply className="w-6 h-6" strokeWidth={1.5} />
+              Reply
+            </button>
+            {!isReply && (
+              <button
+                onClick={() => handleVoteComment(comment.id)}
+                className={`flex items-center gap-1 text-base transition-colors ${
+                  hasVoted 
+                    ? 'text-green-500' 
+                    : 'text-zinc-500 hover:text-green-500'
+                }`}
+              >
+                <TrendingUp className={`w-6 h-6 ${hasVoted ? 'fill-green-500/20' : ''}`} strokeWidth={1.5} />
+                {(comment.votes_count || 0) > 0 && <span>{comment.votes_count}</span>}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -979,6 +1102,10 @@ export function PostCard({
         setReplyingTo={setReplyingTo}
         setNewComment={setNewComment}
         commentInputRef={commentInputRef}
+        handleVoteComment={handleVoteComment}
+        votedComments={votedComments}
+        showCommentMenu={showCommentMenu}
+        setShowCommentMenu={setShowCommentMenu}
       />
     );
   };
@@ -1540,6 +1667,36 @@ export function PostCard({
                               >
                                 {/* Pull Bar */}
                                 <div className="absolute top-4 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-zinc-300 dark:bg-zinc-700 rounded-full cursor-grab active:cursor-grabbing" />
+                                
+                                {/* Comment Sheet Header */}
+                                <div className="flex items-center justify-between px-4 pb-3 border-b border-black/5 dark:border-white/5">
+                                  <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-1 text-zinc-500">
+                                      <Heart className="w-6 h-6" strokeWidth={1.5} />
+                                      <span className="text-base font-medium">{likesCount}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1 text-zinc-500">
+                                      <MessageCircle className="w-6 h-6" strokeWidth={1.5} />
+                                      <span className="text-base font-medium">{commentsCount}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1 text-zinc-500">
+                                      <Repeat className="w-6 h-6" strokeWidth={1.5} />
+                                      <span className="text-base font-medium">{repostsCount}</span>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <button className="p-2 text-zinc-500 hover:text-black dark:hover:text-white rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+                                      <CornerRightDown className="w-6 h-6" strokeWidth={1.5} />
+                                    </button>
+                                    <button 
+                                      onClick={handleSharePost}
+                                      className="p-2 text-zinc-500 hover:text-black dark:hover:text-white rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                                    >
+                                      <Share2 className="w-6 h-6" strokeWidth={1.5} />
+                                    </button>
+                                  </div>
+                                </div>
+
                         <div className="flex-1 overflow-y-auto px-4 py-2 space-y-4 overscroll-contain touch-pan-y custom-scrollbar">
                       {loadingComments ? (
                         <Loader />
