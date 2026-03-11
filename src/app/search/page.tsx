@@ -5,14 +5,13 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   Search as SearchIcon, 
   Settings2, 
-  ArrowLeft, 
   X, 
   User, 
-  MessageSquare, 
+  FileText,
+  Hash,
   Settings as SettingsIcon,
   Bell,
   Moon,
-  Sun,
   UserX,
   Lock,
   LogOut,
@@ -23,16 +22,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { PostCard } from '@/components/PostCard';
 import { Loader } from '@/components/ui/loader';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
+import { BottomNav } from '@/components/BottomNav';
 
-type SearchType = 'Users' | 'Posts' | 'Settings';
+type SearchType = 'Posts' | 'Users' | 'Hashtags' | 'Settings';
 
 const SETTINGS_ITEMS = [
   { label: 'Alerts', description: 'Push alerts', icon: Bell, path: '/settings' },
@@ -50,18 +44,20 @@ function SearchContent() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
   const [query, setQuery] = useState(initialQuery);
-  const [searchType, setSearchType] = useState<SearchType>('Users');
-  const [results, setResults] = useState<{ users: any[], posts: any[], settings: any[] }>({
+  const [searchType, setSearchType] = useState<SearchType>('Posts');
+  const [results, setResults] = useState<{ users: any[], posts: any[], hashtags: any[], settings: any[] }>({
     users: [],
     posts: [],
+    hashtags: [],
     settings: []
   });
   const [loading, setLoading] = useState(false);
   const [isGesturing, setIsGesturing] = useState(false);
+  const [showFilterPills, setShowFilterPills] = useState(false);
 
   const performSearch = useCallback(async (q: string, type: SearchType) => {
     if (!q.trim() || q.length < 2) {
-      setResults(prev => ({ ...prev, users: [], posts: [], settings: [] }));
+      setResults({ users: [], posts: [], hashtags: [], settings: [] });
       return;
     }
 
@@ -82,8 +78,13 @@ function SearchContent() {
       
       if (type === 'Users') {
         setResults(prev => ({ ...prev, users: data.users || [] }));
-      } else {
+      } else if (type === 'Posts') {
         setResults(prev => ({ ...prev, posts: data.posts || [] }));
+      } else if (type === 'Hashtags') {
+        // Filter posts by hashtag match
+        const res2 = await fetch(`/api/search?q=${encodeURIComponent('#' + q.replace(/^#/, ''))}&type=posts`);
+        const data2 = await res2.json();
+        setResults(prev => ({ ...prev, hashtags: data2.posts || [] }));
       }
     } catch (error) {
       console.error('Search error:', error);
@@ -99,9 +100,12 @@ function SearchContent() {
     return () => clearTimeout(timer);
   }, [query, searchType, performSearch]);
 
-  const handleBack = () => {
-    router.back();
-  };
+  const filterPills: { type: SearchType; icon: React.ElementType; label: string }[] = [
+    { type: 'Posts', icon: FileText, label: 'Posts' },
+    { type: 'Users', icon: User, label: 'Users' },
+    { type: 'Hashtags', icon: Hash, label: 'Hashtags' },
+    { type: 'Settings', icon: SettingsIcon, label: '' },
+  ];
 
   return (
     <motion.div 
@@ -111,67 +115,83 @@ function SearchContent() {
       onPanEnd={(e, info) => {
         if (!isGesturing) return;
         setIsGesturing(false);
-
         const isHorizontal = Math.abs(info.offset.x) > Math.abs(info.offset.y);
-        if (isHorizontal) {
-          // Swipe left to right to go back
-          if (info.offset.x > 50) {
-            router.back();
-          }
+        if (isHorizontal && info.offset.x > 50) {
+          router.back();
         }
       }}
     >
-      {/* Top Bar - 64dp (h-16) */}
-      <header className="fixed top-0 left-0 right-0 h-16 bg-white dark:bg-black border-b border-zinc-200 dark:border-zinc-800 z-50 px-4 flex items-center gap-3">
-        <div className="flex-1 relative flex items-center bg-zinc-100 dark:bg-zinc-900 rounded-full px-3 h-12">
-          <SearchIcon size={24} strokeWidth={1.5} className="text-zinc-400 shrink-0" />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={`Search ${searchType}...`}
-            className="flex-1 bg-transparent px-2 focus:outline-none text-sm h-full"
-            autoFocus
-          />
-          {query && (
-            <button
-              onClick={() => setQuery('')}
-              className="p-1 text-zinc-400 hover:text-black dark:hover:text-white transition-colors"
-            >
-              <X size={20} strokeWidth={1.5} />
-            </button>
-          )}
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="p-1 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-full transition-colors shrink-0">
-                <Settings2 size={24} strokeWidth={1.5} className="text-zinc-400" />
+      {/* Top Bar */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-black/10 dark:border-white/10">
+        <div className="h-16 px-4 flex items-center gap-3">
+          <div className="flex-1 relative flex items-center bg-zinc-100 dark:bg-zinc-900 rounded-full px-3 h-12">
+            <SearchIcon size={24} strokeWidth={1.5} className="text-zinc-400 shrink-0" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={`Search ${searchType}...`}
+              className="flex-1 bg-transparent px-2 focus:outline-none text-sm h-full"
+              autoFocus
+            />
+            {query && (
+              <button
+                onClick={() => setQuery('')}
+                className="p-1 text-zinc-400 hover:text-black dark:hover:text-white transition-colors"
+              >
+                <X size={20} strokeWidth={1.5} />
               </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xl p-2">
-              {(['Users', 'Posts', 'Settings'] as SearchType[]).map((type) => (
-                <DropdownMenuItem
-                  key={type}
-                  onClick={() => setSearchType(type)}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-xl cursor-pointer transition-colors",
-                    searchType === type 
-                      ? "bg-black text-white dark:bg-white dark:text-black" 
-                      : "hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                  )}
-                >
-                  {type === 'Users' && <User size={18} />}
-                  {type === 'Posts' && <MessageSquare size={18} />}
-                  {type === 'Settings' && <SettingsIcon size={18} />}
-                  <span className="font-medium">{type}</span>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            )}
+            <button
+              onClick={() => setShowFilterPills(p => !p)}
+              className={cn(
+                "p-1 rounded-full transition-colors shrink-0",
+                showFilterPills
+                  ? "bg-black text-white dark:bg-white dark:text-black"
+                  : "hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-400"
+              )}
+            >
+              <Settings2 size={24} strokeWidth={1.5} />
+            </button>
+          </div>
         </div>
+
+        {/* Filter Pills */}
+        <AnimatePresence>
+          {showFilterPills && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: 'easeInOut' }}
+              className="overflow-hidden"
+            >
+              <div className="flex items-center gap-2 px-4 pb-3 pt-1">
+                {filterPills.map(({ type, icon: Icon, label }) => {
+                  const isActive = searchType === type;
+                  return (
+                    <button
+                      key={type}
+                      onClick={() => { setSearchType(type); setShowFilterPills(false); }}
+                      className={cn(
+                        "flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-medium transition-all",
+                        isActive
+                          ? "bg-black text-white border-black dark:bg-white dark:text-black dark:border-white"
+                          : "bg-transparent text-zinc-600 border-zinc-200 dark:text-zinc-400 dark:border-zinc-700 hover:border-black dark:hover:border-white"
+                      )}
+                    >
+                      <Icon size={16} strokeWidth={1.75} />
+                      {label && <span>{label}</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
 
-      <main className="pt-20 px-4 pb-20 max-w-xl mx-auto">
+      <main className="pt-20 px-4 pb-24 max-w-xl mx-auto">
         <AnimatePresence mode="wait">
           {loading ? (
             <motion.div
@@ -246,6 +266,18 @@ function SearchContent() {
                 </div>
               )}
 
+              {searchType === 'Hashtags' && (
+                <div className="flex flex-col">
+                  {results.hashtags.length > 0 ? (
+                    results.hashtags.map((post) => (
+                      <PostCard key={post.id} {...post} />
+                    ))
+                  ) : (
+                    <div className="py-20 text-center text-zinc-500">No posts found for this hashtag</div>
+                  )}
+                </div>
+              )}
+
               {searchType === 'Settings' && (
                 <div className="space-y-2">
                   {results.settings.length > 0 ? (
@@ -276,6 +308,8 @@ function SearchContent() {
           )}
         </AnimatePresence>
       </main>
+
+      <BottomNav />
     </motion.div>
   );
 }
