@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { PostCard } from '@/components/PostCard';
 import { BottomNav } from '@/components/BottomNav';
-import { Share2, Search, Settings, Settings2, LogOut, X, MessageCircle, MessageSquare, Plus, Menu } from 'lucide-react';
+import { Share2, Search, Settings, Settings2, LogOut, X, MessageCircle, MessageSquare, Plus } from 'lucide-react';
 import { Loader } from '@/components/ui/loader';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -25,7 +25,6 @@ export default function HomePage() {
   const [isGesturing, setIsGesturing] = useState(false);
   const [feedMode, setFeedMode] = useState<'trending' | 'explore' | 'following' | 'sharable'>('trending');
   const [profile, setProfile] = useState<any>(null);
-  const [showHeader, setShowHeader] = useState(true);
   
   const observer = useRef<IntersectionObserver | null>(null);
 
@@ -37,33 +36,6 @@ export default function HomePage() {
   const handleDeletePost = (postId: string) => {
     setPosts(prev => prev.filter(p => p.id !== postId));
   };
-
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-    
-    const handleScroll = () => {
-      if (window.scrollY <= 10) {
-        setShowHeader(true);
-        clearTimeout(timeoutId);
-        return;
-      }
-
-      setShowHeader(false);
-      clearTimeout(timeoutId);
-      
-      timeoutId = setTimeout(() => {
-        setShowHeader(true);
-      }, 500);
-    };
-
-    if (window.scrollY <= 10) setShowHeader(true);
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      clearTimeout(timeoutId);
-    };
-  }, []);
 
   useEffect(() => {
     if (rightSidebarOpen || leftSidebarOpen) {
@@ -403,21 +375,13 @@ export default function HomePage() {
         )}
       </AnimatePresence>
     
-      <header className="fixed top-0 left-0 right-0 h-16 z-50 px-4 pointer-events-none">
-        <motion.div 
-          initial={false}
-          animate={{ 
-            opacity: showHeader ? 1 : 0,
-            y: showHeader ? 0 : -10
-          }}
-          transition={{ duration: 0.2 }}
-          className={`h-full flex items-center justify-between ${showHeader ? 'pointer-events-auto' : 'pointer-events-none'}`}
-        >
+      <header className="fixed top-0 left-0 right-0 h-16 z-50 px-4 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-black/10 dark:border-white/10">
+        <div className="h-full flex items-center justify-between">
           <button 
             onClick={() => setLeftSidebarOpen(true)}
             className="p-2 text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors"
           >
-            <Menu size={24} strokeWidth={1.5} />
+            <Settings2 size={24} strokeWidth={1.5} />
           </button>
 
           <div className="flex-1 flex justify-center">
@@ -429,12 +393,12 @@ export default function HomePage() {
           </div>
 
           <button 
-            onClick={() => router.push('/search')}
+            onClick={() => router.push('/messages')}
             className="p-2 text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors"
           >
-            <Search size={24} strokeWidth={1.5} />
+            <MessageCircle size={24} strokeWidth={1.5} />
           </button>
-        </motion.div>
+        </div>
       </header>
     
       <main className="max-w-xl mx-auto pt-16 pb-20">
