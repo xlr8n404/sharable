@@ -967,13 +967,72 @@ export function PostCard({
           />
         </div>
         <div className="flex-1 min-w-0">
+          {/* Name row — no three dot menu here */}
           <div className="flex items-center gap-2">
             <span className="font-bold text-base">{comment.user.full_name || comment.user.username || 'User'}</span>
             <VerifiedBadge username={comment.user.username} className="w-4 h-4 text-white" />
             <span className="text-zinc-500 text-base">{formatTime(comment.created_at)}</span>
+          </div>
 
-            <div className="ml-auto flex items-center gap-1">
-              {currentUserId === comment.user_id && deletingCommentId === comment.id ? (
+          {/* Content */}
+          <div 
+            onClick={() => shouldTruncate && setIsExpanded(!isExpanded)}
+            className={`${shouldTruncate ? 'cursor-pointer' : ''} group/comment-content`}
+          >
+            <p className="text-base text-zinc-700 dark:text-zinc-300 mt-0.5 whitespace-pre-wrap">
+              <MentionText text={displayedContent} />
+              {shouldTruncate && !isExpanded && <span>...</span>}
+              {shouldTruncate && (
+                <span className="ml-1 font-bold text-black dark:text-white group-hover/comment-content:underline">
+                  {isExpanded ? ' See less' : ' See more'}
+                </span>
+              )}
+            </p>
+          </div>
+
+          {/* Actions row — TrendingUp | Reply | three dot menu on right */}
+          <div className="flex items-center gap-3 mt-1">
+            {/* TrendingUp — only for main comments */}
+            {!isReply && (
+              <button
+                onClick={() => handleVoteComment(comment.id)}
+                className={`flex items-center gap-1 text-base transition-colors ${
+                  hasVoted 
+                    ? 'text-green-500' 
+                    : 'text-zinc-500 hover:text-green-500'
+                }`}
+              >
+                <TrendingUp className={`w-6 h-6 ${hasVoted ? 'fill-green-500/20' : ''}`} strokeWidth={1.5} />
+                {(comment.votes_count || 0) > 0 && <span>{comment.votes_count}</span>}
+              </button>
+            )}
+
+            {/* Reply button */}
+            <button
+              onClick={() => {
+                const username = (comment.user as any)?.username;
+                setReplyingTo({ 
+                  id: isReply ? (parentId || comment.id) : comment.id, 
+                  name: username ? `@${username}` : (comment.user?.full_name || 'User') 
+                });
+                setNewComment(username ? `@${username} ` : '');
+                setTimeout(() => {
+                  if (commentInputRef.current) {
+                    commentInputRef.current.focus();
+                    const len = commentInputRef.current.value.length;
+                    commentInputRef.current.setSelectionRange(len, len);
+                  }
+                }, 10);
+              }}
+              className="flex items-center gap-1 text-base text-zinc-500 hover:text-black dark:hover:text-white transition-colors"
+            >
+              <Reply className="w-6 h-6" strokeWidth={1.5} />
+              Reply
+            </button>
+
+            {/* Three dot menu — pushed to the right */}
+            <div className="ml-auto relative">
+              {deletingCommentId === comment.id ? (
                 <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2 duration-200">
                   <button
                     onClick={() => setDeletingCommentId(null)}
@@ -992,7 +1051,7 @@ export function PostCard({
                   </button>
                 </div>
               ) : (
-                <div className="relative">
+                <>
                   <button
                     onClick={() => setShowCommentMenu(showCommentMenu === comment.id ? null : comment.id)}
                     className="p-1.5 text-zinc-400 hover:text-black dark:hover:text-white rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
@@ -1000,7 +1059,7 @@ export function PostCard({
                     <MoreVertical className="w-6 h-6" strokeWidth={1.5} />
                   </button>
                   {showCommentMenu === comment.id && (
-                    <div className="absolute right-0 top-full mt-1 bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded-xl shadow-xl z-20 overflow-hidden min-w-[140px]">
+                    <div className="absolute right-0 bottom-full mb-1 bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded-xl shadow-xl z-20 overflow-hidden min-w-[140px]">
                       {currentUserId === comment.user_id && (
                         <button
                           onClick={() => {
@@ -1026,59 +1085,9 @@ export function PostCard({
                       </button>
                     </div>
                   )}
-                </div>
+                </>
               )}
             </div>
-          </div>
-          <div 
-            onClick={() => shouldTruncate && setIsExpanded(!isExpanded)}
-            className={`${shouldTruncate ? 'cursor-pointer' : ''} group/comment-content`}
-          >
-            <p className="text-base text-zinc-700 dark:text-zinc-300 mt-0.5 whitespace-pre-wrap">
-              <MentionText text={displayedContent} />
-              {shouldTruncate && !isExpanded && <span>...</span>}
-              {shouldTruncate && (
-                <span className="ml-1 font-bold text-black dark:text-white group-hover/comment-content:underline">
-                  {isExpanded ? ' See less' : ' See more'}
-                </span>
-              )}
-            </p>
-          </div>
-          <div className="flex items-center gap-3 mt-1">
-            <button
-              onClick={() => {
-                const username = (comment.user as any)?.username;
-                setReplyingTo({ 
-                  id: isReply ? (parentId || comment.id) : comment.id, 
-                  name: username ? `@${username}` : (comment.user?.full_name || 'User') 
-                });
-                setNewComment(username ? `@${username} ` : '');
-                setTimeout(() => {
-                  if (commentInputRef.current) {
-                    commentInputRef.current.focus();
-                    const len = commentInputRef.current.value.length;
-                    commentInputRef.current.setSelectionRange(len, len);
-                  }
-                }, 10);
-              }}
-              className="flex items-center gap-1 text-base text-zinc-500 hover:text-black dark:hover:text-white transition-colors"
-            >
-              <Reply className="w-6 h-6" strokeWidth={1.5} />
-              Reply
-            </button>
-            {!isReply && (
-              <button
-                onClick={() => handleVoteComment(comment.id)}
-                className={`flex items-center gap-1 text-base transition-colors ${
-                  hasVoted 
-                    ? 'text-green-500' 
-                    : 'text-zinc-500 hover:text-green-500'
-                }`}
-              >
-                <TrendingUp className={`w-6 h-6 ${hasVoted ? 'fill-green-500/20' : ''}`} strokeWidth={1.5} />
-                {(comment.votes_count || 0) > 0 && <span>{comment.votes_count}</span>}
-              </button>
-            )}
           </div>
         </div>
       </div>
