@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Home, MessageCircle, PlusSquare, Bell, UserCircle } from 'lucide-react';
+import { Home, Search, PlusSquare, Bell, UserCircle } from 'lucide-react';
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -73,7 +73,7 @@ export function BottomNav() {
 
     const navItems = [
       { href: '/home', icon: Home },
-      { href: '/messages', icon: MessageCircle },
+      { href: '/search', icon: Search },
       { href: '/post/create', icon: PlusSquare },
       { href: '/alerts', icon: Bell },
       { href: '/profile', icon: UserCircle },
