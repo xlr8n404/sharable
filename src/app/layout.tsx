@@ -5,14 +5,8 @@ import ErrorReporter from "@/components/ErrorReporter";
 import Script from "next/script";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { LanguageProvider } from "@/components/LanguageProvider";
-import { Syne } from "next/font/google";
 import { ThemedToaster } from "@/components/ThemedToaster";
 import RealtimeNotifications from "@/components/RealtimeNotifications";
-
-const syne = Syne({
-  subsets: ["latin"],
-  variable: "--font-syne",
-});
 
 export const metadata: Metadata = {
   title: "Sharable",
@@ -32,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-      <html lang="en" suppressHydrationWarning className={`${syne.variable}`}>
+      <html lang="en" suppressHydrationWarning>
         <body className="antialiased font-sans bg-background text-foreground">
         <ThemeProvider>
           <LanguageProvider>
