@@ -85,11 +85,7 @@ export default function Home() {
   }, [router]);
 
   if (checking) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
-        <Loader />
-      </div>
-    );
+    return null;
   }
 
   return (
