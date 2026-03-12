@@ -25,8 +25,10 @@ export default function HomePage() {
   const [isGesturing, setIsGesturing] = useState(false);
   const [feedMode, setFeedMode] = useState<'trending' | 'explore' | 'following' | 'sharable'>('trending');
   const [profile, setProfile] = useState<any>(null);
-  
+  const [showHeader, setShowHeader] = useState(true);
+
   const observer = useRef<IntersectionObserver | null>(null);
+  const scrollTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
