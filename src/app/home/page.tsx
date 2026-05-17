@@ -408,24 +408,26 @@ export default function HomePage() {
 
         <header className="fixed top-0 left-0 right-0 h-16 z-50 px-4 bg-white dark:bg-black rounded-b-[16px]">
         <div className="h-full flex items-center justify-between">
-          <span className="font-bold text-2xl tracking-tight font-[family-name:var(--font-syne)] text-black dark:text-white">
-            Sharable
-          </span>
+          {/* Left: Settings */}
+          <button
+            onClick={() => setMainMenuOpen(true)}
+            className="p-2 text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors"
+          >
+            <Settings2 size={24} strokeWidth={1.5} />
+          </button>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => router.push('/messages')}
-              className="p-2 text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors"
-            >
-              <MessageCircle size={24} strokeWidth={1.5} />
-            </button>
-            <button
-              onClick={() => setMainMenuOpen(true)}
-              className="p-2 text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors"
-            >
-              <Settings2 size={24} strokeWidth={1.5} />
-            </button>
+          {/* Center: Share */}
+          <div className="flex-1 flex items-center justify-center">
+            <Share2 size={24} strokeWidth={1.5} className="text-black dark:text-white" />
           </div>
+
+          {/* Right: Messages */}
+          <button
+            onClick={() => router.push('/messages')}
+            className="p-2 text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors"
+          >
+            <MessageCircle size={24} strokeWidth={1.5} />
+          </button>
         </div>
       </header>
 
