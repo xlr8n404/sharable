@@ -1827,16 +1827,8 @@ export function PostCard({
                         reposted ? 'text-green-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10'
                       }`}
                     >
-                      <Repeat className={`w-6 h-6 group-active:rotate-180 transition-transform ${reposted ? 'stroke-[2.5px]' : ''}`} strokeWidth={1.5} />
                       <span className="text-base font-medium">{repostsCount}</span>
-                    </button>
-                    <button 
-                      onClick={handleSavePost}
-                      className={`p-2 -mr-2 rounded-full group transition-colors ${
-                        isSaved ? 'text-amber-400' : 'text-zinc-500 dark:text-zinc-400 hover:text-amber-400 hover:bg-amber-400/10'
-                      }`}
-                    >
-                      <Bookmark className={`w-6 h-6 group-active:scale-110 transition-transform ${isSaved ? 'fill-current' : ''}`} strokeWidth={1.5} />
+                      <Repeat className={`w-6 h-6 group-active:rotate-180 transition-transform ${reposted ? 'stroke-[2.5px]' : ''}`} strokeWidth={1.5} />
                     </button>
                   </div>
                 </div>
@@ -1945,14 +1937,8 @@ export function PostCard({
                                         disabled={reposting}
                                         className={`flex items-center gap-1.5 px-2 py-2 rounded-full transition-colors disabled:opacity-50 ${reposted ? 'text-green-500' : 'text-zinc-500 hover:text-green-500 dark:hover:text-green-400'}`}
                                       >
-                                        <Repeat className={`w-6 h-6 ${reposted ? 'stroke-[2.5px]' : ''}`} strokeWidth={1.5} />
                                         <span className="text-sm font-medium">{repostsCount}</span>
-                                      </button>
-                                      <button
-                                        onClick={handleSavePost}
-                                        className={`p-2 rounded-full transition-colors ${isSaved ? 'text-amber-400' : 'text-zinc-500 hover:text-amber-400 hover:bg-amber-400/10'}`}
-                                      >
-                                        <Bookmark className={`w-6 h-6 ${isSaved ? 'fill-current' : ''}`} strokeWidth={1.5} />
+                                        <Repeat className={`w-6 h-6 ${reposted ? 'stroke-[2.5px]' : ''}`} strokeWidth={1.5} />
                                       </button>
                                     </div>
                                     {/* Right: Settings2 (sort) */}
