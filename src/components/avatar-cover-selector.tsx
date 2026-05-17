@@ -20,12 +20,12 @@ export function AvatarCoverSelector({
   onDelete,
 }: AvatarCoverSelectorProps) {
   const isCover = type === 'cover';
-  const title = isCover ? 'Cover Photo?' : 'Profile Photo?';
+  const title = isCover ? 'Cover photo?' : 'Profile photo?';
   const details = isCover 
     ? 'Show your vibe. Add a cover photo to highlight your personality and make your profile stand out.'
     : 'This is how people recognize you. Add a profile photo to represent yourself across Sharable.';
-  const deleteLabel = 'Remove Photo';
-  const addLabel = 'Add Photo';
+  const deleteLabel = 'Remove photo';
+  const addLabel = 'Add photo';
 
   return (
     <AnimatePresence>
