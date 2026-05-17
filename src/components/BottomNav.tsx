@@ -13,18 +13,23 @@ export function BottomNav() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [userId, setUserId] = useState<string | null>(null);
   const [showCreateSheet, setShowCreateSheet] = useState(false);
+  const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         setUserId(session.user.id);
+        await fetchUserProfile(session.user.id);
       } else {
         // Fallback to internal API
         try {
           const response = await fetch('/api/auth/session');
           const data = await response.json();
-          if (data.user) setUserId(data.user.id);
+          if (data.user) {
+            setUserId(data.user.id);
+            await fetchUserProfile(data.user.id);
+          }
         } catch (e) {
           console.error('Failed to get session in BottomNav', e);
         }
@@ -32,6 +37,22 @@ export function BottomNav() {
     };
     getSession();
   }, []);
+
+  const fetchUserProfile = async (uid: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', uid)
+        .single();
+      
+      if (!error && data?.avatar_url) {
+        setUserAvatarUrl(data.avatar_url);
+      }
+    } catch (e) {
+      console.error('Failed to fetch user profile', e);
+    }
+  };
 
     const fetchUnreadCount = async () => {
       if (!userId) return;
@@ -79,7 +100,7 @@ export function BottomNav() {
       { href: '/search', icon: Search },
       { href: null, icon: PlusSquare, action: 'create' },
       { href: '/alerts', icon: Bell },
-      { href: '/profile', icon: UserCircle },
+      { href: '/profile', icon: UserCircle, isProfile: true },
     ];
 
       return (
@@ -115,11 +136,19 @@ export function BottomNav() {
                           ? 'bg-black/5 dark:bg-white/10'
                           : 'group-hover:bg-black/5 dark:group-hover:bg-white/5'
                       }`}>
-                        <Icon
-                          size={24}
-                          strokeWidth={isActive ? 2.5 : 2}
-                          fill={isActive ? 'currentColor' : 'none'}
-                        />
+                        {(item as any).isProfile && userAvatarUrl ? (
+                          <img
+                            src={userAvatarUrl}
+                            alt="User profile"
+                            className="w-6 h-6 rounded-lg object-cover"
+                          />
+                        ) : (
+                          <Icon
+                            size={24}
+                            strokeWidth={isActive ? 2.5 : 2}
+                            fill={isActive ? 'currentColor' : 'none'}
+                          />
+                        )}
                       </div>
 
                       {item.href === '/alerts' && unreadCount > 0 && (
