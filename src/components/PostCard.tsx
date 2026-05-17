@@ -1827,7 +1827,6 @@ export function PostCard({
                         reposted ? 'text-green-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10'
                       }`}
                     >
-                      <span className="text-base font-medium">{repostsCount}</span>
                       <Repeat className={`w-6 h-6 group-active:rotate-180 transition-transform ${reposted ? 'stroke-[2.5px]' : ''}`} strokeWidth={1.5} />
                     </button>
                   </div>
@@ -1937,7 +1936,6 @@ export function PostCard({
                                         disabled={reposting}
                                         className={`flex items-center gap-1.5 px-2 py-2 rounded-full transition-colors disabled:opacity-50 ${reposted ? 'text-green-500' : 'text-zinc-500 hover:text-green-500 dark:hover:text-green-400'}`}
                                       >
-                                        <span className="text-sm font-medium">{repostsCount}</span>
                                         <Repeat className={`w-6 h-6 ${reposted ? 'stroke-[2.5px]' : ''}`} strokeWidth={1.5} />
                                       </button>
                                     </div>
