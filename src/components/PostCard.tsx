@@ -1786,17 +1786,8 @@ export function PostCard({
                 <div className="flex items-center justify-between px-4 pt-0 pb-1">
                   <div className="flex items-center gap-2">
                     <button 
-                      className="flex items-center gap-1.5 p-2 -ml-2 rounded-full group transition-colors text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10"
-                    >
-                      <Eye 
-                        className="w-6 h-6 group-active:scale-125 transition-transform" 
-                          strokeWidth={1.5}
-                        />
-                        <span className="text-base font-medium">{viewsCount}</span>
-                      </button>
-                    <button 
                       onClick={handleLike}
-                      className={`flex items-center gap-1.5 p-2 rounded-full group transition-colors ${
+                      className={`flex items-center gap-1.5 p-2 -ml-2 rounded-full group transition-colors ${
                         liked ? 'text-red-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10'
                       }`}
                     >
@@ -1814,6 +1805,23 @@ export function PostCard({
                         <span className="text-base font-medium">{commentsCount}</span>
                       </button>
                     <button 
+                      onClick={handleSharePost}
+                      className="p-2 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 transition-colors group"
+                    >
+                      <Share2 className="w-6 h-6 group-active:rotate-12 transition-transform" strokeWidth={1.5} />
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      className="flex items-center gap-1.5 p-2 rounded-full group transition-colors text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10"
+                    >
+                      <Eye 
+                        className="w-6 h-6 group-active:scale-125 transition-transform" 
+                          strokeWidth={1.5}
+                        />
+                        <span className="text-base font-medium">{viewsCount}</span>
+                      </button>
+                    <button 
                       onClick={() => setShowRepostConfirm(true)}
                       className={`flex items-center gap-1.5 p-2 rounded-full group transition-colors ${
                         reposted ? 'text-green-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10'
@@ -1823,20 +1831,14 @@ export function PostCard({
                       <span className="text-base font-medium">{repostsCount}</span>
                     </button>
                     <button 
-                      onClick={handleSharePost}
-                      className="p-2 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 transition-colors group"
+                      onClick={handleSavePost}
+                      className={`p-2 -mr-2 rounded-full group transition-colors ${
+                        isSaved ? 'text-amber-400' : 'text-zinc-500 dark:text-zinc-400 hover:text-amber-400 hover:bg-amber-400/10'
+                      }`}
                     >
-                      <Share2 className="w-6 h-6 group-active:rotate-12 transition-transform" strokeWidth={1.5} />
+                      <Bookmark className={`w-6 h-6 group-active:scale-110 transition-transform ${isSaved ? 'fill-current' : ''}`} strokeWidth={1.5} />
                     </button>
                   </div>
-                  <button 
-                    onClick={handleSavePost}
-                    className={`p-2 -mr-2 rounded-full group transition-colors ${
-                      isSaved ? 'text-amber-400' : 'text-zinc-500 dark:text-zinc-400 hover:text-amber-400 hover:bg-amber-400/10'
-                    }`}
-                  >
-                    <Bookmark className={`w-6 h-6 group-active:scale-110 transition-transform ${isSaved ? 'fill-current' : ''}`} strokeWidth={1.5} />
-                  </button>
                 </div>
           </div>
 
@@ -1907,14 +1909,8 @@ export function PostCard({
   
   {/* Comment Sheet Header — fixed h-16 */}
                                 <div className="h-16 shrink-0 flex items-center justify-between px-2 border-b border-black/5 dark:border-white/5">
-                                    {/* Left: Eye+count, Like+count, Comment+count, Repost+count, Share (no count) */}
+                                    {/* Left: Like+count, Comment+count, Share (no count) | Right: Eye+count, Repost+count, Save */}
                                     <div className="flex items-center">
-                                      <button
-                                        className="flex items-center gap-1.5 px-2 py-2 rounded-full text-zinc-500 hover:text-black dark:hover:text-white transition-colors"
-                                      >
-                                        <Eye className="w-6 h-6" strokeWidth={1.5} />
-                                        <span className="text-sm font-medium">{viewsCount}</span>
-                                      </button>
                                       <button
                                         onClick={handleLike}
                                         disabled={liking}
@@ -1930,6 +1926,21 @@ export function PostCard({
                                         <span className="text-sm font-medium">{commentsCount}</span>
                                       </button>
                                       <button
+                                        onClick={handleSharePost}
+                                        className="flex items-center px-2 py-2 rounded-full text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                      >
+                                        <Share2 className="w-6 h-6" strokeWidth={1.5} />
+                                      </button>
+                                    </div>
+                                    {/* Right: Eye+count, Repost+count, Save */}
+                                    <div className="flex items-center gap-1">
+                                      <button
+                                        className="flex items-center gap-1.5 px-2 py-2 rounded-full text-zinc-500 hover:text-black dark:hover:text-white transition-colors"
+                                      >
+                                        <Eye className="w-6 h-6" strokeWidth={1.5} />
+                                        <span className="text-sm font-medium">{viewsCount}</span>
+                                      </button>
+                                      <button
                                         onClick={() => setShowRepostConfirm(true)}
                                         disabled={reposting}
                                         className={`flex items-center gap-1.5 px-2 py-2 rounded-full transition-colors disabled:opacity-50 ${reposted ? 'text-green-500' : 'text-zinc-500 hover:text-green-500 dark:hover:text-green-400'}`}
@@ -1938,13 +1949,13 @@ export function PostCard({
                                         <span className="text-sm font-medium">{repostsCount}</span>
                                       </button>
                                       <button
-                                        onClick={handleSharePost}
-                                        className="flex items-center px-2 py-2 rounded-full text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                        onClick={handleSavePost}
+                                        className={`p-2 rounded-full transition-colors ${isSaved ? 'text-amber-400' : 'text-zinc-500 hover:text-amber-400 hover:bg-amber-400/10'}`}
                                       >
-                                        <Share2 className="w-6 h-6" strokeWidth={1.5} />
+                                        <Bookmark className={`w-6 h-6 ${isSaved ? 'fill-current' : ''}`} strokeWidth={1.5} />
                                       </button>
                                     </div>
-                                    {/* Right: Settings2 (sort) + Save */}
+                                    {/* Right: Settings2 (sort) */}
                                     <div className="flex items-center gap-1">
                                       <div className="relative">
                                         <button
@@ -1991,12 +2002,6 @@ export function PostCard({
                                           )}
                                         </AnimatePresence>
                                       </div>
-                                      <button
-                                        onClick={handleSavePost}
-                                        className={`p-2 rounded-full transition-colors ${isSaved ? 'text-amber-400' : 'text-zinc-500 hover:text-amber-400 hover:bg-amber-400/10'}`}
-                                      >
-                                        <Bookmark className={`w-6 h-6 ${isSaved ? 'fill-current' : ''}`} strokeWidth={1.5} />
-                                      </button>
                                     </div>
                                 </div>
 
