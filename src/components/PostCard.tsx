@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Heart, MessageCircle, Share2, MoreHorizontal, X, Send, Trash2, Clock, Reply, ChevronDown, ChevronUp, Bookmark, Copy, Maximize2, Repeat, TrendingUp, CornerRightDown, Settings2, Music, Play } from 'lucide-react';
+import { Heart, MessageCircle, Share2, MoreHorizontal, X, Send, Trash2, Clock, Reply, ChevronDown, ChevronUp, Bookmark, Copy, Maximize2, Repeat, TrendingUp, CornerRightDown, Settings2, Music, Play, Eye } from 'lucide-react';
 import { Loader } from '@/components/ui/loader';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
@@ -49,6 +49,7 @@ interface PostCardProps {
   likes_count?: number;
   comments_count?: number;
   reposts_count?: number;
+  views_count?: number;
   reposted_id?: string;
   original_post?: any;
   created_at?: string;
@@ -198,6 +199,7 @@ export function PostCard({
   likes_count: initialLikes = 0,
   comments_count: initialComments = 0,
   reposts_count: initialReposts = 0,
+  views_count: initialViews = 0,
   reposted_id,
   original_post,
   created_at,
@@ -249,10 +251,12 @@ export function PostCard({
   const [liked, setLiked] = useState(initialLiked);
   const [liking, setLiking] = useState(false);
   const [likesCount, setLikesCount] = useState(initialLikes);
+  const [viewsCount, setViewsCount] = useState(initialViews);
 
   // Sync liked/reposted/saved state when parent updates userPostStatus
   useEffect(() => { if (!liking) setLiked(initialLiked); }, [initialLiked]);
   useEffect(() => { setLikesCount(initialLikes); }, [initialLikes]);
+  useEffect(() => { setViewsCount(initialViews); }, [initialViews]);
   const [commentsCount, setCommentsCount] = useState(initialComments);
   const [repostsCount, setRepostsCount] = useState(initialReposts);
   const [reposted, setReposted] = useState(initialReposted);
@@ -1782,8 +1786,17 @@ export function PostCard({
                 <div className="flex items-center justify-between px-4 pt-0 pb-1">
                   <div className="flex items-center gap-2">
                     <button 
+                      className="flex items-center gap-1.5 p-2 -ml-2 rounded-full group transition-colors text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10"
+                    >
+                      <Eye 
+                        className="w-6 h-6 group-active:scale-125 transition-transform" 
+                          strokeWidth={1.5}
+                        />
+                        <span className="text-base font-medium">{viewsCount}</span>
+                      </button>
+                    <button 
                       onClick={handleLike}
-                      className={`flex items-center gap-1.5 p-2 -ml-2 rounded-full group transition-colors ${
+                      className={`flex items-center gap-1.5 p-2 rounded-full group transition-colors ${
                         liked ? 'text-red-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10'
                       }`}
                     >
@@ -1894,8 +1907,14 @@ export function PostCard({
   
   {/* Comment Sheet Header — fixed h-16 */}
                                 <div className="h-16 shrink-0 flex items-center justify-between px-2 border-b border-black/5 dark:border-white/5">
-                                    {/* Left: Like+count, Comment+count, Repost+count, Share (no count) */}
+                                    {/* Left: Eye+count, Like+count, Comment+count, Repost+count, Share (no count) */}
                                     <div className="flex items-center">
+                                      <button
+                                        className="flex items-center gap-1.5 px-2 py-2 rounded-full text-zinc-500 hover:text-black dark:hover:text-white transition-colors"
+                                      >
+                                        <Eye className="w-6 h-6" strokeWidth={1.5} />
+                                        <span className="text-sm font-medium">{viewsCount}</span>
+                                      </button>
                                       <button
                                         onClick={handleLike}
                                         disabled={liking}
