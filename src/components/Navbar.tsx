@@ -8,9 +8,7 @@ export function Navbar() {
   const isVisible = useScrollDirection();
   
     return (
-      <nav className={`fixed top-0 left-0 right-0 z-50 w-full px-4 h-16 flex items-center justify-between bg-white/80 dark:bg-black/80 backdrop-blur-xl transition-transform duration-300 ${
-        isVisible ? 'translate-y-0' : '-translate-y-full'
-      }`}>
+      <nav className="fixed top-0 left-0 right-0 z-50 w-full px-4 h-16 flex items-center justify-between bg-white dark:bg-black">
 
             <div className="flex items-center gap-2">
               <Share2 className="w-8 h-8 text-black dark:text-white" />
