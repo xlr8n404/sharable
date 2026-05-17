@@ -1582,7 +1582,7 @@ export function PostCard({
   return (
     <>
       <div
-        className={`w-full bg-white dark:bg-black overflow-hidden ${isNested ? '' : 'border-b border-black/[0.05] dark:border-white/[0.05]'}`}
+        className={`w-full bg-white dark:bg-black overflow-hidden ${isNested ? '' : ''}`}
       >
           {!isNested && (
             <div className="flex items-center justify-between px-4 pt-4 pb-2">

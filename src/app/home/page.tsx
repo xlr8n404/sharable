@@ -434,7 +434,7 @@ export default function HomePage() {
       <main
         className="max-w-xl mx-auto pt-16 pb-20"
       >
-        <div className="px-4 py-4 flex items-center gap-3 border-b border-black/[0.05] dark:border-white/[0.05]">
+        <div className="px-4 py-4 flex items-center gap-3">
           <div className="shrink-0 w-10 h-10 rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
             {avatarSrc ? (
               <img src={avatarSrc} alt="Profile" className="w-full h-full object-cover" />
