@@ -107,9 +107,13 @@ export default function SettingsPage() {
   if (!mounted) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="h-16 flex items-center px-4 bg-background">
-          <ArrowLeft size={24} strokeWidth={1.5} className="text-zinc-400" />
-          <span className="ml-2 font-bold text-lg text-zinc-400">Settings</span>
+        <header className="h-16 flex items-center px-4 bg-white dark:bg-black border-b border-black/5 dark:border-white/5 relative">
+          <div className="absolute left-4">
+            <ArrowLeft size={24} strokeWidth={1.5} className="text-zinc-400" />
+          </div>
+          <div className="flex-1 text-center">
+            <span className="font-bold text-2xl">Settings & more</span>
+          </div>
         </header>
         <main className="max-w-xl mx-auto p-4 space-y-3">
           {[...Array(6)].map((_, i) => (
@@ -123,11 +127,15 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white selection:bg-black dark:selection:bg-white selection:text-white dark:selection:text-black">
-      <header className={`fixed top-0 left-0 right-0 z-50 px-4 h-16 flex items-center bg-transparent transition-transform duration-300 ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'} border-b-0`}>
-        <Link href="/home" className="p-2 -ml-2 hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors" onClick={(e) => { e.preventDefault(); goBack(); }}>
+      <header className={`fixed top-0 left-0 right-0 z-50 px-4 h-16 flex items-center bg-white dark:bg-black transition-transform duration-300 ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'} border-b border-black/5 dark:border-white/5`}>
+        <div className="absolute left-4">
+          <Link href="/home" className="p-2 -ml-2 hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors flex items-center justify-center" onClick={(e) => { e.preventDefault(); goBack(); }}>
             <ArrowLeft size={24} strokeWidth={1.5} />
           </Link>
-        <span className="ml-2 font-bold text-lg">Settings</span>
+        </div>
+        <div className="flex-1 text-center">
+          <span className="font-bold text-2xl">Settings & more</span>
+        </div>
       </header>
 
       <main className="max-w-xl mx-auto pt-16 pb-20">
@@ -338,8 +346,8 @@ export default function SettingsPage() {
               <div className="w-10 h-10 bg-zinc-200 dark:bg-zinc-800 rounded-full flex items-center justify-center">
                 <LogOut size={24} strokeWidth={1.5} className="text-zinc-500 dark:text-zinc-400" />
               </div>
-              <div className="text-left">
-                <p className="font-medium">Log out</p>
+              <div>
+                <p className="font-medium">Logout</p>
                 <p className="text-sm text-zinc-500">Sign out of your account</p>
               </div>
             </div>
@@ -355,8 +363,8 @@ export default function SettingsPage() {
                 <Trash2 size={24} strokeWidth={1.5} className="text-red-500 dark:text-red-400" />
               </div>
               <div className="text-left">
-                <p className="font-medium text-red-500 dark:text-red-400">Delete Account</p>
-                <p className="text-sm text-red-400 dark:text-red-400/60">Permanently delete your account</p>
+                <p className="font-medium text-red-600 dark:text-red-400">Delete Account</p>
+                <p className="text-sm text-red-500 dark:text-red-400/60">Permanently remove your data</p>
               </div>
             </div>
             <ChevronRight size={24} strokeWidth={1.5} className="text-red-400 dark:text-red-400/60" />
@@ -364,64 +372,58 @@ export default function SettingsPage() {
         </div>
       </main>
 
+      <BottomNav />
+
       <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
-        <AlertDialogContent className="bg-white dark:bg-zinc-900 border-black/10 dark:border-white/10">
+        <AlertDialogContent className="bg-white dark:bg-zinc-900 border-black/5 dark:border-white/5 rounded-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Log out?</AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-500 dark:text-zinc-400">
-              Are you sure you want to log out of your account?
+            <AlertDialogTitle>Logout</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to logout?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-zinc-100 dark:bg-zinc-800 border-black/10 dark:border-white/10 hover:bg-zinc-200 dark:hover:bg-zinc-700">
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleLogout}
-              className="bg-black dark:bg-white text-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-200"
+              className="bg-black dark:bg-white text-white dark:text-black rounded-xl"
             >
-              Log out
+              Logout
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent className="bg-white dark:bg-zinc-900 border-black/10 dark:border-white/10">
+        <AlertDialogContent className="bg-white dark:bg-zinc-900 border-black/5 dark:border-white/5 rounded-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Account?</AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-500 dark:text-zinc-400">
-              This action cannot be undone. This will permanently delete your account and remove all your data from our servers.
-              <br /><br />
-              Type <span className="font-bold text-red-500 dark:text-red-400">DELETE</span> to confirm.
+            <AlertDialogTitle className="text-red-600">Delete Account</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action is permanent. All your posts, profile data and media will be deleted.
+              Type <span className="font-bold text-black dark:text-white">DELETE</span> to confirm.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <input
-            type="text"
-            value={deleteConfirmText}
-            onChange={(e) => setDeleteConfirmText(e.target.value)}
-            placeholder="Type DELETE to confirm"
-            className="w-full px-4 py-3 bg-zinc-100 dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded-lg placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
-          />
+          <div className="py-4">
+            <input 
+              type="text"
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder="Type DELETE"
+              className="w-full px-4 py-2 bg-zinc-100 dark:bg-zinc-800 rounded-xl border-none focus:ring-2 focus:ring-red-500 outline-none"
+            />
+          </div>
           <AlertDialogFooter>
-            <AlertDialogCancel 
-              onClick={() => setDeleteConfirmText('')}
-              className="bg-zinc-100 dark:bg-zinc-800 border-black/10 dark:border-white/10 hover:bg-zinc-200 dark:hover:bg-zinc-700"
-            >
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleDeleteAccount}
               disabled={deleteConfirmText !== 'DELETE'}
-              className="bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-red-600 hover:bg-red-700 text-white rounded-xl disabled:opacity-50"
             >
-              Delete Account
+              Delete Permanently
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <BottomNav />
     </div>
   );
 }
