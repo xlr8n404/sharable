@@ -15,6 +15,15 @@ export function ThemeColorMeta() {
       document.head.appendChild(meta);
     }
     meta.content = color;
+
+    // Remove border from status bar by ensuring viewport-fit=cover
+    let viewportMeta = document.querySelector<HTMLMetaElement>('meta[name="viewport"]');
+    if (viewportMeta) {
+      const currentContent = viewportMeta.getAttribute('content') || '';
+      if (!currentContent.includes('viewport-fit')) {
+        viewportMeta.setAttribute('content', currentContent + ', viewport-fit=cover');
+      }
+    }
   }, [resolvedTheme]);
 
   return null;
