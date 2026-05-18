@@ -1750,30 +1750,31 @@ export function PostCard({
 
             {hasMedia && (
               <div className="rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 mx-4 my-2">
-                <Carousel className="w-full">
-                  <CarouselContent className="-ml-0">
-                    {finalMediaUrls.map((url, index) => {
-                      const type = finalMediaTypes[index];
-                      return (
-                        <CarouselItem key={index} className="pl-0">
-                          <div className="relative bg-zinc-100 dark:bg-zinc-900">
-                            <MediaGridCell
-                              url={url}
-                              type={type}
-                              index={index}
-                              isVisible={isVisible}
-                            />
-                            {finalMediaUrls.length > 1 && (
-                              <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-full z-10">
-                                {index + 1}/{finalMediaUrls.length}
-                              </div>
-                            )}
-                          </div>
-                        </CarouselItem>
-                      );
-                    })}
-                  </CarouselContent>
-                </Carousel>
+                <div className={`grid gap-1 ${
+                  finalMediaUrls.length === 1 ? 'grid-cols-1' :
+                  finalMediaUrls.length === 2 ? 'grid-cols-2' :
+                  finalMediaUrls.length === 3 ? 'grid-cols-3' :
+                  finalMediaUrls.length === 4 ? 'grid-cols-2' :
+                  'grid-cols-3'
+                }`}>
+                  {finalMediaUrls.map((url, index) => {
+                    const type = finalMediaTypes[index];
+                    return (
+                      <div key={index} className={`relative bg-zinc-100 dark:bg-zinc-900 ${
+                        finalMediaUrls.length === 1 ? 'col-span-1' :
+                        finalMediaUrls.length === 4 && index < 2 ? 'col-span-1' :
+                        ''
+                      }`}>
+                        <MediaGridCell
+                          url={url}
+                          type={type}
+                          index={index}
+                          isVisible={isVisible}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
