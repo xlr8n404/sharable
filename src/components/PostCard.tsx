@@ -154,12 +154,12 @@ function MediaGridCell({
   index: number;
   overlay?: number;
   isVisible: boolean;
-  onOpen: (url: string, type: string) => void;
+  onOpen?: (url: string, type: string) => void;
 }) {
   return (
     <div
       className="relative overflow-hidden bg-zinc-100 dark:bg-zinc-900 cursor-pointer group w-full h-full"
-      onClick={() => onOpen(url, type)}
+      onClick={() => onOpen?.(url, type)}
     >
       {type === 'video' ? (
         <LazyVideo src={isVisible ? url : ''} className="w-full h-full object-cover" />
