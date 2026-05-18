@@ -1756,18 +1756,12 @@ export function PostCard({
                       const type = finalMediaTypes[index];
                       return (
                         <CarouselItem key={index} className="pl-0">
-                          <div className="relative bg-zinc-100 dark:bg-zinc-900 aspect-square">
+                          <div className="relative bg-zinc-100 dark:bg-zinc-900">
                             <MediaGridCell
                               url={url}
                               type={type}
                               index={index}
                               isVisible={isVisible}
-                              onOpen={(url, type) => {
-                                if (type !== 'video' && type !== 'audio') {
-                                  setFullscreenMedia({ url, type, index });
-                                  setMediaCarouselIndex(index);
-                                }
-                              }}
                             />
                             {finalMediaUrls.length > 1 && (
                               <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-full z-10">
