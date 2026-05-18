@@ -1810,8 +1810,6 @@ export function PostCard({
                     >
                         <Share2 className="w-6 h-6 group-active:scale-125 transition-transform" strokeWidth={1.5} />
                       </button>
-                  </div>
-                  <div className="flex items-center gap-2">
                     <button
                       onClick={() => setShowRepostConfirm(true)}
                       className={`flex items-center gap-1.5 p-2 rounded-full group transition-colors ${
@@ -1821,6 +1819,8 @@ export function PostCard({
                       <Repeat className={`w-6 h-6 group-active:rotate-180 transition-transform ${reposted ? 'stroke-[2.5px]' : ''}`} strokeWidth={1.5} />
                       <span className="text-base font-medium">{repostsCount}</span>
                     </button>
+                  </div>
+                  <div className="flex items-center pr-4">
                     <button
                       onClick={handleSavePost}
                       className={`flex items-center gap-1.5 p-2 rounded-full group transition-colors ${
@@ -1900,7 +1900,7 @@ export function PostCard({
   
   {/* Comment Sheet Header — fixed h-16 */}
                                 <div className="h-16 shrink-0 flex items-center justify-between px-2 border-b border-black/5 dark:border-white/5">
-                                    {/* Left: Like+count, Comment+count, Share */}
+                                    {/* Left: Like+count, Comment+count, Share, Repost+count */}
                                     <div className="flex items-center">
                                       <button
                                         onClick={handleLike}
@@ -1922,9 +1922,6 @@ export function PostCard({
                                       >
                                         <Share2 className="w-6 h-6" strokeWidth={1.5} />
                                       </button>
-                                    </div>
-                                    {/* Right: Repost+count, Save */}
-                                    <div className="flex items-center gap-1">
                                       <button
                                         onClick={() => setShowRepostConfirm(true)}
                                         disabled={reposting}
@@ -1933,6 +1930,9 @@ export function PostCard({
                                         <Repeat className={`w-6 h-6 ${reposted ? 'stroke-[2.5px]' : ''}`} strokeWidth={1.5} />
                                         <span className="text-sm font-medium">{repostsCount}</span>
                                       </button>
+                                    </div>
+                                    {/* Right: Save */}
+                                    <div className="flex items-center pr-4">
                                       <button
                                         onClick={handleSavePost}
                                         className={`flex items-center gap-1.5 px-2 py-2 rounded-full transition-colors ${isSaved ? 'text-black dark:text-white' : 'text-zinc-500 hover:text-black dark:hover:text-white'}`}
