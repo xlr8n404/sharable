@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Home, Search, PlusSquare, Bell, UserCircle } from 'lucide-react';
 import { CreateBottomSheet } from './CreateBottomSheet';
+import { toProxyUrl } from '@/lib/media-utils';
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -47,7 +48,7 @@ export function BottomNav() {
         .single();
       
       if (!error && data?.avatar_url) {
-        setUserAvatarUrl(data.avatar_url);
+        setUserAvatarUrl(toProxyUrl(data.avatar_url));
       }
     } catch (e) {
       console.error('Failed to fetch user profile', e);
