@@ -1810,6 +1810,8 @@ export function PostCard({
                     >
                         <Share2 className="w-6 h-6 group-active:scale-125 transition-transform" strokeWidth={1.5} />
                       </button>
+                  </div>
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={() => setShowRepostConfirm(true)}
                       className={`flex items-center gap-1.5 p-2 rounded-full group transition-colors ${
@@ -1819,12 +1821,10 @@ export function PostCard({
                       <Repeat className={`w-6 h-6 group-active:rotate-180 transition-transform ${reposted ? 'stroke-[2.5px]' : ''}`} strokeWidth={1.5} />
                       <span className="text-base font-medium">{repostsCount}</span>
                     </button>
-                  </div>
-                  <div className="flex items-center pr-4">
                     <button
                       onClick={handleSavePost}
-                      className={`flex items-center gap-1.5 p-2 rounded-full group transition-colors ${
-                        isSaved ? 'text-black dark:text-white' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10'
+                      className={`flex items-center p-2 -mr-2 rounded-full group transition-colors ${
+                        isSaved ? 'text-yellow-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10'
                       }`}
                     >
                       <Bookmark className={`w-6 h-6 group-active:scale-125 transition-transform ${isSaved ? 'fill-current' : ''}`} strokeWidth={1.5} />
