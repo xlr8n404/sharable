@@ -25,26 +25,26 @@ export function PostSkeleton() {
           <Skeleton className="h-4 w-3/4 bg-zinc-100 dark:bg-zinc-900" />
         </div>
 
-        {/* Photo Grid: Facebook style - Large left, 2 small right */}
+        {/* Photo Grid: 3 containers (1:1 ratio) - 1 left (50%), 2 right (50%) */}
         <div className="mb-4">
           <div className="flex gap-1 -mx-4 px-4">
-            {/* Left large skeleton - 120px x 120px (1:1) */}
+            {/* Left container - 50% width */}
             <div className="flex-1">
-              <Skeleton className="w-full aspect-square h-[120px] bg-zinc-200 dark:bg-zinc-800 rounded-lg" />
+              <Skeleton className="w-full aspect-square bg-zinc-200 dark:bg-zinc-800 rounded-lg" />
             </div>
             
-            {/* Right side: 2 stacked skeletons - 60px x 60px each (1:1) */}
-            <div className="w-1/3 flex flex-col gap-1">
+            {/* Right side: 2 stacked skeletons - 50% width */}
+            <div className="flex-1 flex flex-col gap-1">
               <Skeleton className="w-full aspect-square bg-zinc-200 dark:bg-zinc-800 rounded-lg" />
               <Skeleton className="w-full aspect-square bg-zinc-200 dark:bg-zinc-800 rounded-lg" />
             </div>
           </div>
         </div>
 
-        {/* Interactions: 50% width on left, Save icon on right */}
+        {/* Interactions: 120px on left, 80px on right */}
         <div className="flex items-center justify-between">
-          <Skeleton className="h-4 w-1/2 bg-zinc-100 dark:bg-zinc-900" />
-          <Skeleton className="w-5 h-5 bg-zinc-100 dark:bg-zinc-900" />
+          <Skeleton className="h-4 w-[120px] bg-zinc-100 dark:bg-zinc-900" />
+          <Skeleton className="h-4 w-[80px] bg-zinc-100 dark:bg-zinc-900" />
         </div>
       </div>
     </div>
