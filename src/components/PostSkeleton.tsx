@@ -25,14 +25,14 @@ export function PostSkeleton() {
           <Skeleton className="h-4 w-3/4 bg-zinc-100 dark:bg-zinc-900" />
         </div>
 
-        {/* Photo: 100% width, 120px height */}
-        <div className="mb-4 -mx-4">
-          <Skeleton className="w-full h-[120px] bg-zinc-200 dark:bg-zinc-800 rounded-lg" />
+        {/* Photo: 1:1 aspect ratio with 16px margin */}
+        <div className="mb-4 mx-4">
+          <Skeleton className="w-full aspect-square bg-zinc-200 dark:bg-zinc-800 rounded-lg" />
         </div>
 
-        {/* Interactions: 120px on left, 80px on right */}
+        {/* Interactions: 160px on left, 80px on right */}
         <div className="flex items-center justify-between">
-          <Skeleton className="h-4 w-[120px] bg-zinc-100 dark:bg-zinc-900" />
+          <Skeleton className="h-4 w-[160px] bg-zinc-100 dark:bg-zinc-900" />
           <Skeleton className="h-4 w-[80px] bg-zinc-100 dark:bg-zinc-900" />
         </div>
       </div>
