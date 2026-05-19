@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Settings, Settings2, LogOut, Plus, Home, Bell, UserCircle, PlusSquare, Moon, Sun, BookOpen, Users, UserPlus, MessageCircle } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 
 interface MainMenuProps {
@@ -13,14 +13,18 @@ interface MainMenuProps {
   onClose: () => void;
   avatarSrc: string | null;
   feedMode?: string;
+  pinnedFeed?: 'explore' | 'following';
   onFeedModeChange?: (mode: 'trending' | 'explore' | 'following' | 'sharable' | 'communities') => void;
+  onPinnedFeedChange?: (mode: 'explore' | 'following') => void;
 }
 
-export function MainMenu({ open, onClose, avatarSrc, feedMode, onFeedModeChange }: MainMenuProps) {
+export function MainMenu({ open, onClose, avatarSrc, feedMode, pinnedFeed = 'explore', onFeedModeChange, onPinnedFeedChange }: MainMenuProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [alertsEnabled, setAlertsEnabled] = useState(true);
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+  const [showPinFeedback, setShowPinFeedback] = useState<'explore' | 'following' | null>(null);
 
   // Prevent background scroll when menu is open
   useEffect(() => {
@@ -79,28 +83,70 @@ export function MainMenu({ open, onClose, avatarSrc, feedMode, onFeedModeChange 
                 </div>
               </div>
 
-              {/* Trending / Explore pills (only on home feed) */}
+              {/* Explore / Following pills (only on home feed) */}
               {onFeedModeChange && (
                 <div className="h-16 flex items-center gap-3 px-4">
                   <button
-                    onClick={() => { onFeedModeChange('trending'); onClose(); }}
-                    className={`flex-1 h-10 rounded-full text-sm font-semibold transition-all ${
-                      feedMode === 'trending'
-                        ? 'bg-black dark:bg-white text-white dark:text-black'
-                        : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800'
-                    }`}
-                  >
-                    Trending
-                  </button>
-                  <button
                     onClick={() => { onFeedModeChange('explore'); onClose(); }}
-                    className={`flex-1 h-10 rounded-full text-sm font-semibold transition-all ${
+                    onMouseDown={() => {
+                      longPressTimer.current = setTimeout(() => {
+                        onPinnedFeedChange?.('explore');
+                        setShowPinFeedback('explore');
+                        setTimeout(() => setShowPinFeedback(null), 1500);
+                      }, 500);
+                    }}
+                    onMouseUp={() => longPressTimer.current && clearTimeout(longPressTimer.current)}
+                    onMouseLeave={() => longPressTimer.current && clearTimeout(longPressTimer.current)}
+                    onTouchStart={() => {
+                      longPressTimer.current = setTimeout(() => {
+                        onPinnedFeedChange?.('explore');
+                        setShowPinFeedback('explore');
+                        setTimeout(() => setShowPinFeedback(null), 1500);
+                      }, 500);
+                    }}
+                    onTouchEnd={() => longPressTimer.current && clearTimeout(longPressTimer.current)}
+                    onTouchCancel={() => longPressTimer.current && clearTimeout(longPressTimer.current)}
+                    className={`flex-1 h-10 rounded-full text-sm font-semibold transition-all relative ${
                       feedMode === 'explore'
                         ? 'bg-black dark:bg-white text-white dark:text-black'
                         : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800'
                     }`}
                   >
-                    Explore
+                    <span>Explore</span>
+                    {pinnedFeed === 'explore' && (
+                      <span className="absolute top-1 right-2 w-1.5 h-1.5 bg-current rounded-full" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => { onFeedModeChange('following'); onClose(); }}
+                    onMouseDown={() => {
+                      longPressTimer.current = setTimeout(() => {
+                        onPinnedFeedChange?.('following');
+                        setShowPinFeedback('following');
+                        setTimeout(() => setShowPinFeedback(null), 1500);
+                      }, 500);
+                    }}
+                    onMouseUp={() => longPressTimer.current && clearTimeout(longPressTimer.current)}
+                    onMouseLeave={() => longPressTimer.current && clearTimeout(longPressTimer.current)}
+                    onTouchStart={() => {
+                      longPressTimer.current = setTimeout(() => {
+                        onPinnedFeedChange?.('following');
+                        setShowPinFeedback('following');
+                        setTimeout(() => setShowPinFeedback(null), 1500);
+                      }, 500);
+                    }}
+                    onTouchEnd={() => longPressTimer.current && clearTimeout(longPressTimer.current)}
+                    onTouchCancel={() => longPressTimer.current && clearTimeout(longPressTimer.current)}
+                    className={`flex-1 h-10 rounded-full text-sm font-semibold transition-all relative ${
+                      feedMode === 'following'
+                        ? 'bg-black dark:bg-white text-white dark:text-black'
+                        : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800'
+                    }`}
+                  >
+                    <span>Following</span>
+                    {pinnedFeed === 'following' && (
+                      <span className="absolute top-1 right-2 w-1.5 h-1.5 bg-current rounded-full" />
+                    )}
                   </button>
                 </div>
               )}

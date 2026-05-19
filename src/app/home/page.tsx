@@ -56,7 +56,8 @@ export default function HomePage() {
   const [hasMore, setHasMore] = useState(true);
   const [offset, setOffset] = useState(0);
   const [mainMenuOpen, setMainMenuOpen] = useState(false);
-  const [feedMode, setFeedMode] = useState<'trending' | 'explore' | 'following' | 'sharable' | 'communities'>('trending');
+  const [feedMode, setFeedMode] = useState<'trending' | 'explore' | 'following' | 'sharable' | 'communities'>('explore');
+  const [pinnedFeed, setPinnedFeed] = useState<'explore' | 'following'>('explore');
   const [profile, setProfile] = useState<Profile | null>(null);
   const [currentUser, setCurrentUser] = useState<{ id: string } | null>(null);
   const [currentUserProfile, setCurrentUserProfile] = useState<{ full_name: string; avatar_url: string; username?: string } | null>(null);
@@ -403,7 +404,9 @@ export default function HomePage() {
         onClose={() => setMainMenuOpen(false)}
         avatarSrc={avatarSrc}
         feedMode={feedMode}
+        pinnedFeed={pinnedFeed}
         onFeedModeChange={(mode) => setFeedMode(mode)}
+        onPinnedFeedChange={(mode) => setPinnedFeed(mode)}
       />
 
         <header className="fixed top-0 left-0 right-0 h-16 z-50 px-4 bg-white dark:bg-black rounded-b-[16px]">
