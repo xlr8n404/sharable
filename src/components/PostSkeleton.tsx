@@ -25,6 +25,22 @@ export function PostSkeleton() {
           <Skeleton className="h-4 w-3/4 bg-zinc-100 dark:bg-zinc-900" />
         </div>
 
+        {/* Photo Grid: Facebook style - Large left, 2 small right */}
+        <div className="mb-4">
+          <div className="flex gap-1 -mx-4 px-4">
+            {/* Left large skeleton - 120px height */}
+            <div className="flex-1">
+              <Skeleton className="w-full h-[120px] bg-zinc-200 dark:bg-zinc-800 rounded-lg" />
+            </div>
+            
+            {/* Right side: 2 stacked skeletons */}
+            <div className="w-1/3 flex flex-col gap-1">
+              <Skeleton className="w-full h-[59.5px] bg-zinc-200 dark:bg-zinc-800 rounded-lg" />
+              <Skeleton className="w-full h-[59.5px] bg-zinc-200 dark:bg-zinc-800 rounded-lg" />
+            </div>
+          </div>
+        </div>
+
         {/* Interactions: 50% width on left, Save icon on right */}
         <div className="flex items-center justify-between">
           <Skeleton className="h-4 w-1/2 bg-zinc-100 dark:bg-zinc-900" />
