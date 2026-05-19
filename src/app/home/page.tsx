@@ -206,7 +206,59 @@ export default function HomePage() {
 
           // Score & sort: likes×1 + comments×2 + reposts×3, decayed by age^1.8
           fetchedPosts = sortByTrending(mapped).slice(0, PAGE_SIZE);
+        } else if (mode === 'explore') {
+          // Explore: Fetch a wider pool and score by trending
+          const fetchSize = PAGE_SIZE * TRENDING_FETCH_MULTIPLIER;
+          const { data, error } = await supabase
+            .from('posts')
+            .select('*, user:profiles(id, full_name, avatar_url, username, identity_tag)')
+            .order('created_at', { ascending: false })
+            .range(currentOffset, currentOffset + fetchSize - 1);
+
+          if (error) throw error;
+
+          let mapped = (data || [])
+            .filter((post: any) => post.user)
+            .map((post: any) => {
+              const urls = post.media_urls || (post.media_url ? [post.media_url] : []);
+              const types = post.media_types || (post.media_type ? [post.media_type] : urls.map((u: string) => {
+                if (/\.(mp4|webm|mov|avi)$/i.test(u) || u.includes('video')) return 'video';
+                if (/\.(mp3|wav|ogg|aac|flac|m4a)$/i.test(u) || u.includes('audio')) return 'audio';
+                return 'image';
+              }));
+              return { ...post, media_urls: urls, media_types: types };
+            });
+
+          // Fetch community posts for explore
+          const { data: communityData } = await supabase
+            .from('community_posts')
+            .select(`
+              *,
+              user:profiles(id, full_name, username, avatar_url, identity_tag),
+              community:communities(id, name),
+              likes:community_post_likes(count),
+              comments:community_post_comments(count)
+            `)
+            .order('created_at', { ascending: false })
+            .range(currentOffset, currentOffset + (fetchSize - 1));
+
+          if (communityData) {
+            const formattedCommunityPosts = communityData.filter((post: any) => post.user).map((post: any) => {
+              const urls = post.media_urls || (post.media_url ? [post.media_url] : []);
+              const types = post.media_types || (post.media_type ? [post.media_type] : urls.map((u: string) => {
+                if (/\.(mp4|webm|mov|avi)$/i.test(u) || u.includes('video')) return 'video';
+                if (/\.(mp3|wav|ogg|aac|flac|m4a)$/i.test(u) || u.includes('audio')) return 'audio';
+                return 'image';
+              }));
+              return { ...post, media_urls: urls, media_types: types, is_community_post: true };
+            });
+            mapped = [...mapped, ...formattedCommunityPosts];
+          }
+
+          // Score & sort by trending
+          fetchedPosts = sortByTrending(mapped).slice(0, PAGE_SIZE);
         } else {
+          // Following / Sharable modes
           let query = supabase
             .from('posts')
             .select('*, user:profiles(id, full_name, avatar_url, username, identity_tag)');
@@ -228,7 +280,7 @@ export default function HomePage() {
                 .order('created_at', { ascending: false });
             }
           } else {
-            // Explore / sharable - show newest posts
+            // Sharable - show newest posts
             query = query.order('created_at', { ascending: false });
           }
 
@@ -251,8 +303,8 @@ export default function HomePage() {
               return { ...post, media_urls: urls, media_types: types };
             });
 
-          // Also fetch community posts for explore and following modes
-          if (mode === 'explore' || mode === 'following') {
+          // Also fetch community posts for following mode
+          if (mode === 'following') {
             let communityQuery = supabase
               .from('community_posts')
               .select(`
@@ -263,7 +315,7 @@ export default function HomePage() {
                 comments:community_post_comments(count)
               `);
 
-            if (mode === 'following' && user) {
+            if (user) {
               // For following mode, only show community posts from people you follow
               const { data: followsData } = await supabase
                 .from('follows')
@@ -319,9 +371,9 @@ export default function HomePage() {
         });
       }
 
-      // For trending mode the raw fetch pool is larger than PAGE_SIZE.
+      // For trending and explore modes the raw fetch pool is larger than PAGE_SIZE.
       // hasMore should reflect whether the DB had more rows in that pool.
-      const advanceBy = mode === 'trending'
+      const advanceBy = (mode === 'trending' || mode === 'explore')
         ? PAGE_SIZE * TRENDING_FETCH_MULTIPLIER
         : fetchedPosts.length;
       setHasMore(fetchedPosts.length === PAGE_SIZE);
