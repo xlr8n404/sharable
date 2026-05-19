@@ -25,20 +25,9 @@ export function PostSkeleton() {
           <Skeleton className="h-4 w-3/4 bg-zinc-100 dark:bg-zinc-900" />
         </div>
 
-        {/* Photo Grid: 3 containers (1:1 ratio) - 1 left (50%), 2 right (50%) */}
-        <div className="mb-4">
-          <div className="flex gap-1 -mx-4 px-4">
-            {/* Left container - 50% width */}
-            <div className="flex-1">
-              <Skeleton className="w-full aspect-square bg-zinc-200 dark:bg-zinc-800 rounded-lg" />
-            </div>
-            
-            {/* Right side: 2 stacked skeletons - 50% width */}
-            <div className="flex-1 flex flex-col gap-1">
-              <Skeleton className="w-full aspect-square bg-zinc-200 dark:bg-zinc-800 rounded-lg" />
-              <Skeleton className="w-full aspect-square bg-zinc-200 dark:bg-zinc-800 rounded-lg" />
-            </div>
-          </div>
+        {/* Photo: 100% width, 120px height */}
+        <div className="mb-4 -mx-4">
+          <Skeleton className="w-full h-[120px] bg-zinc-200 dark:bg-zinc-800 rounded-lg" />
         </div>
 
         {/* Interactions: 120px on left, 80px on right */}
