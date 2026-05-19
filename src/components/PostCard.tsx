@@ -1756,32 +1756,119 @@ export function PostCard({
 
             {hasMedia && (
               <div className="rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 mx-4 my-2">
-                <div className={`grid gap-1 ${
-                  finalMediaUrls.length === 1 ? 'grid-cols-1' :
-                  finalMediaUrls.length === 2 ? 'grid-cols-2' :
-                  finalMediaUrls.length === 3 ? 'grid-cols-3' :
-                  finalMediaUrls.length === 4 ? 'grid-cols-2' :
-                  'grid-cols-3'
-                }`}>
-                  {finalMediaUrls.map((url, index) => {
-                    const type = finalMediaTypes[index];
-                    return (
-                      <div key={index} className={`relative bg-zinc-100 dark:bg-zinc-900 ${
-                        finalMediaUrls.length === 1 ? 'col-span-1' :
-                        finalMediaUrls.length === 4 && index < 2 ? 'col-span-1' :
-                        ''
-                      }`}>
+                {/* Facebook-style grid layout */}
+                {finalMediaUrls.length === 1 && (
+                  <div className="relative w-full h-auto">
+                    <MediaGridCell
+                      url={finalMediaUrls[0]}
+                      type={finalMediaTypes[0]}
+                      index={0}
+                      isVisible={isVisible}
+                      isSingle={true}
+                    />
+                  </div>
+                )}
+                {finalMediaUrls.length === 2 && (
+                  <div className="grid grid-cols-2 gap-1">
+                    {finalMediaUrls.map((url, index) => (
+                      <div key={index} className="relative w-full aspect-square">
                         <MediaGridCell
                           url={url}
-                          type={type}
+                          type={finalMediaTypes[index]}
                           index={index}
                           isVisible={isVisible}
-                          isSingle={finalMediaUrls.length === 1}
+                          isSingle={false}
                         />
                       </div>
-                    );
-                  })}
-                </div>
+                    ))}
+                  </div>
+                )}
+                {finalMediaUrls.length === 3 && (
+                  <div className="grid gap-1">
+                    <div className="relative w-full aspect-video">
+                      <MediaGridCell
+                        url={finalMediaUrls[0]}
+                        type={finalMediaTypes[0]}
+                        index={0}
+                        isVisible={isVisible}
+                        isSingle={false}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-1">
+                      {finalMediaUrls.slice(1, 3).map((url, index) => (
+                        <div key={index + 1} className="relative w-full aspect-square">
+                          <MediaGridCell
+                            url={url}
+                            type={finalMediaTypes[index + 1]}
+                            index={index + 1}
+                            isVisible={isVisible}
+                            isSingle={false}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {finalMediaUrls.length === 4 && (
+                  <div className="grid grid-cols-2 gap-1">
+                    {finalMediaUrls.map((url, index) => (
+                      <div key={index} className="relative w-full aspect-square">
+                        <MediaGridCell
+                          url={url}
+                          type={finalMediaTypes[index]}
+                          index={index}
+                          isVisible={isVisible}
+                          isSingle={false}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {finalMediaUrls.length >= 5 && (
+                  <div className="grid gap-1">
+                    <div className="grid grid-cols-2 gap-1">
+                      {finalMediaUrls.slice(0, 2).map((url, index) => (
+                        <div key={index} className="relative w-full aspect-square">
+                          <MediaGridCell
+                            url={url}
+                            type={finalMediaTypes[index]}
+                            index={index}
+                            isVisible={isVisible}
+                            isSingle={false}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-3 gap-1">
+                      {finalMediaUrls.slice(2, 5).map((url, index) => (
+                        <div key={index + 2} className="relative w-full aspect-square">
+                          <MediaGridCell
+                            url={url}
+                            type={finalMediaTypes[index + 2]}
+                            index={index + 2}
+                            isVisible={isVisible}
+                            isSingle={false}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    {finalMediaUrls.length > 5 && (
+                      <div className="grid grid-cols-3 gap-1">
+                        {finalMediaUrls.slice(5, 8).map((url, index) => (
+                          <div key={index + 5} className="relative w-full aspect-square">
+                            <MediaGridCell
+                              url={url}
+                              type={finalMediaTypes[index + 5]}
+                              index={index + 5}
+                              isVisible={isVisible}
+                              isSingle={false}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 

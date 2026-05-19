@@ -25,9 +25,12 @@ export function PostSkeleton() {
           <Skeleton className="h-4 w-3/4 bg-zinc-100 dark:bg-zinc-900" />
         </div>
 
-        {/* Photo: 1:1 aspect ratio with 16px margin */}
-        <div className="mb-4 mx-4">
-          <Skeleton className="w-full aspect-square bg-zinc-200 dark:bg-zinc-800 rounded-lg" />
+        {/* Photo: Facebook-style grid - showing 2 media example */}
+        <div className="mb-4 -mx-4 rounded-2xl overflow-hidden">
+          <div className="grid grid-cols-2 gap-1">
+            <Skeleton className="w-full aspect-square bg-zinc-200 dark:bg-zinc-800" />
+            <Skeleton className="w-full aspect-square bg-zinc-200 dark:bg-zinc-800" />
+          </div>
         </div>
 
         {/* Interactions: 160px on left, 80px on right */}
