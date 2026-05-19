@@ -148,6 +148,7 @@ function MediaGridCell({
   overlay,
   isVisible,
   onOpen,
+  isSingle,
 }: {
   url: string;
   type: string;
@@ -155,19 +156,24 @@ function MediaGridCell({
   overlay?: number;
   isVisible: boolean;
   onOpen?: (url: string, type: string) => void;
+  isSingle?: boolean;
 }) {
   return (
     <div
-      className="relative overflow-hidden bg-zinc-100 dark:bg-zinc-900 cursor-pointer group w-full h-full"
+      className={`relative overflow-hidden bg-zinc-100 dark:bg-zinc-900 cursor-pointer group w-full ${isSingle ? 'h-auto' : 'h-full'}`}
       onClick={() => onOpen?.(url, type)}
     >
       {type === 'video' ? (
-        <LazyVideo src={isVisible ? url : ''} className="w-full h-full object-cover" />
+        <LazyVideo 
+          src={isVisible ? url : ''} 
+          className={`w-full ${isSingle ? 'h-auto max-h-[70vh]' : 'h-full object-cover'}`} 
+          controls={isSingle}
+        />
       ) : (
         <img
           src={url}
           alt={`Post media ${index + 1}`}
-          className="w-full h-full object-cover"
+          className={`w-full ${isSingle ? 'h-auto max-h-[70vh] object-contain' : 'h-full object-cover'}`}
           loading="lazy"
           onError={(e) => {
             const img = e.target as HTMLImageElement;
@@ -1770,6 +1776,7 @@ export function PostCard({
                           type={type}
                           index={index}
                           isVisible={isVisible}
+                          isSingle={finalMediaUrls.length === 1}
                         />
                       </div>
                     );

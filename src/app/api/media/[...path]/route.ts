@@ -44,6 +44,60 @@ export async function GET(
     return NextResponse.json({ error: 'Invalid path' }, { status: 400 });
   }
 
+  // Check for Range header
+  const range = request.headers.get('range');
+
+  if (range) {
+    // For range requests, we need to get the file size and then stream the range
+    const { data: fileInfo, error: infoError } = await supabaseAdmin.storage
+      .from(bucket)
+      .list(filePath.substring(0, filePath.lastIndexOf('/')), {
+        search: filePath.substring(filePath.lastIndexOf('/') + 1),
+      });
+
+    const file = fileInfo?.find(f => f.name === filePath.substring(filePath.lastIndexOf('/') + 1));
+    
+    if (infoError || !file) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+
+    const fileSize = file.metadata.size;
+    const parts = range.replace(/bytes=/, "").split("-");
+    const start = parseInt(parts[0], 10);
+    const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+    const chunksize = (end - start) + 1;
+
+    const { data, error } = await supabaseAdmin.storage
+      .from(bucket)
+      .download(filePath, {
+        transform: {
+          // Supabase download options don't support range directly in the download method easily with the standard client
+          // but we can pass it through the headers if needed or just download the whole thing if it's small.
+          // However, for better video support, we should use the range.
+        },
+        // Using the standard download for now but serving it as a partial response if requested
+      });
+
+    if (error || !data) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+
+    const arrayBuffer = await data.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const chunk = buffer.slice(start, end + 1);
+
+    return new NextResponse(chunk, {
+      status: 206,
+      headers: {
+        'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+        'Accept-Ranges': 'bytes',
+        'Content-Length': chunksize.toString(),
+        'Content-Type': data.type || 'application/octet-stream',
+        'Cache-Control': 'private, max-age=604800',
+      },
+    });
+  }
+
   const { data, error } = await supabaseAdmin.storage
     .from(bucket)
     .download(filePath);
@@ -58,7 +112,8 @@ export async function GET(
     status: 200,
     headers: {
       'Content-Type': contentType,
-      // Cache media in the browser for 7 days — avoids re-downloading the same image/video on every scroll
+      'Accept-Ranges': 'bytes',
+      // Cache media in the browser for 7 days
       'Cache-Control': 'private, max-age=604800, stale-while-revalidate=86400',
       'X-Content-Type-Options': 'nosniff',
       'Referrer-Policy': 'no-referrer',
