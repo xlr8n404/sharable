@@ -215,10 +215,11 @@ export default function AlertsPage() {
           <div>
             {[...Array(10)].map((_, i) => (
               <div key={i} className="flex items-center gap-3 px-4 py-3 animate-pulse">
-                <Skeleton className="w-12 h-12 rounded-full bg-zinc-200 dark:bg-zinc-800 shrink-0" />
+                <Skeleton className="w-14 h-14 rounded-full bg-zinc-200 dark:bg-zinc-800 shrink-0" />
                 <div className="flex-1 space-y-2">
-                  <Skeleton className="h-3.5 w-2/3 bg-zinc-100 dark:bg-zinc-900" />
-                  <Skeleton className="h-2.5 w-1/4 bg-zinc-50 dark:bg-zinc-950" />
+                  <Skeleton className="h-3.5 w-1/2 bg-zinc-100 dark:bg-zinc-900" />
+                  <Skeleton className="h-3.5 w-full bg-zinc-100 dark:bg-zinc-900" />
+                  <Skeleton className="h-2.5 w-3/10 bg-zinc-50 dark:bg-zinc-950" />
                 </div>
               </div>
             ))}
@@ -233,12 +234,12 @@ export default function AlertsPage() {
                   !alert.read ? 'bg-black/[0.025] dark:bg-white/[0.025]' : ''
                 }`}
               >
-                {/* Avatar — 48px, clickable → profile */}
+                {/* Avatar — 56px, clickable → profile */}
                 <div
                   className="relative shrink-0 cursor-pointer"
                   onClick={(e) => handleProfileClick(e, alert.from_user.username)}
                 >
-                  <div className="w-12 h-12 rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-900">
+                  <div className="w-14 h-14 rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-900">
                     <img
                       src={getAvatarSrc(alert)}
                       alt={alert.from_user.full_name}
