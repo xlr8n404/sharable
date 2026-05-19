@@ -29,16 +29,17 @@ export function CreateBottomSheet({ isOpen, onClose }: CreateBottomSheetProps) {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-neutral-900 rounded-t-2xl"
+            className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-neutral-900 rounded-t-[16px]"
           >
             <div className="max-w-xl mx-auto w-full px-6 py-6">
               {/* Grabber */}
-              <div className="flex justify-center" style={{ paddingTop: '16px', paddingBottom: '16px' }}>
-                <div className="bg-neutral-200 dark:bg-neutral-700 rounded-full" style={{ width: '48px', height: '8px' }} />
+              <div className="flex justify-center pt-2 pb-6">
+                <div className="bg-neutral-300 dark:bg-neutral-600 rounded-full" style={{ width: '48px', height: '8px' }} />
               </div>
 
               {/* Title */}
-              <h2 className="text-xl font-bold mb-6 text-foreground">Create</h2>
+              <h2 className="text-xl font-bold mb-2 text-foreground">Create</h2>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-6">Share your thoughts and stories with the community</p>
 
               {/* Options */}
               <div className="space-y-3 mb-6">
