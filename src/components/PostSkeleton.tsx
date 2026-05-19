@@ -25,11 +25,17 @@ export function PostSkeleton() {
           <Skeleton className="h-4 w-3/4 bg-zinc-100 dark:bg-zinc-900" />
         </div>
 
-        {/* Photo: Facebook-style grid - showing 2 media example */}
+        {/* Photo: Facebook-style grid - hero on left, 2 stacked on right */}
         <div className="mb-4 -mx-4 rounded-2xl overflow-hidden">
-          <div className="grid grid-cols-2 gap-1">
-            <Skeleton className="w-full aspect-square bg-zinc-200 dark:bg-zinc-800" />
-            <Skeleton className="w-full aspect-square bg-zinc-200 dark:bg-zinc-800" />
+          <div className="grid grid-cols-2 gap-1" style={{ aspectRatio: '2/1' }}>
+            {/* Large hero image on left */}
+            <Skeleton className="w-full h-full bg-zinc-200 dark:bg-zinc-800" />
+            
+            {/* Two stacked images on right */}
+            <div className="flex flex-col gap-1">
+              <Skeleton className="w-full flex-1 bg-zinc-200 dark:bg-zinc-800" />
+              <Skeleton className="w-full flex-1 bg-zinc-200 dark:bg-zinc-800" />
+            </div>
           </div>
         </div>
 
