@@ -13,7 +13,7 @@ import { PostSkeleton } from '@/components/PostSkeleton';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { useScrollDirection } from '@/hooks/use-scroll-direction';
-import { sortByTrending } from '@/lib/trending';
+
 
 type UserPostStatus = {
   liked: Set<string>;
@@ -56,7 +56,7 @@ export default function HomePage() {
   const [hasMore, setHasMore] = useState(true);
   const [offset, setOffset] = useState(0);
   const [mainMenuOpen, setMainMenuOpen] = useState(false);
-  const [feedMode, setFeedMode] = useState<'trending' | 'explore' | 'following' | 'sharable' | 'communities'>('trending');
+  const [feedMode, setFeedMode] = useState<'trending' | 'explore' | 'following' | 'sharable' | 'communities'>('following');
   const [profile, setProfile] = useState<Profile | null>(null);
   const [currentUser, setCurrentUser] = useState<{ id: string } | null>(null);
   const [currentUserProfile, setCurrentUserProfile] = useState<{ full_name: string; avatar_url: string; username?: string } | null>(null);
@@ -176,22 +176,32 @@ export default function HomePage() {
               });
             }
           }
-        } else if (mode === 'trending') {
-          // Fetch a wider pool (3× page size) so the scoring algorithm has
-          // enough candidates to compare. We fetch the most recent posts in
-          // the current window, score them client-side, then take PAGE_SIZE.
-          const fetchSize = PAGE_SIZE * TRENDING_FETCH_MULTIPLIER;
-          const { data, error } = await supabase
+        } else if (mode === 'following') {
+          // Fetch posts from users being followed
+          let query = supabase
             .from('posts')
-            .select('*, user:profiles(id, full_name, avatar_url, username, identity_tag)')
-            // Pull recent posts; the score function handles time-decay,
-            // so fetching newest-first gives us the right candidate pool.
-            .order('created_at', { ascending: false })
-            .range(currentOffset, currentOffset + fetchSize - 1);
+            .select('*, user:profiles(id, full_name, avatar_url, username, identity_tag)');
 
+          if (!user) {
+            query = query.order('created_at', { ascending: false });
+          } else {
+            const { data: followsData, error: followsError } = await supabase
+              .from('follows')
+              .select('following_id')
+              .eq('follower_id', user.id);
+
+            if (followsError) throw followsError;
+
+            const followingIds = (followsData || []).map(f => f.following_id);
+            query = query
+              .in('user_id', [...followingIds, user.id])
+              .order('created_at', { ascending: false });
+          }
+
+          query = query.range(currentOffset, currentOffset + PAGE_SIZE - 1);
+          const { data, error } = await query;
           if (error) throw error;
-
-          const mapped = (data || [])
+          fetchedPosts = (data || [])
             .filter((post: any) => post.user)
             .map((post: any) => {
               const urls = post.media_urls || (post.media_url ? [post.media_url] : []);
@@ -203,33 +213,52 @@ export default function HomePage() {
               return { ...post, media_urls: urls, media_types: types };
             });
 
-          // Score & sort: likes×1 + comments×2 + reposts×3, decayed by age^1.8
-          fetchedPosts = sortByTrending(mapped).slice(0, PAGE_SIZE);
+          // Also fetch community posts from people you follow
+          let communityQuery = supabase
+            .from('community_posts')
+            .select(`
+              *,
+              user:profiles(id, full_name, username, avatar_url, identity_tag),
+              community:communities(id, name),
+              likes:community_post_likes(count),
+              comments:community_post_comments(count)
+            `);
+
+          if (user) {
+            // Only show community posts from people you follow
+            const { data: followsData } = await supabase
+              .from('follows')
+              .select('following_id')
+              .eq('follower_id', user.id);
+            const followingIds = (followsData || []).map(f => f.following_id);
+            communityQuery = communityQuery.in('user_id', [...followingIds, user.id]);
+          }
+
+          const { data: communityData } = await communityQuery
+            .order('created_at', { ascending: false })
+            .range(currentOffset, currentOffset + PAGE_SIZE - 1);
+
+          if (communityData) {
+            const formattedCommunityPosts = communityData.filter((post: any) => post.user).map((post: any) => {
+              const urls = post.media_urls || (post.media_url ? [post.media_url] : []);
+              const types = post.media_types || (post.media_type ? [post.media_type] : urls.map((u: string) => {
+                if (/\.(mp4|webm|mov|avi)$/i.test(u) || u.includes('video')) return 'video';
+                if (/\.(mp3|wav|ogg|aac|flac|m4a)$/i.test(u) || u.includes('audio')) return 'audio';
+                return 'image';
+              }));
+              return { ...post, media_urls: urls, media_types: types, is_community_post: true };
+            });
+            fetchedPosts = [...fetchedPosts, ...formattedCommunityPosts]
+              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+              .slice(0, PAGE_SIZE);
+          }
         } else {
+          // For other modes (sharable, etc.)
           let query = supabase
             .from('posts')
             .select('*, user:profiles(id, full_name, avatar_url, username, identity_tag)');
 
-          if (mode === 'following') {
-            if (!user) {
-              query = query.order('created_at', { ascending: false });
-            } else {
-              const { data: followsData, error: followsError } = await supabase
-                .from('follows')
-                .select('following_id')
-                .eq('follower_id', user.id);
-
-              if (followsError) throw followsError;
-
-              const followingIds = (followsData || []).map(f => f.following_id);
-              query = query
-                .in('user_id', [...followingIds, user.id])
-                .order('created_at', { ascending: false });
-            }
-          } else {
-            // Explore / sharable - show newest posts
-            query = query.order('created_at', { ascending: false });
-          }
+          query = query.order('created_at', { ascending: false });
 
           query = query.range(currentOffset, currentOffset + PAGE_SIZE - 1);
           const { data, error } = await query;
@@ -249,48 +278,6 @@ export default function HomePage() {
               }));
               return { ...post, media_urls: urls, media_types: types };
             });
-
-          // Also fetch community posts for explore and following modes
-          if (mode === 'explore' || mode === 'following') {
-            let communityQuery = supabase
-              .from('community_posts')
-              .select(`
-                *,
-                user:profiles(id, full_name, username, avatar_url, identity_tag),
-                community:communities(id, name),
-                likes:community_post_likes(count),
-                comments:community_post_comments(count)
-              `);
-
-            if (mode === 'following' && user) {
-              // For following mode, only show community posts from people you follow
-              const { data: followsData } = await supabase
-                .from('follows')
-                .select('following_id')
-                .eq('follower_id', user.id);
-              const followingIds = (followsData || []).map(f => f.following_id);
-              communityQuery = communityQuery.in('user_id', [...followingIds, user.id]);
-            }
-
-            const { data: communityData } = await communityQuery
-              .order('created_at', { ascending: false })
-              .range(currentOffset, currentOffset + PAGE_SIZE - 1);
-
-            if (communityData) {
-              const formattedCommunityPosts = communityData.filter((post: any) => post.user).map((post: any) => {
-                const urls = post.media_urls || (post.media_url ? [post.media_url] : []);
-                const types = post.media_types || (post.media_type ? [post.media_type] : urls.map((u: string) => {
-                  if (/\.(mp4|webm|mov|avi)$/i.test(u) || u.includes('video')) return 'video';
-                  if (/\.(mp3|wav|ogg|aac|flac|m4a)$/i.test(u) || u.includes('audio')) return 'audio';
-                  return 'image';
-                }));
-                return { ...post, media_urls: urls, media_types: types, is_community_post: true };
-              });
-              fetchedPosts = [...fetchedPosts, ...formattedCommunityPosts]
-                .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-                .slice(0, PAGE_SIZE);
-            }
-          }
         }
 
       if (isLoadMore) {
@@ -356,10 +343,9 @@ export default function HomePage() {
             // Remove deleted post from state
             setPosts(prev => prev.filter(p => p.id !== payload.old.id));
           } else if (payload.eventType === 'UPDATE') {
-            // Update modified post in state, then re-sort if in trending mode
+            // Update modified post in state
             setPosts(prev => {
-              const updated = prev.map(p => p.id === payload.new.id ? { ...p, ...payload.new } : p);
-              return feedMode === 'trending' ? sortByTrending([...updated]) : updated;
+              return prev.map(p => p.id === payload.new.id ? { ...p, ...payload.new } : p);
             });
           }
         })

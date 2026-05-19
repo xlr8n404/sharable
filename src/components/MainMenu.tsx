@@ -79,28 +79,18 @@ export function MainMenu({ open, onClose, avatarSrc, feedMode, onFeedModeChange 
                 </div>
               </div>
 
-              {/* Trending / Explore pills (only on home feed) */}
+              {/* Following feed (only on home feed) */}
               {onFeedModeChange && (
                 <div className="h-16 flex items-center gap-3 px-4">
                   <button
-                    onClick={() => { onFeedModeChange('trending'); onClose(); }}
+                    onClick={() => { onFeedModeChange('following'); onClose(); }}
                     className={`flex-1 h-10 rounded-full text-sm font-semibold transition-all ${
-                      feedMode === 'trending'
+                      feedMode === 'following'
                         ? 'bg-black dark:bg-white text-white dark:text-black'
                         : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800'
                     }`}
                   >
-                    Trending
-                  </button>
-                  <button
-                    onClick={() => { onFeedModeChange('explore'); onClose(); }}
-                    className={`flex-1 h-10 rounded-full text-sm font-semibold transition-all ${
-                      feedMode === 'explore'
-                        ? 'bg-black dark:bg-white text-white dark:text-black'
-                        : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800'
-                    }`}
-                  >
-                    Explore
+                    Following
                   </button>
                 </div>
               )}
