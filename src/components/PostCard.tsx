@@ -1171,146 +1171,94 @@ export function PostCard({
     }
   };
 
-  function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, formatTime, deletingCommentId, setDeletingCommentId, handleDeleteComment, setReplyingTo, setNewComment, commentInputRef, handleVoteComment, votedComments, showCommentMenu, setShowCommentMenu, replies, expandedReplies, toggleReplies }: any) {
-    const [isExpanded, setIsExpanded] = useState(false);
-    const content = comment.content || '';
-    const shouldTruncate = content.length > 115;
-    const displayedContent = isExpanded || !shouldTruncate ? content : content.slice(0, 115);
-    const hasVoted = votedComments?.has(comment.id);
-
-    return (
-      <div className={`flex gap-4 ${isReply ? 'ml-8' : ''}`}>
-        <div className="w-10 h-10 rounded-full overflow-hidden border border-black/10 dark:border-white/10 bg-zinc-200 dark:bg-zinc-800 flex-shrink-0">
-          <img 
-            src={getAvatarUrl(comment.user.avatar_url, comment.user.full_name)} 
-            alt={comment.user.full_name || 'User'}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(comment.user.full_name || 'User')}`;
-            }}
-          />
-        </div>
-        <div className="flex-1 min-w-0">
-          {/* Name row — no three dot menu here */}
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-base">{comment.user.full_name || comment.user.username || 'User'}</span>
-            <span className="text-zinc-500 text-base">{formatTime(comment.created_at)}</span>
-          </div>
-
-          {/* Content */}
-          <div 
-            onClick={() => shouldTruncate && setIsExpanded(!isExpanded)}
-            className={`${shouldTruncate ? 'cursor-pointer' : ''} group/comment-content`}
-          >
-            <p className="text-base text-zinc-700 dark:text-zinc-300 mt-0.5 whitespace-pre-wrap">
-              <MentionText text={displayedContent} />
-              {shouldTruncate && !isExpanded && <span>...</span>}
-              {shouldTruncate && (
-                <span className="ml-1 font-bold text-black dark:text-white group-hover/comment-content:underline">
-                  {isExpanded ? ' See less' : ' See more'}
-                </span>
-              )}
-            </p>
-          </div>
-
-          {/* Actions row — Left: Reply | Replies | TrendingUp | Right: Three dot menu */}
-          <div className="flex items-center gap-3 mt-1">
-            {/* Left side actions */}
-            <div className="flex items-center gap-3">
-              {/* Reply button */}
-              <button
-                onClick={() => {
-                  const username = (comment.user as any)?.username;
-                  setReplyingTo({
-                    id: isReply ? (parentId || comment.id) : comment.id,
-                    name: username ? `@${username}` : (comment.user?.full_name || 'User')
-                  });
-                  setNewComment(username ? `@${username} ` : '');
-                  // Disabled: Do not auto-focus to prevent scroll-up behavior
-                  // setTimeout(() => {
-                  //   if (commentInputRef.current) {
-                  //     commentInputRef.current.focus();
-                  //     const len = commentInputRef.current.value.length;
-                  //     commentInputRef.current.setSelectionRange(len, len);
-                  //   }
-                  // }, 10);
-                }}
-                className="flex items-center gap-1 text-base text-zinc-500 hover:text-black dark:hover:text-white transition-colors"
-              >
-                <Reply className="w-6 h-6" strokeWidth={1.5} />
-                <span>Reply</span>
-              </button>
-
-              {/* Replies toggle — only for main comments with replies */}
-              {!isReply && replies && replies.length > 0 && (
-                <button
-                  onClick={() => toggleReplies(comment.id)}
-                  className="flex items-center gap-1 text-base text-zinc-500 hover:text-black dark:hover:text-white transition-colors"
-                >
-                  {expandedReplies?.has(comment.id) ? (
-                    <ChevronUp className="w-6 h-6" strokeWidth={1.5} />
-                  ) : (
-                    <ChevronDown className="w-6 h-6" strokeWidth={1.5} />
-                  )}
-                  <span>{replies.length} {replies.length === 1 ? 'Reply' : 'Replies'}</span>
-                </button>
-              )}
-
-              {/* TrendingUp — only for main comments */}
-              {!isReply && (
-                <button
-                  onClick={() => handleVoteComment(comment.id)}
-                  className={`flex items-center gap-1 text-base transition-colors ${
-                    hasVoted
-                      ? 'text-green-500'
-                      : 'text-zinc-500 hover:text-green-500'
-                  }`}
-                >
-                  <TrendingUp className={`w-6 h-6 ${hasVoted ? 'fill-green-500/20' : ''}`} strokeWidth={1.5} />
-                  {(comment.votes_count || 0) > 0 && <span>{comment.votes_count}</span>}
-                </button>
-              )}
-            </div>
-
-            {/* Right side: Three dot menu */}
-            <div className="ml-auto flex items-center gap-1">
-            {/* Three dot menu */}
-            <div className="relative">
-              {deletingCommentId === comment.id ? (
-                <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2 duration-200">
-                  <button
-                    onClick={() => setDeletingCommentId(null)}
-                    className="text-base font-medium text-zinc-500 hover:text-black dark:hover:text-white"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => {
-                      handleDeleteComment(comment.id, isReply, parentId);
-                      setDeletingCommentId(null);
-                    }}
-                    className="text-base font-medium text-red-500 hover:text-red-600"
-                  >
-                    Confirm
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <button
-                    onClick={() => setSelectedCommentMenu(comment.id)}
-                    className="p-1.5 text-zinc-400 hover:text-black dark:hover:text-white rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-                  >
-                    <MoreHorizontal className="w-6 h-6" strokeWidth={1.5} />
-                  </button>
-                </>
-              )}
-            </div>
-            </div>
-          </div>
-        </div>
+function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, formatTime, deletingCommentId, setDeletingCommentId, handleDeleteComment, setReplyingTo, setNewComment, commentInputRef, handleVoteComment, votedComments, showCommentMenu, setShowCommentMenu, replies, expandedReplies, toggleReplies }: any) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const content = comment.content || '';
+  const shouldTruncate = content.length > 115;
+  const displayedContent = isExpanded || !shouldTruncate ? content : content.slice(0, 115);
+  const hasVoted = votedComments?.has(comment.id);
+  const avatarSize = isReply ? 32 : 40;
+  const nameSize = isReply ? 'text-sm' : 'text-base';
+  const timeSize = isReply ? 'text-xs' : 'text-sm';
+  
+  return (
+  <div className={`flex gap-3 ${isReply ? 'ml-8' : ''}`}>
+  {/* Profile picture */}
+  <div className="flex-shrink-0" style={{ width: `${avatarSize}px`, height: `${avatarSize}px` }}>
+    <div className="w-full h-full rounded-full overflow-hidden border border-black/10 dark:border-white/10 bg-zinc-200 dark:bg-zinc-800">
+      <img
+        src={getAvatarUrl(comment.user.avatar_url, comment.user.full_name)}
+        alt={comment.user.full_name || 'User'}
+        className="w-full h-full object-cover"
+        onError={(e) => {
+          (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(comment.user.full_name || 'User')}`;
+        }}
+      />
+    </div>
+  </div>
+  
+  <div className="flex-1 min-w-0">
+    {/* Header row: name, timing, menu */}
+    <div className="flex items-center justify-between gap-2 mb-1">
+      <div className="flex items-center gap-2 min-w-0">
+        <span className={`font-bold ${nameSize}`}>{comment.user.full_name || comment.user.username || 'User'}</span>
+        <span className={`text-zinc-500 ${timeSize}`}>{formatTime(comment.created_at)}</span>
       </div>
-    );
-  }
+      <button
+        onClick={() => setShowCommentMenu(comment.id)}
+        className="p-1 text-zinc-500 hover:text-black dark:hover:text-white rounded-full transition-colors hover:bg-black/5 dark:hover:bg-white/5 flex-shrink-0"
+      >
+        <MoreHorizontal className="w-6 h-6" strokeWidth={1.5} />
+      </button>
+    </div>
+  
+    {/* Content */}
+    <div
+      onClick={() => shouldTruncate && setIsExpanded(!isExpanded)}
+      className={`${shouldTruncate ? 'cursor-pointer' : ''} group/comment-content mb-2`}
+    >
+      <p className="text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap">
+        <MentionText text={displayedContent} />
+        {shouldTruncate && !isExpanded && <span>...</span>}
+        {shouldTruncate && (
+          <span className="ml-1 font-bold text-black dark:text-white group-hover/comment-content:underline">
+            {isExpanded ? ' See less' : ' See more'}
+          </span>
+        )}
+      </p>
+    </div>
+    
+    {/* Actions row — Reply | Replies */}
+    <div className="flex items-center gap-4">
+      {/* Reply button */}
+      <button
+        onClick={() => {
+          const username = (comment.user as any)?.username;
+          setReplyingTo({
+            id: isReply ? (parentId || comment.id) : comment.id,
+            name: username ? `@${username}` : (comment.user?.full_name || 'User')
+          });
+          setNewComment(username ? `@${username} ` : '');
+        }}
+        className="text-sm text-zinc-500 hover:text-black dark:hover:text-white transition-colors"
+      >
+        Reply
+      </button>
+      
+      {/* Replies toggle — only for main comments with replies */}
+      {!isReply && replies && replies.length > 0 && (
+        <button
+          onClick={() => toggleReplies(comment.id)}
+          className="text-sm text-zinc-500 hover:text-black dark:hover:text-white transition-colors"
+        >
+          {expandedReplies?.has(comment.id) ? '▲' : '▼'} {replies.length} {replies.length === 1 ? 'Reply' : 'Replies'}
+        </button>
+      )}
+    </div>
+  </div>
+  </div>
+  );
+}
 
   const renderComment = (comment: Comment | CommentReply, isReply: boolean = false, parentId?: string) => {
     if (!comment || !comment.user) return null;
@@ -1893,54 +1841,54 @@ export function PostCard({
   {/* Grabber */}
   <div className="absolute left-1/2 -translate-x-1/2 bg-zinc-300 dark:bg-zinc-700 rounded-full cursor-grab active:cursor-grabbing" style={{ top: '16px', width: '48px', height: '8px' }} />
   
-  {/* Comment Sheet Header — fixed h-16 */}
-                                <div className="h-16 shrink-0 flex items-center justify-between px-2 border-b border-black/5 dark:border-white/5">
-                                    {/* Left: Like+count, Comment+count, Share, Repost+count */}
-                                    <div className="flex items-center">
+  {/* Comment Sheet Header — fixed h-16 with centered handler and interactions */}
+                                <div className="h-16 shrink-0 flex flex-col items-center justify-center border-b border-black/5 dark:border-white/5">
+                                  {/* Handler */}
+                                  <div className="mb-2" style={{ width: '48px', height: '8px', background: 'currentColor', opacity: 0.2, borderRadius: '999px' }} />
+                                  
+                                  {/* Interactions - Left side (likes, comments, share) Right side (reposts, save) */}
+                                  <div className="w-full flex items-center justify-between px-4">
+                                    {/* Left side: likes, comments, share */}
+                                    <div className="flex items-center gap-4">
                                       <button
                                         onClick={handleLike}
                                         disabled={liking}
-                                        className={`flex items-center gap-1.5 px-2 py-2 rounded-full transition-colors disabled:opacity-50 ${liked ? 'text-red-500' : 'text-zinc-500 hover:text-red-500 dark:hover:text-red-400'}`}
+                                        className={`flex items-center gap-1.5 transition-colors disabled:opacity-50 ${liked ? 'text-red-500' : 'text-zinc-500 hover:text-red-500 dark:hover:text-red-400'}`}
                                       >
                                         <Heart className={`w-6 h-6 ${liked ? 'fill-current' : ''}`} strokeWidth={1.5} />
-                                        <span className="text-sm font-medium">{likesCount}</span>
                                       </button>
                                       <button
-                                        className="flex items-center gap-1.5 px-2 py-2 rounded-full text-zinc-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+                                        className="flex items-center gap-1.5 text-zinc-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
                                       >
                                         <MessageCircle className="w-6 h-6" strokeWidth={1.5} />
-                                        <span className="text-sm font-medium">{commentsCount}</span>
                                       </button>
                                       <button
                                         onClick={handleSharePost}
-                                        className="flex items-center gap-1.5 px-2 py-2 rounded-full text-zinc-500 hover:text-black dark:hover:text-white transition-colors"
+                                        className="flex items-center gap-1.5 text-zinc-500 hover:text-black dark:hover:text-white transition-colors"
                                       >
                                         <Share2 className="w-6 h-6" strokeWidth={1.5} />
                                       </button>
+                                    </div>
+                                    
+                                    {/* Right side: reposts, save, sort */}
+                                    <div className="flex items-center gap-4">
                                       <button
                                         onClick={() => setShowRepostConfirm(true)}
                                         disabled={reposting}
-                                        className={`flex items-center gap-1.5 px-2 py-2 rounded-full transition-colors disabled:opacity-50 ${reposted ? 'text-green-500' : 'text-zinc-500 hover:text-green-500 dark:hover:text-green-400'}`}
+                                        className={`flex items-center gap-1.5 transition-colors disabled:opacity-50 ${reposted ? 'text-green-500' : 'text-zinc-500 hover:text-green-500 dark:hover:text-green-400'}`}
                                       >
                                         <Repeat className={`w-6 h-6 ${reposted ? 'stroke-[2.5px]' : ''}`} strokeWidth={1.5} />
-                                        <span className="text-sm font-medium">{repostsCount}</span>
                                       </button>
-                                    </div>
-                                    {/* Right: Save */}
-                                    <div className="flex items-center pr-4">
                                       <button
                                         onClick={handleSavePost}
-                                        className={`flex items-center gap-1.5 px-2 py-2 rounded-full transition-colors ${isSaved ? 'text-black dark:text-white' : 'text-zinc-500 hover:text-black dark:hover:text-white'}`}
+                                        className={`flex items-center gap-1.5 transition-colors ${isSaved ? 'text-black dark:text-white' : 'text-zinc-500 hover:text-black dark:hover:text-white'}`}
                                       >
                                         <Bookmark className={`w-6 h-6 ${isSaved ? 'fill-current' : ''}`} strokeWidth={1.5} />
                                       </button>
-                                    </div>
-                                    {/* Right: Settings2 (sort) */}
-                                    <div className="flex items-center gap-1">
                                       <div className="relative">
                                         <button
                                           onClick={() => setShowCommentSortMenu(prev => !prev)}
-                                          className={`p-2 rounded-full transition-colors ${showCommentSortMenu ? 'bg-black/10 dark:bg-white/10 text-black dark:text-white' : 'text-zinc-500 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'}`}
+                                          className={`p-1 rounded-full transition-colors ${showCommentSortMenu ? 'bg-black/10 dark:bg-white/10 text-black dark:text-white' : 'text-zinc-500 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'}`}
                                         >
                                           <Settings2 className="w-6 h-6" strokeWidth={1.5} />
                                         </button>
@@ -1983,7 +1931,11 @@ export function PostCard({
                                         </AnimatePresence>
                                       </div>
                                     </div>
+                                  </div>
                                 </div>
+                                
+                                {/* HR separator */}
+                                <div className="h-px bg-black/5 dark:bg-white/5" />
 
                         <div className="flex-1 overflow-y-auto px-4 py-2 space-y-4 overscroll-contain touch-pan-y custom-scrollbar" onPointerDownCapture={(e) => e.stopPropagation()}>
                       {loadingComments ? (
@@ -2018,46 +1970,35 @@ export function PostCard({
                     </div>
 
                           <div className="bg-zinc-100 dark:bg-zinc-900 pb-[env(safe-area-inset-bottom,16px)]">
-                          {replyingTo && (
-                            <div className="flex items-center justify-between py-2 px-4 border-b border-black/5 dark:border-white/5">
-                              <span className="text-base text-zinc-500">
-                                Replying to <span className="font-bold text-black dark:text-white">{replyingTo.name}</span>
-                              </span>
-                              <button
-                                onClick={() => setReplyingTo(null)}
-                                className="p-1 text-zinc-400 hover:text-black dark:hover:text-white transition-colors"
-                              >
-                                <X className="w-5 h-5" strokeWidth={1.5} />
-                              </button>
+                        <div className="flex items-end px-4 py-3 gap-3 relative">
+                          {/* Mentions dropdown */}
+                          {showMentions && (
+                            <div className="absolute bottom-full left-0 right-0 mb-2 bg-zinc-100 dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded-xl shadow-2xl z-20 overflow-hidden">
+                              {mentionResults.map((user) => (
+                                <button
+                                  key={user.username}
+                                  onClick={() => selectMention(user.username)}
+                                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-left"
+                                >
+                                  <div className="w-8 h-8 rounded-full overflow-hidden border border-black/10 dark:border-white/10 bg-zinc-200 dark:bg-zinc-900">
+                                    <img
+                                      src={getAvatarUrl(user.avatar_url, user.full_name)}
+                                      alt={user.full_name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-base font-bold">{user.full_name}</span>
+                                    <span className="text-base text-zinc-500">@{user.username}</span>
+                                  </div>
+                                </button>
+                              ))}
                             </div>
                           )}
-                        <div className="flex items-start px-4 py-3 gap-3 relative">
-                          <div className="flex items-start gap-3 w-full">
-                            {showMentions && (
-                              <div className="absolute bottom-full left-0 right-0 mb-2 bg-zinc-100 dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded-xl shadow-2xl z-20 overflow-hidden">
-                                {mentionResults.map((user) => (
-                                  <button
-                                    key={user.username}
-                                    onClick={() => selectMention(user.username)}
-                                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-left"
-                                  >
-                                    <div className="w-8 h-8 rounded-full overflow-hidden border border-black/10 dark:border-white/10 bg-zinc-200 dark:bg-zinc-900">
-                                      <img
-                                        src={getAvatarUrl(user.avatar_url, user.full_name)}
-                                        alt={user.full_name}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    </div>
-                      <div className="flex flex-col">
-                          <span className="text-base font-bold">{user.full_name}</span>
-                          <span className="text-base text-zinc-500">@{user.username}</span>
-                        </div>
-                                  </button>
-                                ))}
-                              </div>
-                            )}
+                          
+                          {/* Pill-shaped comment input container */}
                           {currentUserProfile && (
-                            <div className="w-10 h-10 rounded-full overflow-hidden border border-black/10 dark:border-white/10 bg-zinc-200 dark:bg-zinc-800 flex-shrink-0 mt-0.5">
+                            <div className="w-10 h-10 rounded-full overflow-hidden border border-black/10 dark:border-white/10 bg-zinc-200 dark:bg-zinc-800 flex-shrink-0">
                               <img
                                 src={getAvatarUrl(currentUserProfile.avatar_url, currentUserProfile.full_name)}
                                 alt={currentUserProfile.full_name}
@@ -2065,32 +2006,34 @@ export function PostCard({
                               />
                             </div>
                           )}
-                          <textarea
-                            ref={commentInputRef}
-                            rows={1}
-                            value={newComment}
-                            onChange={handleCommentChange}
-                            placeholder={replyingTo ? `Reply to ${replyingTo.name}...` : 'Add a comment...'}
-                            className="flex-1 bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white px-4 py-3 rounded-2xl text-[16px] outline-none placeholder-zinc-500 resize-none min-h-[46px] max-h-32 leading-snug overflow-y-auto"
-                          />
-                          <button
-                            onClick={handleSubmitComment}
-                            disabled={submittingComment || !newComment.trim()}
-                            className={`w-10 h-10 flex items-center justify-center rounded-full transition-colors flex-shrink-0 mt-0.5 ${
-                              submittingComment || !newComment.trim()
-                                ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-600'
-                                : 'bg-black dark:bg-white text-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-200'
-                            }`}
-                          >
-                            {submittingComment ? (
-                              <Loader centered={false} className="text-current" />
-                            ) : (
-                              <Send className="w-6 h-6" strokeWidth={1.5} />
-                            )}
-                          </button>
+                          
+                          <div className="flex-1 flex items-end gap-2 bg-zinc-200 dark:bg-zinc-800 rounded-full px-4 py-2">
+                            <textarea
+                              ref={commentInputRef}
+                              rows={1}
+                              value={newComment}
+                              onChange={handleCommentChange}
+                              placeholder={replyingTo ? `Reply to ${replyingTo.name}...` : 'Add a comment...'}
+                              className="flex-1 bg-transparent text-black dark:text-white text-sm outline-none placeholder-zinc-500 resize-none min-h-[36px] max-h-[90px] leading-snug overflow-y-auto py-1"
+                            />
+                            
+                            <button
+                              onClick={handleSubmitComment}
+                              disabled={submittingComment || !newComment.trim()}
+                              className={`flex items-center justify-center rounded-full transition-colors flex-shrink-0 ${
+                                submittingComment || !newComment.trim()
+                                  ? 'text-zinc-400 dark:text-zinc-600 opacity-50'
+                                  : 'text-black dark:text-white hover:opacity-70'
+                              }`}
+                            >
+                              {submittingComment ? (
+                                <Loader centered={false} className="text-current" />
+                              ) : (
+                                <Send className="w-5 h-5" strokeWidth={1.5} />
+                              )}
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    </div>
                   </motion.div>
                 </motion.div>
               )}
