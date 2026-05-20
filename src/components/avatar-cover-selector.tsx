@@ -43,7 +43,7 @@ export function AvatarCoverSelector({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'tween', duration: 0.3 }}
-            className="fixed bottom-0 left-0 right-0 z-50 max-w-xl mx-auto rounded-t-2xl bg-white dark:bg-black overflow-hidden"
+            className="fixed bottom-0 left-0 right-0 z-50 max-w-xl mx-auto rounded-t-2xl bg-background overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Grabber */}
@@ -53,7 +53,7 @@ export function AvatarCoverSelector({
 
             <div className="px-4 pb-8">
               <div className="text-center mb-6">
-                <h2 className="text-xl font-bold text-black dark:text-white mb-2">{title}</h2>
+                <h2 className="text-xl font-bold text-foreground mb-2">{title}</h2>
                 <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">{details}</p>
               </div>
 

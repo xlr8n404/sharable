@@ -358,7 +358,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white selection:bg-black dark:selection:bg-white selection:text-white dark:selection:text-black">
+    <div className="min-h-screen bg-background text-foreground selection:bg-black dark:selection:bg-white selection:text-white dark:selection:text-black">
 
       <MainMenu
         open={menuOpen}
@@ -399,7 +399,7 @@ export default function ProfilePage() {
 
           <button
             onClick={() => setMenuOpen(true)}
-            className="absolute top-4 right-4 p-2.5 bg-white/90 dark:bg-black/90 backdrop-blur-sm text-black dark:text-white rounded-full border border-black/10 dark:border-white/10 hover:bg-white dark:hover:bg-black transition-colors"
+            className="absolute top-4 right-4 p-2.5 bg-white/90 dark:bg-black/90 backdrop-blur-sm text-foreground rounded-full border border-black/10 dark:border-white/10 hover:bg-white dark:hover:bg-black transition-colors"
           >
             <Menu size={24} strokeWidth={1.5} />
           </button>
@@ -438,7 +438,7 @@ export default function ProfilePage() {
           <div className="flex gap-3 mt-6 mb-6">
             <Link
               href="/profile/edit"
-              className="flex-1 flex items-center justify-center px-4 py-2.5 bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white font-bold text-sm rounded-full border border-black/10 dark:border-white/10 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
+              className="flex-1 flex items-center justify-center px-4 py-2.5 bg-zinc-100 dark:bg-zinc-900 text-foreground font-bold text-sm rounded-full border border-black/10 dark:border-white/10 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
             >
               Edit Profile
             </Link>
@@ -455,7 +455,7 @@ export default function ProfilePage() {
             <button
               onClick={() => setActiveTab('posts')}
               className={`flex-1 py-3 text-sm font-bold transition-colors relative ${
-                activeTab === 'posts' ? 'text-black dark:text-white' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                activeTab === 'posts' ? 'text-foreground' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
               }`}
             >
               Posts
@@ -469,7 +469,7 @@ export default function ProfilePage() {
             <button
               onClick={() => setActiveTab('stories')}
               className={`flex-1 py-3 text-sm font-bold transition-colors relative ${
-                activeTab === 'stories' ? 'text-black dark:text-white' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                activeTab === 'stories' ? 'text-foreground' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
               }`}
             >
               Stories
@@ -488,7 +488,7 @@ export default function ProfilePage() {
               onTouchStart={handleLongPressStart}
               onTouchEnd={handleLongPressEnd}
               className={`flex-1 py-3 text-sm font-bold transition-colors relative flex items-center justify-center gap-1.5 ${
-                activeTab === 'saved' ? 'text-black dark:text-white' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                activeTab === 'saved' ? 'text-foreground' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
               }`}
             >
               Saved
@@ -507,7 +507,7 @@ export default function ProfilePage() {
             <button
               onClick={() => setActiveTab('about')}
               className={`flex-1 py-3 text-sm font-bold transition-colors relative ${
-                activeTab === 'about' ? 'text-black dark:text-white' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                activeTab === 'about' ? 'text-foreground' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
               }`}
             >
               About
@@ -630,7 +630,7 @@ export default function ProfilePage() {
                     {profile?.account_type === 'brand' ? 'Description' : 'Bio'}
                   </span>
                 </div>
-                <p className="text-black dark:text-white leading-relaxed text-[15px]">
+                <p className="text-foreground leading-relaxed text-[15px]">
                   {profile?.account_type === 'brand'
                     ? (profile?.description ? <MentionText text={profile.description} /> : 'No description yet.')
                     : (profile?.bio ? <MentionText text={profile.bio} /> : 'No bio yet.')
@@ -651,7 +651,7 @@ export default function ProfilePage() {
                   </div>
                   <div className="flex-1">
                     <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Account Type</p>
-                    <p className="font-semibold text-black dark:text-white">
+                    <p className="font-semibold text-foreground">
                       {profile?.account_type === 'brand' ? 'Brand Account' : 'Personal Account'}
                     </p>
                   </div>
@@ -664,7 +664,7 @@ export default function ProfilePage() {
                   </div>
                   <div className="flex-1">
                     <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Account Role</p>
-                    <p className="font-semibold text-black dark:text-white">
+                    <p className="font-semibold text-foreground">
                       {profile?.identity_tag || 'Not set'}
                     </p>
                   </div>
@@ -680,7 +680,7 @@ export default function ProfilePage() {
                   </div>
                   <div className="flex-1">
                     <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Full Name</p>
-                    <p className="font-semibold text-black dark:text-white">{profile?.full_name || 'Not set'}</p>
+                    <p className="font-semibold text-foreground">{profile?.full_name || 'Not set'}</p>
                   </div>
                 </div>
 
@@ -691,7 +691,7 @@ export default function ProfilePage() {
                   </div>
                   <div className="flex-1">
                     <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Sharable ID</p>
-                    <p className="font-semibold text-black dark:text-white">@{profile?.username || 'Not set'}</p>
+                    <p className="font-semibold text-foreground">@{profile?.username || 'Not set'}</p>
                   </div>
                 </div>
 
@@ -703,7 +703,7 @@ export default function ProfilePage() {
                     </div>
                     <div className="flex-1">
                       <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Date of Birth</p>
-                      <p className="font-semibold text-black dark:text-white">{formatDate(profile?.date_of_birth || '')}</p>
+                      <p className="font-semibold text-foreground">{formatDate(profile?.date_of_birth || '')}</p>
                     </div>
                   </div>
                 )}
@@ -722,7 +722,7 @@ export default function ProfilePage() {
                     </div>
                     <div className="flex-1">
                       <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Gender</p>
-                      <p className="font-semibold text-black dark:text-white capitalize">{profile?.gender || 'Not set'}</p>
+                      <p className="font-semibold text-foreground capitalize">{profile?.gender || 'Not set'}</p>
                     </div>
                   </div>
                 )}
@@ -735,7 +735,7 @@ export default function ProfilePage() {
                     </div>
                     <div className="flex-1">
                       <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Relationship Status</p>
-                      <p className="font-semibold text-black dark:text-white">{profile?.relationship_status || 'Not set'}</p>
+                      <p className="font-semibold text-foreground">{profile?.relationship_status || 'Not set'}</p>
                     </div>
                   </div>
                 )}
@@ -748,7 +748,7 @@ export default function ProfilePage() {
                     </div>
                     <div className="flex-1">
                       <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Since</p>
-                      <p className="font-semibold text-black dark:text-white">{profile?.since ? formatDate(profile.since) : 'Not set'}</p>
+                      <p className="font-semibold text-foreground">{profile?.since ? formatDate(profile.since) : 'Not set'}</p>
                     </div>
                   </div>
                 )}
@@ -760,7 +760,7 @@ export default function ProfilePage() {
                   </div>
                   <div className="flex-1">
                     <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Active From</p>
-                    <p className="font-semibold text-black dark:text-white">{formatDate(profile?.created_at || '')}</p>
+                    <p className="font-semibold text-foreground">{formatDate(profile?.created_at || '')}</p>
                   </div>
                 </div>
               </div>
@@ -826,7 +826,7 @@ export default function ProfilePage() {
                   <p className="text-sm text-zinc-500 text-center">Point the camera at a profile QR code</p>
                   <button
                     onClick={stopScan}
-                    className="px-6 py-2.5 rounded-full bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white font-bold text-sm hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
+                    className="px-6 py-2.5 rounded-full bg-zinc-100 dark:bg-zinc-900 text-foreground font-bold text-sm hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
                   >
                     Cancel Scan
                   </button>
@@ -851,20 +851,20 @@ export default function ProfilePage() {
                   </div>
 
                   {/* Username */}
-                  <p className="text-base font-bold text-black dark:text-white">@{profile?.username}</p>
+                  <p className="text-base font-bold text-foreground">@{profile?.username}</p>
 
                   {/* Top action buttons */}
                   <div className="flex gap-3 w-full">
                     <button
                       onClick={handleDownloadQR}
-                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white font-bold text-sm hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors border border-black/5 dark:border-white/5"
+                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-zinc-100 dark:bg-zinc-900 text-foreground font-bold text-sm hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors border border-black/5 dark:border-white/5"
                     >
                       <Download size={16} strokeWidth={2} />
                       Download QR
                     </button>
                     <button
                       onClick={handleScanQR}
-                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white font-bold text-sm hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors border border-black/5 dark:border-white/5"
+                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-zinc-100 dark:bg-zinc-900 text-foreground font-bold text-sm hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors border border-black/5 dark:border-white/5"
                     >
                       <ScanLine size={16} strokeWidth={2} />
                       Scan QR

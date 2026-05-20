@@ -107,7 +107,7 @@ export default function SettingsPage() {
   if (!mounted) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="h-16 flex items-center px-4 bg-white dark:bg-black border-b border-black/5 dark:border-white/5 relative">
+        <header className="h-16 flex items-center px-4 bg-background border-b border-black/5 dark:border-white/5 relative">
           <div className="absolute left-4">
             <ArrowLeft size={24} strokeWidth={1.5} className="text-zinc-400" />
           </div>
@@ -126,8 +126,8 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white selection:bg-black dark:selection:bg-white selection:text-white dark:selection:text-black">
-      <header className={`fixed top-0 left-0 right-0 z-50 px-4 h-16 flex items-center bg-white dark:bg-black transition-transform duration-300 ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+    <div className="min-h-screen bg-background text-foreground selection:bg-black dark:selection:bg-white selection:text-white dark:selection:text-black">
+      <header className={`fixed top-0 left-0 right-0 z-50 px-4 h-16 flex items-center bg-background transition-transform duration-300 ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'}`}>
         <div className="absolute left-4">
           <Link href="/home" className="p-2 -ml-2 hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors flex items-center justify-center" onClick={(e) => { e.preventDefault(); goBack(); }}>
             <ArrowLeft size={24} strokeWidth={1.5} />
@@ -400,7 +400,7 @@ export default function SettingsPage() {
             <AlertDialogTitle className="text-red-600">Delete Account</AlertDialogTitle>
             <AlertDialogDescription>
               This action is permanent. All your posts, profile data and media will be deleted.
-              Type <span className="font-bold text-black dark:text-white">DELETE</span> to confirm.
+              Type <span className="font-bold text-foreground">DELETE</span> to confirm.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="py-4">

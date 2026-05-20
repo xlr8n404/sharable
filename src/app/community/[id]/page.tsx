@@ -225,7 +225,7 @@ export default function CommunityDetailPage() {
   // ─── Skeleton ────────────────────────────────────────────────────────────────
   if (!community) {
     return (
-      <div className="min-h-screen bg-white dark:bg-black pb-28 animate-pulse">
+      <div className="min-h-screen bg-background pb-28 animate-pulse">
         <div className="max-w-xl mx-auto">
           <Skeleton className="w-full bg-zinc-100 dark:bg-zinc-900" style={{ height: '120px' }} />
           <div className="px-4">
@@ -252,7 +252,7 @@ export default function CommunityDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white pb-28">
+    <div className="min-h-screen bg-background text-foreground pb-28">
       <div className="max-w-xl mx-auto">
 
         {/* ── Cover + Avatar ─────────────────────────────────────────────── */}
@@ -328,7 +328,7 @@ export default function CommunityDetailPage() {
               {descTruncated && (
                 <button
                   onClick={() => setDescExpanded(v => !v)}
-                  className="mt-1 text-sm font-bold text-black dark:text-white hover:underline"
+                  className="mt-1 text-sm font-bold text-foreground hover:underline"
                 >
                   {descExpanded ? 'See less' : 'See more'}
                 </button>
@@ -356,7 +356,7 @@ export default function CommunityDetailPage() {
                   <button
                     onClick={handleLeave}
                     disabled={joinLoading}
-                    className="flex-1 py-2.5 font-bold text-sm rounded-full bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white border border-black/10 dark:border-white/10 hover:bg-red-50 dark:hover:bg-red-900/30 hover:border-red-500/40 hover:text-red-500 transition-colors disabled:opacity-50"
+                    className="flex-1 py-2.5 font-bold text-sm rounded-full bg-zinc-100 dark:bg-zinc-900 text-foreground border border-black/10 dark:border-white/10 hover:bg-red-50 dark:hover:bg-red-900/30 hover:border-red-500/40 hover:text-red-500 transition-colors disabled:opacity-50"
                   >
                     {joinLoading ? '...' : 'Leave Community'}
                   </button>
@@ -379,7 +379,7 @@ export default function CommunityDetailPage() {
                 onClick={() => setActiveTab(tab)}
                 className={`flex-1 py-3 text-sm font-bold transition-colors relative capitalize ${
                   activeTab === tab
-                    ? 'text-black dark:text-white'
+                    ? 'text-foreground'
                     : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
                 }`}
               >
@@ -450,7 +450,7 @@ export default function CommunityDetailPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Community Name</p>
-                    <p className="font-semibold text-black dark:text-white truncate">{community.name}</p>
+                    <p className="font-semibold text-foreground truncate">{community.name}</p>
                   </div>
                 </div>
 
@@ -462,7 +462,7 @@ export default function CommunityDetailPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Sharable ID</p>
-                      <p className="font-semibold text-black dark:text-white">@{community.username}</p>
+                      <p className="font-semibold text-foreground">@{community.username}</p>
                     </div>
                   </div>
                 )}
@@ -475,7 +475,7 @@ export default function CommunityDetailPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Category</p>
-                      <p className="font-semibold text-black dark:text-white capitalize">{community.category}</p>
+                      <p className="font-semibold text-foreground capitalize">{community.category}</p>
                     </div>
                   </div>
                 )}
@@ -487,7 +487,7 @@ export default function CommunityDetailPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Members</p>
-                    <p className="font-semibold text-black dark:text-white">{memberCount}</p>
+                    <p className="font-semibold text-foreground">{memberCount}</p>
                   </div>
                 </div>
 
@@ -499,7 +499,7 @@ export default function CommunityDetailPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Created</p>
-                      <p className="font-semibold text-black dark:text-white">{formatDate(community.created_at)}</p>
+                      <p className="font-semibold text-foreground">{formatDate(community.created_at)}</p>
                     </div>
                   </div>
                 )}
@@ -509,7 +509,7 @@ export default function CommunityDetailPage() {
               {description && (
                 <div className="bg-zinc-100 dark:bg-zinc-900/50 rounded-2xl p-4 border border-black/5 dark:border-white/5">
                   <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium uppercase tracking-widest mb-3">About</p>
-                  <p className="text-black dark:text-white text-[15px] leading-relaxed">{description}</p>
+                  <p className="text-foreground text-[15px] leading-relaxed">{description}</p>
                 </div>
               )}
             </div>
@@ -547,7 +547,7 @@ export default function CommunityDetailPage() {
                 {/* Back */}
                 <button
                   onClick={() => { setShowPostComposer(false); setPostContent(''); }}
-                  className="p-1.5 -ml-1.5 text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors"
+                  className="p-1.5 -ml-1.5 text-foreground hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors"
                 >
                   <ArrowLeft size={24} strokeWidth={2} />
                 </button>
@@ -583,7 +583,7 @@ export default function CommunityDetailPage() {
                   value={postContent}
                   onChange={e => setPostContent(e.target.value)}
                   placeholder={`Write something in ${community.name}...`}
-                  className="w-full h-full min-h-[200px] bg-transparent outline-none text-[16px] text-black dark:text-white placeholder-zinc-400 dark:placeholder-zinc-600 resize-none leading-relaxed"
+                  className="w-full h-full min-h-[200px] bg-transparent outline-none text-[16px] text-foreground placeholder-zinc-400 dark:placeholder-zinc-600 resize-none leading-relaxed"
                 />
               </div>
             </motion.div>

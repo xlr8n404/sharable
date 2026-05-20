@@ -21,7 +21,7 @@ export function BackButton({ className, fallbackHref = '/home' }: BackButtonProp
       )}
       aria-label="Go back"
     >
-      <ArrowLeft className="w-5 h-5 text-black dark:text-white" />
+      <ArrowLeft className="w-5 h-5 text-foreground" />
     </button>
   );
 }

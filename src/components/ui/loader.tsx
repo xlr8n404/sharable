@@ -26,7 +26,7 @@ export function Loader({
 
   if (fullScreen) {
     return (
-      <div className="fixed inset-0 bg-white dark:bg-black z-[100] flex items-center justify-center">
+      <div className="fixed inset-0 bg-background z-[100] flex items-center justify-center">
         {loader}
       </div>
     );

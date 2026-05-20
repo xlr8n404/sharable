@@ -72,9 +72,9 @@ export default function ChangePasswordPage() {
   };
 
   return (
-      <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white selection:bg-black dark:selection:bg-white selection:text-white dark:selection:text-black">
+      <div className="min-h-screen bg-background text-foreground selection:bg-black dark:selection:bg-white selection:text-white dark:selection:text-black">
         <header className="fixed top-0 left-0 right-0 z-50 px-4 h-16 flex items-center bg-transparent border-b-0">
-          <button onClick={() => goBack()} className="p-2 -ml-2 text-black dark:text-white hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors">
+          <button onClick={() => goBack()} className="p-2 -ml-2 text-foreground hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <span className="ml-2 font-bold text-lg">Change Password</span>
@@ -111,7 +111,7 @@ export default function ChangePasswordPage() {
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                       placeholder="Enter current password"
-                      className="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded-lg text-black dark:text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-black/20 dark:focus:ring-white/20 pr-12"
+                      className="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded-lg text-foreground placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-black/20 dark:focus:ring-white/20 pr-12"
                       required
                     />
                     <button
@@ -135,7 +135,7 @@ export default function ChangePasswordPage() {
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="Enter new password"
-                      className="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded-lg text-black dark:text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-black/20 dark:focus:ring-white/20 pr-12"
+                      className="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded-lg text-foreground placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-black/20 dark:focus:ring-white/20 pr-12"
                       required
                       minLength={6}
                     />
@@ -161,7 +161,7 @@ export default function ChangePasswordPage() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Confirm new password"
-                      className="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded-lg text-black dark:text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-black/20 dark:focus:ring-white/20 pr-12"
+                      className="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded-lg text-foreground placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-black/20 dark:focus:ring-white/20 pr-12"
                       required
                     />
                     <button

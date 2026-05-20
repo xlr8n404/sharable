@@ -449,7 +449,7 @@ export default function HomePage() {
 
   return (
     <div
-      className="min-h-screen bg-white dark:bg-black text-black dark:text-white selection:bg-black dark:selection:bg-white selection:text-white dark:selection:text-black"
+      className="min-h-screen bg-background text-foreground selection:bg-black dark:selection:bg-white selection:text-white dark:selection:text-black"
     >
       <MainMenu
         open={mainMenuOpen}
@@ -461,25 +461,25 @@ export default function HomePage() {
         onPinnedFeedChange={(mode) => setPinnedFeed(mode)}
       />
 
-        <header className="fixed top-0 left-0 right-0 h-16 z-50 px-4 bg-white dark:bg-black rounded-b-[16px]">
+        <header className="fixed top-0 left-0 right-0 h-16 z-50 px-4 bg-background rounded-b-[16px]">
         <div className="h-full flex items-center justify-between">
           {/* Left: Settings */}
           <button
             onClick={() => setMainMenuOpen(true)}
-            className="p-2 text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors"
+            className="p-2 text-foreground hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors"
           >
             <Settings2 size={24} strokeWidth={1.5} />
           </button>
 
           {/* Center: Share */}
           <div className="flex-1 flex items-center justify-center">
-            <Share2 size={24} strokeWidth={1.5} className="text-black dark:text-white" />
+            <Share2 size={24} strokeWidth={1.5} className="text-foreground" />
           </div>
 
           {/* Right: Messages */}
           <button
             onClick={() => router.push('/messages')}
-            className="p-2 text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors"
+            className="p-2 text-foreground hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors"
           >
             <MessageCircle size={24} strokeWidth={1.5} />
           </button>

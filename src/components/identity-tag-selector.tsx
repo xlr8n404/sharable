@@ -36,7 +36,7 @@ export function IdentityTagSelector({ value, onChange }: IdentityTagSelectorProp
           placeholder="Search your Role..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white pl-10 pr-4 py-2.5 rounded-lg border border-black/10 dark:border-white/10 outline-none focus:border-black/30 dark:focus:border-white/30 transition-colors text-sm"
+          className="w-full bg-zinc-100 dark:bg-zinc-900 text-foreground pl-10 pr-4 py-2.5 rounded-lg border border-black/10 dark:border-white/10 outline-none focus:border-black/30 dark:focus:border-white/30 transition-colors text-sm"
         />
       </div>
 

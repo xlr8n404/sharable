@@ -107,9 +107,9 @@ export default function DeactivateAccountPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white selection:bg-black dark:selection:bg-white selection:text-white dark:selection:text-black">
+    <div className="min-h-screen bg-background text-foreground selection:bg-black dark:selection:bg-white selection:text-white dark:selection:text-black">
       <header className="fixed top-0 left-0 right-0 z-50 px-4 h-16 flex items-center bg-transparent border-b-0">
-        <button onClick={() => goBack()} className="p-2 -ml-2 text-black dark:text-white hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors">
+        <button onClick={() => goBack()} className="p-2 -ml-2 text-foreground hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <span className="ml-2 font-bold text-lg">Deactivate Account</span>
@@ -145,7 +145,7 @@ export default function DeactivateAccountPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  className="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded-lg text-black dark:text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-black/20 dark:focus:ring-white/20 pr-12"
+                  className="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded-lg text-foreground placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-black/20 dark:focus:ring-white/20 pr-12"
                   required
                 />
                 <button
@@ -181,7 +181,7 @@ export default function DeactivateAccountPage() {
 
             <Link
               href="/settings"
-              className="block w-full py-4 bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white font-bold rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors text-center"
+              className="block w-full py-4 bg-zinc-100 dark:bg-zinc-900 text-foreground font-bold rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors text-center"
             >
               Cancel
             </Link>
@@ -196,13 +196,13 @@ export default function DeactivateAccountPage() {
             <AlertDialogDescription className="text-zinc-500 dark:text-zinc-400">
               <p className="mb-4">Your account will be deactivated. You won't be visible to other users, and your posts won't appear in feeds.</p>
               <p className="mb-4 font-medium">You can reactivate your account anytime by logging in again.</p>
-              <p className="mb-3">Type <span className="font-mono font-bold text-black dark:text-white">DEACTIVATE</span> to confirm:</p>
+              <p className="mb-3">Type <span className="font-mono font-bold text-foreground">DEACTIVATE</span> to confirm:</p>
               <input
                 type="text"
                 value={confirmText}
                 onChange={(e) => setConfirmText(e.target.value)}
                 placeholder="Type DEACTIVATE"
-                className="w-full px-4 py-2 bg-zinc-100 dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded-lg text-black dark:text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                className="w-full px-4 py-2 bg-zinc-100 dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded-lg text-foreground placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
               />
             </AlertDialogDescription>
           </AlertDialogHeader>

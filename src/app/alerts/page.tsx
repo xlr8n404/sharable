@@ -196,10 +196,10 @@ export default function AlertsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white selection:bg-black dark:selection:bg-white selection:text-white dark:selection:text-black">
+    <div className="min-h-screen bg-background text-foreground selection:bg-black dark:selection:bg-white selection:text-white dark:selection:text-black">
       {/* Top Bar — 64px */}
       <header
-        className={`fixed top-0 left-0 right-0 z-50 bg-white dark:bg-black transition-transform duration-300 ${
+        className={`fixed top-0 left-0 right-0 z-50 bg-background transition-transform duration-300 ${
           isHeaderVisible ? 'translate-y-0' : '-translate-y-full'
         }`}
       >

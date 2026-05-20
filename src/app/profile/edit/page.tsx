@@ -238,7 +238,7 @@ export default function EditProfilePage() {
   }
 
   return (
-      <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white selection:bg-black dark:selection:bg-white selection:text-white dark:selection:text-black">
+      <div className="min-h-screen bg-background text-foreground selection:bg-black dark:selection:bg-white selection:text-white dark:selection:text-black">
         {/* Cover Photo Section with Overlay Header */}
         <div className="relative">
           <input
@@ -341,7 +341,7 @@ export default function EditProfilePage() {
                 value={fullName}
                 maxLength={15}
                 onChange={(e) => setFullName(e.target.value)}
-                className="w-full bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 outline-none focus:border-black/30 dark:focus:border-white/30 transition-colors"
+                className="w-full bg-zinc-100 dark:bg-zinc-900 text-foreground px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 outline-none focus:border-black/30 dark:focus:border-white/30 transition-colors"
                 placeholder="Your full name"
               />
             </div>
@@ -371,7 +371,7 @@ export default function EditProfilePage() {
                   onChange={(e) => setBio(e.target.value)}
                   maxLength={115}
                   rows={3}
-                  className="w-full bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 outline-none focus:border-black/30 dark:focus:border-white/30 transition-colors resize-none"
+                  className="w-full bg-zinc-100 dark:bg-zinc-900 text-foreground px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 outline-none focus:border-black/30 dark:focus:border-white/30 transition-colors resize-none"
                   placeholder="Tell us about yourself"
                 />
               </div>
@@ -389,7 +389,7 @@ export default function EditProfilePage() {
                   onChange={(e) => setDescription(e.target.value)}
                   maxLength={115}
                   rows={3}
-                  className="w-full bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 outline-none focus:border-black/30 dark:focus:border-white/30 transition-colors resize-none"
+                  className="w-full bg-zinc-100 dark:bg-zinc-900 text-foreground px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 outline-none focus:border-black/30 dark:focus:border-white/30 transition-colors resize-none"
                   placeholder="Describe your brand"
                 />
               </div>
@@ -403,7 +403,7 @@ export default function EditProfilePage() {
                   type="date"
                   value={dateOfBirth}
                   onChange={(e) => setDateOfBirth(e.target.value)}
-                  className="w-full bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 outline-none focus:border-black/30 dark:focus:border-white/30 transition-colors"
+                  className="w-full bg-zinc-100 dark:bg-zinc-900 text-foreground px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 outline-none focus:border-black/30 dark:focus:border-white/30 transition-colors"
                 />
               </div>
             )}
@@ -415,7 +415,7 @@ export default function EditProfilePage() {
                 <select
                   value={gender}
                   onChange={(e) => setGender(e.target.value)}
-                  className="w-full bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 outline-none focus:border-black/30 dark:focus:border-white/30 transition-colors"
+                  className="w-full bg-zinc-100 dark:bg-zinc-900 text-foreground px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 outline-none focus:border-black/30 dark:focus:border-white/30 transition-colors"
                 >
                   <option value="male">Male</option>
                   <option value="female">Female</option>
@@ -430,7 +430,7 @@ export default function EditProfilePage() {
                 <select
                   value={relationshipStatus}
                   onChange={(e) => setRelationshipStatus(e.target.value)}
-                  className="w-full bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 outline-none focus:border-black/30 dark:focus:border-white/30 transition-colors"
+                  className="w-full bg-zinc-100 dark:bg-zinc-900 text-foreground px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 outline-none focus:border-black/30 dark:focus:border-white/30 transition-colors"
                 >
                   <option value="Single">Single</option>
                   <option value="In a relationship">In a relationship</option>
@@ -451,7 +451,7 @@ export default function EditProfilePage() {
                   type="date"
                   value={since}
                   onChange={(e) => setSince(e.target.value)}
-                  className="w-full bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 outline-none focus:border-black/30 dark:focus:border-white/30 transition-colors"
+                  className="w-full bg-zinc-100 dark:bg-zinc-900 text-foreground px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 outline-none focus:border-black/30 dark:focus:border-white/30 transition-colors"
                 />
               </div>
             )}
@@ -493,7 +493,7 @@ export default function EditProfilePage() {
 // Edit Profile Skeleton Component
 function EditProfileSkeleton() {
   return (
-    <div className="min-h-screen bg-white dark:bg-black animate-pulse">
+    <div className="min-h-screen bg-background animate-pulse">
       {/* Cover Photo Skeleton - 120px height */}
       <div className="w-full bg-zinc-100 dark:bg-zinc-900" style={{height: '120px'}} />
 

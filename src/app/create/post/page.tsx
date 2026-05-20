@@ -265,10 +265,10 @@ export default function CreatePostPage() {
   }
 
   return (
-      <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white selection:bg-black dark:selection:bg-white selection:text-white dark:selection:text-black">
-        <header className={`fixed top-0 left-0 right-0 z-50 px-4 h-16 flex items-center justify-between bg-white dark:bg-black transition-transform duration-300 ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+      <div className="min-h-screen bg-background text-foreground selection:bg-black dark:selection:bg-white selection:text-white dark:selection:text-black">
+        <header className={`fixed top-0 left-0 right-0 z-50 px-4 h-16 flex items-center justify-between bg-background transition-transform duration-300 ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'}`}>
           <div className="flex items-center gap-3">
-            <Link href="/home" className="p-2 -ml-2 text-black dark:text-white hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors" onClick={(e) => { e.preventDefault(); goBack(); }}>
+            <Link href="/home" className="p-2 -ml-2 text-foreground hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors" onClick={(e) => { e.preventDefault(); goBack(); }}>
               <ArrowLeft className="w-6 h-6" />
             </Link>
             <div className="w-10 h-10 rounded-full overflow-hidden border border-black/10 dark:border-white/10 bg-zinc-100 dark:bg-zinc-900">
@@ -281,7 +281,7 @@ export default function CreatePostPage() {
               }}
             />
           </div>
-          <span className="text-[16px] font-semibold text-black dark:text-white truncate max-w-[120px]">
+          <span className="text-[16px] font-semibold text-foreground truncate max-w-[120px]">
             {profile?.full_name}
           </span>
         </div>
@@ -333,7 +333,7 @@ export default function CreatePostPage() {
               value={content}
               onChange={handleTextChange}
               placeholder="What's on your mind?"
-              className="w-full bg-transparent text-black dark:text-white text-lg placeholder-zinc-400 dark:placeholder-zinc-600 resize-none outline-none min-h-[120px]"
+              className="w-full bg-transparent text-foreground text-lg placeholder-zinc-400 dark:placeholder-zinc-600 resize-none outline-none min-h-[120px]"
               autoFocus
             />
         </div>

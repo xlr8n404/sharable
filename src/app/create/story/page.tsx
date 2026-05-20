@@ -41,11 +41,11 @@ export default function CreateStoryPage() {
 
   if (!STORIES_ENABLED) {
     return (
-      <div className="fixed inset-0 bg-white dark:bg-black flex flex-col items-center justify-center text-center px-8">
+      <div className="fixed inset-0 bg-background flex flex-col items-center justify-center text-center px-8">
         <div className="w-20 h-20 rounded-2xl bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center mb-6">
           <BookOpen size={36} strokeWidth={1.5} className="text-zinc-400" />
         </div>
-        <h2 className="text-2xl font-bold text-black dark:text-white mb-3">Coming Soon</h2>
+        <h2 className="text-2xl font-bold text-foreground mb-3">Coming Soon</h2>
         <p className="text-zinc-500 text-base max-w-[280px] leading-relaxed mb-8">
           Stories is not available yet. We're working on something great — stay tuned!
         </p>

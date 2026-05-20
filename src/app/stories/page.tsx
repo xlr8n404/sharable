@@ -57,8 +57,8 @@ export default function StoriesPage() {
 
   if (!STORIES_ENABLED) {
     return (
-      <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white flex flex-col">
-        <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-white dark:bg-black">
+      <div className="min-h-screen bg-background text-foreground flex flex-col">
+        <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-background">
           <div className="max-w-xl mx-auto flex items-center px-4 h-full">
             <h1 className="text-xl font-bold tracking-tight">Stories</h1>
           </div>
@@ -96,14 +96,14 @@ export default function StoriesPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Top Bar — 64px */}
-      <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-white dark:bg-black">
+      <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-background">
         <div className="max-w-xl mx-auto flex items-center justify-between px-4 h-full">
           <h1 className="text-xl font-bold tracking-tight">Stories</h1>
           <Link
             href="/create/story"
-            className="p-2 rounded-xl text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+            className="p-2 rounded-xl text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
           >
             <SquarePen size={24} strokeWidth={1.5} />
           </Link>

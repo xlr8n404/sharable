@@ -107,7 +107,7 @@ export function BottomNav() {
       return (
           <>
             <CreateBottomSheet isOpen={showCreateSheet} onClose={() => setShowCreateSheet(false)} />
-            <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-black h-16">
+            <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background h-16">
               <div className="max-w-xl mx-auto flex items-center justify-between px-4 h-full">
                 {navItems.map((item) => {
               const Icon = item.icon;
@@ -128,7 +128,7 @@ export function BottomNav() {
                       onClick={handleClick}
                       className={`flex items-center justify-center transition-all relative w-12 h-12 rounded-2xl group ${
                         isActive
-                          ? 'text-black dark:text-white'
+                          ? 'text-foreground'
                           : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
                       }`}
                       >

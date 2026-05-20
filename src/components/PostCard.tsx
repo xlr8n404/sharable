@@ -1226,7 +1226,7 @@ function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, 
         <MentionText text={displayedContent} />
         {shouldTruncate && !isExpanded && <span>...</span>}
         {shouldTruncate && (
-          <span className="ml-1 font-bold text-black dark:text-white group-hover/comment-content:underline">
+          <span className="ml-1 font-bold text-foreground group-hover/comment-content:underline">
             {isExpanded ? ' See less' : ' See more'}
           </span>
         )}
@@ -1300,7 +1300,7 @@ function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, 
     // If we have a reposted_id but no original_post data (deleted or failed join)
     if (!originalPostData) {
       return (
-        <div className="w-full bg-white dark:bg-black overflow-hidden border-b border-black/[0.05] dark:border-white/[0.05] p-4">
+        <div className="w-full bg-background overflow-hidden border-b border-black/[0.05] dark:border-white/[0.05] p-4">
           <div className="flex items-center gap-2 text-zinc-500 italic">
             <Repeat className="w-4 h-4" />
             <span>Original post is no longer available</span>
@@ -1312,7 +1312,7 @@ function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, 
     const originalUser = originalPostData.user || { full_name: 'Unknown User', avatar_url: null, username: 'unknown' };
 
     return (
-      <div className="w-full bg-white dark:bg-black overflow-hidden border-b border-black/[0.05] dark:border-white/[0.05]">
+      <div className="w-full bg-background overflow-hidden border-b border-black/[0.05] dark:border-white/[0.05]">
         {/* Reposter Header */}
           <div className="flex items-center justify-between px-4 pt-4 pb-2">
             <div className="flex items-center gap-1.5 min-w-0">
@@ -1400,7 +1400,7 @@ function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, 
                         </div>
                         <div className="flex flex-col">
                           <span className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Posted on</span>
-                          <span className="text-base font-medium text-black dark:text-white">{originalPostData.created_at ? formatFullDate(originalPostData.created_at) : 'Unknown'}</span>
+                          <span className="text-base font-medium text-foreground">{originalPostData.created_at ? formatFullDate(originalPostData.created_at) : 'Unknown'}</span>
                         </div>
                       </div>
 
@@ -1415,7 +1415,7 @@ function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, 
                         </div>
                         <div className="flex flex-col">
                           <span className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Posted by</span>
-                          <span className="text-base font-bold text-black dark:text-white">{originalUser?.full_name || 'Unknown User'}</span>
+                          <span className="text-base font-bold text-foreground">{originalUser?.full_name || 'Unknown User'}</span>
                         </div>
                       </div>
 
@@ -1426,7 +1426,7 @@ function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, 
                         </div>
                         <div className="flex flex-col">
                           <span className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Reposted on</span>
-                          <span className="text-base font-medium text-black dark:text-white">{created_at ? formatFullDate(created_at) : 'Unknown'}</span>
+                          <span className="text-base font-medium text-foreground">{created_at ? formatFullDate(created_at) : 'Unknown'}</span>
                         </div>
                       </div>
 
@@ -1441,7 +1441,7 @@ function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, 
                         </div>
                         <div className="flex flex-col">
                           <span className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Reposted by</span>
-                          <span className="text-base font-bold text-black dark:text-white">{user?.full_name || 'Unknown User'}</span>
+                          <span className="text-base font-bold text-foreground">{user?.full_name || 'Unknown User'}</span>
                         </div>
                       </div>
                     </div>
@@ -1539,7 +1539,7 @@ function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, 
   return (
     <>
       <div
-        className={`w-full bg-white dark:bg-black overflow-hidden ${isNested ? '' : ''}`}
+        className={`w-full bg-background overflow-hidden ${isNested ? '' : ''}`}
       >
           {!isNested && (
             <div className="flex items-center justify-between px-4 pt-4 pb-2">
@@ -1615,7 +1615,7 @@ function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, 
                               </div>
                               <div className="flex flex-col">
                                 <span className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Posted on</span>
-                                <span className="text-base font-medium text-black dark:text-white">{created_at ? formatFullDate(created_at) : 'Unknown'}</span>
+                                <span className="text-base font-medium text-foreground">{created_at ? formatFullDate(created_at) : 'Unknown'}</span>
                               </div>
                             </div>
 
@@ -1630,7 +1630,7 @@ function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, 
                               </div>
                               <div className="flex flex-col">
                                 <span className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Posted by</span>
-                                <span className="text-base font-bold text-black dark:text-white">{user?.full_name || 'Unknown User'}</span>
+                                <span className="text-base font-bold text-foreground">{user?.full_name || 'Unknown User'}</span>
                               </div>
                             </div>
                           </div>
@@ -1693,7 +1693,7 @@ function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, 
                       <MentionText text={displayedContent} />
                       {shouldTruncate && !isExpanded && <span>...</span>}
                       {shouldTruncate && (
-                        <span className="ml-1 font-bold text-black dark:text-white group-hover/content:underline">
+                        <span className="ml-1 font-bold text-foreground group-hover/content:underline">
                           {isExpanded ? ' See less' : ' See more'}
                         </span>
                       )}
@@ -1910,7 +1910,7 @@ function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, 
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="fixed inset-0 bg-white dark:bg-black z-[60] flex items-end justify-center overflow-hidden"
+                      className="fixed inset-0 bg-background z-[60] flex items-end justify-center overflow-hidden"
                       onClick={() => { setShowComments(false); setReplyingTo(null); }}
                       style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
                     >                        <motion.div
@@ -1929,7 +1929,7 @@ function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, 
                             transition={{ type: 'tween', duration: 0.3, ease: 'easeOut' }}
                             onClick={(e) => e.stopPropagation()}
                               style={{ height: viewportHeight ? `${viewportHeight}px` : '90dvh', WebkitOverflowScrolling: 'touch' }}
-                                className="w-full max-w-xl bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white flex flex-col relative rounded-t-2xl overflow-hidden shadow-2xl pt-10 will-change-transform" onTouchMove={(e) => e.preventDefault()}
+                                className="w-full max-w-xl bg-zinc-100 dark:bg-zinc-900 text-foreground flex flex-col relative rounded-t-2xl overflow-hidden shadow-2xl pt-10 will-change-transform" onTouchMove={(e) => e.preventDefault()}
   >
   {/* Grabber */}
   <div className="absolute left-1/2 -translate-x-1/2 bg-zinc-300 dark:bg-zinc-700 rounded-full cursor-grab active:cursor-grabbing" style={{ top: '16px', width: '48px', height: '8px' }} />
@@ -1974,14 +1974,14 @@ function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, 
                                       </button>
                                       <button
                                         onClick={handleSavePost}
-                                        className={`flex items-center gap-1.5 transition-colors ${isSaved ? 'text-black dark:text-white' : 'text-zinc-500 hover:text-black dark:hover:text-white'}`}
+                                        className={`flex items-center gap-1.5 transition-colors ${isSaved ? 'text-foreground' : 'text-zinc-500 hover:text-black dark:hover:text-white'}`}
                                       >
                                         <Bookmark className={`w-6 h-6 ${isSaved ? 'fill-current' : ''}`} strokeWidth={1.5} />
                                       </button>
                                       <div className="relative">
                                         <button
                                           onClick={() => setShowCommentSortMenu(prev => !prev)}
-                                          className={`p-1 rounded-full transition-colors ${showCommentSortMenu ? 'bg-black/10 dark:bg-white/10 text-black dark:text-white' : 'text-zinc-500 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'}`}
+                                          className={`p-1 rounded-full transition-colors ${showCommentSortMenu ? 'bg-black/10 dark:bg-white/10 text-foreground' : 'text-zinc-500 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'}`}
                                         >
                                           <Settings2 className="w-6 h-6" strokeWidth={1.5} />
                                         </button>
@@ -2008,7 +2008,7 @@ function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, 
                                                     onClick={() => { handleCommentSortChange(option); setShowCommentSortMenu(false); }}
                                                     className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium transition-colors text-left ${
                                                       commentSortOrder === option
-                                                        ? 'text-black dark:text-white bg-black/5 dark:bg-white/10'
+                                                        ? 'text-foreground bg-black/5 dark:bg-white/10'
                                                         : 'text-zinc-600 dark:text-zinc-400 hover:bg-black/5 dark:hover:bg-white/5'
                                                     }`}
                                                   >
@@ -2107,7 +2107,7 @@ function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, 
                               value={newComment}
                               onChange={handleCommentChange}
                               placeholder={replyingTo ? `Reply to ${replyingTo.name}...` : 'Add a comment...'}
-                              className="flex-1 bg-transparent text-black dark:text-white text-sm outline-none placeholder-zinc-500 resize-none min-h-[36px] max-h-[90px] leading-snug overflow-y-auto py-1"
+                              className="flex-1 bg-transparent text-foreground text-sm outline-none placeholder-zinc-500 resize-none min-h-[36px] max-h-[90px] leading-snug overflow-y-auto py-1"
                             />
                             
                             <button
@@ -2116,7 +2116,7 @@ function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, 
                               className={`flex items-center justify-center rounded-full transition-colors flex-shrink-0 ${
                                 submittingComment || !newComment.trim()
                                   ? 'text-zinc-400 dark:text-zinc-600 opacity-50'
-                                  : 'text-black dark:text-white hover:opacity-70'
+                                  : 'text-foreground hover:opacity-70'
                               }`}
                             >
                               {submittingComment ? (

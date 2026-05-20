@@ -60,15 +60,15 @@ export function Navbar() {
   };
   
     return (
-      <nav className="fixed top-0 left-0 right-0 z-50 w-full px-4 h-16 flex items-center justify-between bg-white dark:bg-black">
+      <nav className="fixed top-0 left-0 right-0 z-50 w-full px-4 h-16 flex items-center justify-between bg-background">
         {/* Left: Settings */}
         <div className="flex items-center w-10">
-          <Settings2 className="w-6 h-6 text-black dark:text-white" strokeWidth={1.5} />
+          <Settings2 className="w-6 h-6 text-foreground" strokeWidth={1.5} />
         </div>
 
         {/* Center: Share */}
         <div className="flex items-center justify-center flex-1">
-          <Share2 className="w-6 h-6 text-black dark:text-white" strokeWidth={1.5} />
+          <Share2 className="w-6 h-6 text-foreground" strokeWidth={1.5} />
         </div>
         
         {/* Right: Profile Photo or User Icon */}

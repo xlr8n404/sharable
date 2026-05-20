@@ -79,9 +79,9 @@ export default function BlockedUsersPage() {
   };
 
   return (
-      <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white selection:bg-black dark:selection:bg-white selection:text-white dark:selection:text-black">
+      <div className="min-h-screen bg-background text-foreground selection:bg-black dark:selection:bg-white selection:text-white dark:selection:text-black">
         <header className="fixed top-0 left-0 right-0 z-50 px-4 h-16 flex items-center bg-transparent border-b-0">
-          <button onClick={() => goBack()} className="p-2 -ml-2 text-black dark:text-white hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors">
+          <button onClick={() => goBack()} className="p-2 -ml-2 text-foreground hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <span className="ml-2 font-bold text-lg">Blocked Users</span>
@@ -115,7 +115,7 @@ export default function BlockedUsersPage() {
                       setSelectedUser(user);
                       setShowUnblockDialog(true);
                     }}
-                      className="px-4 py-2 bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white text-sm font-medium rounded-full hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors"
+                      className="px-4 py-2 bg-zinc-200 dark:bg-zinc-800 text-foreground text-sm font-medium rounded-full hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors"
                   >
                     Unblock
                   </button>

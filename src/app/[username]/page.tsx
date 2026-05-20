@@ -249,7 +249,7 @@ export default function UserProfilePage() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white flex items-center justify-center">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <div className="flex flex-col items-center gap-4 text-center px-4">
           <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-900 rounded-full flex items-center justify-center mb-2">
             <User className="w-8 h-8 text-zinc-500" />
@@ -266,9 +266,9 @@ export default function UserProfilePage() {
   }
 
   return (
-      <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white selection:bg-black dark:selection:bg-white selection:text-white dark:selection:text-black">
+      <div className="min-h-screen bg-background text-foreground selection:bg-black dark:selection:bg-white selection:text-white dark:selection:text-black">
         <header className={`fixed top-0 left-0 right-0 z-50 px-4 h-16 flex items-center bg-transparent transition-transform duration-300 hidden ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-          <button onClick={() => goBack()} className="p-2 -ml-2 text-black dark:text-white hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors">
+          <button onClick={() => goBack()} className="p-2 -ml-2 text-foreground hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="ml-2 flex items-center gap-1.5 min-w-0">
@@ -341,7 +341,7 @@ export default function UserProfilePage() {
           <div className="flex gap-3 mt-6 mb-6">
             <button
               onClick={handleMessage}
-              className="flex-1 flex items-center justify-center px-4 py-2.5 bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white font-bold text-sm rounded-full border border-black/10 dark:border-white/10 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
+              className="flex-1 flex items-center justify-center px-4 py-2.5 bg-zinc-100 dark:bg-zinc-900 text-foreground font-bold text-sm rounded-full border border-black/10 dark:border-white/10 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
             >
               Message
             </button>
@@ -350,7 +350,7 @@ export default function UserProfilePage() {
               disabled={followLoading}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 font-bold text-sm rounded-full transition-colors disabled:opacity-50 ${
                 isFollowing
-                  ? 'bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white border border-black/10 dark:border-white/10 hover:bg-red-50 dark:hover:bg-red-900/50 hover:border-red-500/50 hover:text-red-500'
+                  ? 'bg-zinc-100 dark:bg-zinc-900 text-foreground border border-black/10 dark:border-white/10 hover:bg-red-50 dark:hover:bg-red-900/50 hover:border-red-500/50 hover:text-red-500'
                   : 'bg-black dark:bg-white text-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-200'
               }`}
             >
@@ -362,7 +362,7 @@ export default function UserProfilePage() {
             <button
               onClick={() => setActiveTab('posts')}
               className={`flex-1 py-3 text-sm font-bold transition-colors relative ${
-                activeTab === 'posts' ? 'text-black dark:text-white' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                activeTab === 'posts' ? 'text-foreground' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
               }`}
             >
               Posts
@@ -377,7 +377,7 @@ export default function UserProfilePage() {
             <button
               onClick={() => setActiveTab('stories')}
               className={`flex-1 py-3 text-sm font-bold transition-colors relative ${
-                activeTab === 'stories' ? 'text-black dark:text-white' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                activeTab === 'stories' ? 'text-foreground' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
               }`}
             >
               Stories
@@ -392,7 +392,7 @@ export default function UserProfilePage() {
             <button
               onClick={() => setActiveTab('saved')}
               className={`flex-1 py-3 text-sm font-bold transition-colors relative flex items-center justify-center gap-1.5 ${
-                activeTab === 'saved' ? 'text-black dark:text-white' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                activeTab === 'saved' ? 'text-foreground' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
               }`}
             >
               Saved
@@ -407,7 +407,7 @@ export default function UserProfilePage() {
             <button
               onClick={() => setActiveTab('about')}
               className={`flex-1 py-3 text-sm font-bold transition-colors relative ${
-                activeTab === 'about' ? 'text-black dark:text-white' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                activeTab === 'about' ? 'text-foreground' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
               }`}
             >
               About
@@ -522,7 +522,7 @@ export default function UserProfilePage() {
                     {profile?.account_type === 'brand' ? 'Description' : 'Bio'}
                   </span>
                 </div>
-                <p className="text-black dark:text-white leading-relaxed text-[15px]">
+                <p className="text-foreground leading-relaxed text-[15px]">
                   {profile?.account_type === 'brand'
                     ? (profile?.description ? <MentionText text={profile.description} /> : 'No description yet.')
                     : (profile?.bio ? <MentionText text={profile.bio} /> : 'No bio yet.')
@@ -543,7 +543,7 @@ export default function UserProfilePage() {
                   </div>
                   <div className="flex-1">
                     <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Account Type</p>
-                    <p className="font-semibold text-black dark:text-white">
+                    <p className="font-semibold text-foreground">
                       {profile?.account_type === 'brand' ? 'Brand Account' : 'Personal Account'}
                     </p>
                   </div>
@@ -556,7 +556,7 @@ export default function UserProfilePage() {
                   </div>
                   <div className="flex-1">
                     <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Full Name</p>
-                    <p className="font-semibold text-black dark:text-white">{profile?.full_name || 'Not set'}</p>
+                    <p className="font-semibold text-foreground">{profile?.full_name || 'Not set'}</p>
                   </div>
                 </div>
 
@@ -567,7 +567,7 @@ export default function UserProfilePage() {
                   </div>
                   <div className="flex-1">
                     <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Sharable ID</p>
-                    <p className="font-semibold text-black dark:text-white">@{profile?.username || 'Not set'}</p>
+                    <p className="font-semibold text-foreground">@{profile?.username || 'Not set'}</p>
                   </div>
                 </div>
 
@@ -579,7 +579,7 @@ export default function UserProfilePage() {
                     </div>
                     <div className="flex-1">
                       <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Date of Birth</p>
-                      <p className="font-semibold text-black dark:text-white">{formatDate(profile?.date_of_birth || '')}</p>
+                      <p className="font-semibold text-foreground">{formatDate(profile?.date_of_birth || '')}</p>
                     </div>
                   </div>
                 )}
@@ -598,7 +598,7 @@ export default function UserProfilePage() {
                     </div>
                     <div className="flex-1">
                       <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Gender</p>
-                      <p className="font-semibold text-black dark:text-white capitalize">{profile?.gender || 'Not set'}</p>
+                      <p className="font-semibold text-foreground capitalize">{profile?.gender || 'Not set'}</p>
                     </div>
                   </div>
                 )}
@@ -611,7 +611,7 @@ export default function UserProfilePage() {
                     </div>
                     <div className="flex-1">
                       <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Relationship Status</p>
-                      <p className="font-semibold text-black dark:text-white">{profile?.relationship_status || 'Not set'}</p>
+                      <p className="font-semibold text-foreground">{profile?.relationship_status || 'Not set'}</p>
                     </div>
                   </div>
                 )}
@@ -624,7 +624,7 @@ export default function UserProfilePage() {
                     </div>
                     <div className="flex-1">
                       <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Since</p>
-                      <p className="font-semibold text-black dark:text-white">{profile?.since ? formatDate(profile.since) : 'Not set'}</p>
+                      <p className="font-semibold text-foreground">{profile?.since ? formatDate(profile.since) : 'Not set'}</p>
                     </div>
                   </div>
                 )}
@@ -636,7 +636,7 @@ export default function UserProfilePage() {
                   </div>
                   <div className="flex-1">
                     <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Active From</p>
-                    <p className="font-semibold text-black dark:text-white">{formatDate(profile?.created_at || '')}</p>
+                    <p className="font-semibold text-foreground">{formatDate(profile?.created_at || '')}</p>
                   </div>
                 </div>
               </div>

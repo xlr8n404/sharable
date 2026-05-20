@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function PostSkeleton() {
   return (
-    <div className="w-full bg-white dark:bg-black border-b border-black/[0.05] dark:border-white/[0.05] animate-pulse">
+    <div className="w-full bg-background border-b border-black/[0.05] dark:border-white/[0.05] animate-pulse">
       <div className="px-4 pt-4 pb-4">
         {/* Header: Avatar (40px), Full Name, Three-dot Menu */}
         <div className="flex items-center justify-between mb-4">

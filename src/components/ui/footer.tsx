@@ -2,10 +2,10 @@ import Link from 'next/link';
 
 export function Footer() {
   return (
-    <footer className="w-full py-8 px-6 bg-white dark:bg-black text-zinc-500 text-sm">
+    <footer className="w-full py-8 px-6 bg-background text-zinc-500 text-sm">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex flex-col items-center md:items-start gap-2">
-          <p className="font-bold text-black dark:text-white">Sharable</p>
+          <p className="font-bold text-foreground">Sharable</p>
           <p>© {new Date().getFullYear()} Sharable. All rights reserved.</p>
         </div>
         

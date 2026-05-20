@@ -7,7 +7,7 @@ interface VerifiedBadgeProps {
 
 export const VERIFIED_USERNAMES = ['najemislam', 'sharable'];
 
-export function VerifiedBadge({ username, className = "w-4 h-4 text-black dark:text-white" }: VerifiedBadgeProps) {
+export function VerifiedBadge({ username, className = "w-4 h-4 text-foreground" }: VerifiedBadgeProps) {
   if (!username || !VERIFIED_USERNAMES.includes(username.toLowerCase())) {
     return null;
   }

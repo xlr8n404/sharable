@@ -199,9 +199,9 @@ export default function ConnectPage() {
   const isSearching = query.length >= 2;
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Top bar: "Connect" title + search bar */}
-      <header className="sticky top-0 z-50 bg-white dark:bg-black">
+      <header className="sticky top-0 z-50 bg-background">
         <div className="max-w-xl mx-auto px-4 h-16 flex items-center gap-3">
           <span className="font-bold text-2xl tracking-tight font-[family-name:var(--font-syne)] flex-shrink-0">
             Connect
@@ -213,7 +213,7 @@ export default function ConnectPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search users..."
-              className="w-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-full pl-9 pr-8 py-2 text-black dark:text-white placeholder:text-zinc-500 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-700 transition-colors text-sm"
+              className="w-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-full pl-9 pr-8 py-2 text-foreground placeholder:text-zinc-500 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-700 transition-colors text-sm"
             />
             {query && (
               <button
@@ -341,7 +341,7 @@ export default function ConnectPage() {
                     <div className="flex gap-2 mt-4">
                       <button
                         onClick={() => handleMessage(user.id)}
-                        className="flex-1 py-2 font-bold text-sm rounded-full bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white border border-black/10 dark:border-white/10 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
+                        className="flex-1 py-2 font-bold text-sm rounded-full bg-zinc-100 dark:bg-zinc-900 text-foreground border border-black/10 dark:border-white/10 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
                       >
                         Message
                       </button>
@@ -350,7 +350,7 @@ export default function ConnectPage() {
                         disabled={loadingFollow === user.id}
                         className={`flex-1 py-2 font-bold text-sm rounded-full transition-colors disabled:opacity-50 flex items-center justify-center ${
                           isFollowed
-                            ? 'bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white border border-black/10 dark:border-white/10 hover:bg-red-50 dark:hover:bg-red-900/50 hover:border-red-500/50 hover:text-red-500'
+                            ? 'bg-zinc-100 dark:bg-zinc-900 text-foreground border border-black/10 dark:border-white/10 hover:bg-red-50 dark:hover:bg-red-900/50 hover:border-red-500/50 hover:text-red-500'
                             : 'bg-black dark:bg-white text-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-200'
                         }`}
                       >

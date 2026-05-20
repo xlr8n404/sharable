@@ -257,7 +257,7 @@ export default function CommunitySettingsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-black animate-pulse">
+      <div className="min-h-screen bg-background animate-pulse">
         <div className="w-full bg-zinc-100 dark:bg-zinc-900" style={{ height: '120px' }} />
         <div className="max-w-xl mx-auto px-4 pt-12 pb-8 space-y-6">
           {[...Array(5)].map((_, i) => (
@@ -272,7 +272,7 @@ export default function CommunitySettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white">
+    <div className="min-h-screen bg-background text-foreground">
 
       {/* ── Cover Photo + overlaid header ─────────────────────────────── */}
       <div className="relative">
@@ -353,7 +353,7 @@ export default function CommunitySettingsPage() {
               value={name}
               onChange={e => setName(e.target.value)}
               maxLength={60}
-              className="w-full bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 outline-none focus:border-black/30 dark:focus:border-white/30 transition-colors"
+              className="w-full bg-zinc-100 dark:bg-zinc-900 text-foreground px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 outline-none focus:border-black/30 dark:focus:border-white/30 transition-colors"
               placeholder="Community name"
             />
           </div>
@@ -385,7 +385,7 @@ export default function CommunitySettingsPage() {
               onChange={e => setDescription(e.target.value)}
               maxLength={500}
               rows={4}
-              className="w-full bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 outline-none focus:border-black/30 dark:focus:border-white/30 transition-colors resize-none"
+              className="w-full bg-zinc-100 dark:bg-zinc-900 text-foreground px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 outline-none focus:border-black/30 dark:focus:border-white/30 transition-colors resize-none"
               placeholder="Describe your community…"
             />
           </div>
@@ -413,7 +413,7 @@ export default function CommunitySettingsPage() {
                       className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl border transition-colors text-left ${
                         active
                           ? 'bg-black dark:bg-white border-black dark:border-white text-white dark:text-black'
-                          : 'bg-zinc-100 dark:bg-zinc-900 border-black/10 dark:border-white/10 text-black dark:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800'
+                          : 'bg-zinc-100 dark:bg-zinc-900 border-black/10 dark:border-white/10 text-foreground hover:bg-zinc-200 dark:hover:bg-zinc-800'
                       }`}
                     >
                       <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
@@ -430,7 +430,7 @@ export default function CommunitySettingsPage() {
                       {/* Radio dot */}
                       <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-colors ${
                         active
-                          ? 'border-white dark:border-black bg-white dark:bg-black'
+                          ? 'border-white dark:border-black bg-background'
                           : 'border-black/20 dark:border-white/20'
                       }`}>
                         {active && (
@@ -488,7 +488,7 @@ export default function CommunitySettingsPage() {
               <div className="px-4 pb-8">
                 {transferStep === 1 && (
                   <>
-                    <h2 className="text-xl font-bold text-black dark:text-white mb-1">Transfer Ownership</h2>
+                    <h2 className="text-xl font-bold text-foreground mb-1">Transfer Ownership</h2>
                     <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">Enter the username of the member you want to transfer this community to.</p>
                     <div className="mb-5">
                       <label className="block text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-2">New Owner's Username</label>
@@ -498,14 +498,14 @@ export default function CommunitySettingsPage() {
                         onChange={e => setTransferUsername(e.target.value)}
                         autoFocus
                         placeholder="@username"
-                        className="w-full bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 outline-none focus:border-black/30 dark:focus:border-white/30 transition-colors"
+                        className="w-full bg-zinc-100 dark:bg-zinc-900 text-foreground px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 outline-none focus:border-black/30 dark:focus:border-white/30 transition-colors"
                         onKeyDown={e => { if (e.key === 'Enter') handleTransferNext(); }}
                       />
                     </div>
                     <div className="flex gap-3">
                       <button
                         onClick={() => setTransferStep(0)}
-                        className="flex-1 py-3 font-bold text-sm rounded-2xl border border-black/10 dark:border-white/10 bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
+                        className="flex-1 py-3 font-bold text-sm rounded-2xl border border-black/10 dark:border-white/10 bg-zinc-100 dark:bg-zinc-900 text-foreground hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
                       >
                         Cancel
                       </button>
@@ -522,9 +522,9 @@ export default function CommunitySettingsPage() {
 
                 {transferStep === 2 && (
                   <>
-                    <h2 className="text-xl font-bold text-black dark:text-white mb-1">Confirm Transfer</h2>
+                    <h2 className="text-xl font-bold text-foreground mb-1">Confirm Transfer</h2>
                     <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">
-                      You're about to transfer ownership to <span className="font-bold text-black dark:text-white">@{transferUsername}</span>. Enter your password to confirm.
+                      You're about to transfer ownership to <span className="font-bold text-foreground">@{transferUsername}</span>. Enter your password to confirm.
                     </p>
                     <div className="mb-5">
                       <label className="block text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-2">Your Password</label>
@@ -534,14 +534,14 @@ export default function CommunitySettingsPage() {
                         onChange={e => setTransferPassword(e.target.value)}
                         autoFocus
                         placeholder="Enter your password"
-                        className="w-full bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 outline-none focus:border-black/30 dark:focus:border-white/30 transition-colors"
+                        className="w-full bg-zinc-100 dark:bg-zinc-900 text-foreground px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 outline-none focus:border-black/30 dark:focus:border-white/30 transition-colors"
                         onKeyDown={e => { if (e.key === 'Enter') handleTransferConfirm(); }}
                       />
                     </div>
                     <div className="flex gap-3">
                       <button
                         onClick={() => { setTransferStep(1); setTransferPassword(''); }}
-                        className="flex-1 py-3 font-bold text-sm rounded-2xl border border-black/10 dark:border-white/10 bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
+                        className="flex-1 py-3 font-bold text-sm rounded-2xl border border-black/10 dark:border-white/10 bg-zinc-100 dark:bg-zinc-900 text-foreground hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
                       >
                         Back
                       </button>

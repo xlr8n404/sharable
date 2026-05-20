@@ -61,7 +61,7 @@ export function MainMenu({ open, onClose, avatarSrc, feedMode, pinnedFeed = 'exp
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="absolute top-0 left-0 h-full w-[85%] max-w-[320px] bg-white dark:bg-black shadow-2xl flex flex-col"
+            className="absolute top-0 left-0 h-full w-[85%] max-w-[320px] bg-background shadow-2xl flex flex-col"
           >
             {/* ── FULLY SCROLLABLE ── */}
             <div className="flex-1 overflow-y-auto">
@@ -191,7 +191,7 @@ export function MainMenu({ open, onClose, avatarSrc, feedMode, pinnedFeed = 'exp
                         <Icon
                           size={22}
                           strokeWidth={isActive ? 2.5 : 2}
-                          className={isActive ? 'text-black dark:text-white' : 'text-zinc-500 dark:text-zinc-400'}
+                          className={isActive ? 'text-foreground' : 'text-zinc-500 dark:text-zinc-400'}
                           fill={isActive ? 'currentColor' : 'none'}
                         />
                       </div>
@@ -221,7 +221,7 @@ export function MainMenu({ open, onClose, avatarSrc, feedMode, pinnedFeed = 'exp
                     onClick={() => setAlertsEnabled(prev => !prev)}
                     className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none ${alertsEnabled ? 'bg-black dark:bg-white' : 'bg-zinc-300 dark:bg-zinc-700'}`}
                   >
-                    <span className={`inline-block h-5 w-5 transform rounded-full bg-white dark:bg-black shadow transition-transform ${alertsEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                    <span className={`inline-block h-5 w-5 transform rounded-full bg-background shadow transition-transform ${alertsEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
                   </button>
                 </div>
               </div>
@@ -245,7 +245,7 @@ export function MainMenu({ open, onClose, avatarSrc, feedMode, pinnedFeed = 'exp
                     onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                     className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none ${theme === 'dark' ? 'bg-black dark:bg-white' : 'bg-zinc-300 dark:bg-zinc-700'}`}
                   >
-                    <span className={`inline-block h-5 w-5 transform rounded-full bg-white dark:bg-black shadow transition-transform ${theme === 'dark' ? 'translate-x-6' : 'translate-x-1'}`} />
+                    <span className={`inline-block h-5 w-5 transform rounded-full bg-background shadow transition-transform ${theme === 'dark' ? 'translate-x-6' : 'translate-x-1'}`} />
                   </button>
                 </div>
               </div>
