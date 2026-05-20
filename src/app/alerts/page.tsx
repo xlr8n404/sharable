@@ -217,9 +217,9 @@ export default function AlertsPage() {
               <div key={i} className="flex items-center gap-3 px-4 py-3 animate-pulse">
                 <Skeleton className="w-14 h-14 rounded-full bg-zinc-200 dark:bg-zinc-800 shrink-0" />
                 <div className="flex-1 space-y-2">
-                  <Skeleton className="h-3.5 w-1/2 bg-zinc-100 dark:bg-zinc-900" />
-                  <Skeleton className="h-3.5 w-full bg-zinc-100 dark:bg-zinc-900" />
-                  <Skeleton className="h-2.5 w-3/10 bg-zinc-50 dark:bg-zinc-950" />
+                  <Skeleton className="h-3.5 w-[30%] bg-zinc-100 dark:bg-zinc-900" />
+                  <Skeleton className="h-3.5 w-[50%] bg-zinc-100 dark:bg-zinc-900" />
+                  <Skeleton className="h-2.5 w-[10%] bg-zinc-50 dark:bg-zinc-950" />
                 </div>
               </div>
             ))}
