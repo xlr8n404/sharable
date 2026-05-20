@@ -2128,10 +2128,11 @@ function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, 
                             </button>
                           </div>
                         </div>
+                      </div>
+                    </motion.div>
                   </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                )}
+              </AnimatePresence>
 
             {/* Nested Comment Menu Bottom Sheet */}
             <AnimatePresence>
