@@ -103,7 +103,7 @@ export default function CreateCommunityPage() {
   return (
     <div className="min-h-screen bg-background pb-28">
       {/* Fixed Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center gap-4 px-4 bg-background border-b border-border">
+      <header className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center gap-4 px-4 bg-background">
         <button
           onClick={() => goBack()}
           className="p-2 hover:bg-accent rounded-full transition-colors"
