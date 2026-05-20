@@ -492,11 +492,10 @@ export function PostCard({
     setShowMenu(false);
   };
 
-    const generateShareLink = () => {
-      // Create short unique link: @username + random 6 chars
-      const randomChars = Math.random().toString(36).substring(2, 8);
-      return `${window.location.origin}/${user.username}/${randomChars}`;
-    };
+  const generateShareLink = () => {
+  // Create fixed unique link: @username + post ID
+  return `${window.location.origin}/${user.username}/${id}`;
+  };
 
     const handleSharePost = async () => {
       const shareLink = generateShareLink();
