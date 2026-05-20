@@ -461,7 +461,7 @@ export default function HomePage() {
         onPinnedFeedChange={(mode) => setPinnedFeed(mode)}
       />
 
-        <header className="fixed top-0 left-0 right-0 h-16 z-50 px-4 bg-background rounded-b-[16px]">
+        <header className={`fixed top-0 left-0 right-0 h-16 z-50 px-4 bg-background transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
         <div className="h-full flex items-center justify-between">
           {/* Left: Settings */}
           <button
