@@ -123,12 +123,11 @@
     -moz-user-select: none;
     -ms-user-select: none;
     overflow-x: hidden;
-    /* Status bar area color */
-    background-color: #f2f2f2;
+    background-color: #f1f1f1;
   }
   
   .dark body {
-    background-color: #1a1a1a;
+    background-color: #1f1f1f;
   }
 
   #root, main, .app-container {
