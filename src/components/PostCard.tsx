@@ -424,43 +424,10 @@ export function PostCard({
     const words = textBeforeCursor.split(/\s/);
     words[words.length - 1] = `@${username} `;
     
-    const nextComment = words.join(' ') + textAfterCursor;
-    setNewComment(nextComment);
+    const newValue = words.join(' ') + textAfterCursor;
+    setNewComment(newValue);
     setShowMentions(false);
-    
-    // Disabled: Do not auto-focus to prevent scroll-up behavior
-    // setTimeout(() => {
-    //   commentInputRef.current?.focus();
-    // }, 0);
-  };
-
-  useEffect(() => {
-    if (showComments || showMenu || fullscreenMedia) {
-      document.body.classList.add('no-scroll');
-    } else {
-      document.body.classList.remove('no-scroll');
-    }
-    
-    return () => {
-      document.body.classList.remove('no-scroll');
-    };
-  }, [showComments, showMenu, fullscreenMedia]);
-
-  useEffect(() => {
-    // Disabled: Do not auto-focus on comment input to prevent scroll-up behavior
-    // if (showComments && commentInputRef.current) {
-    //   // Delay focus slightly to allow animation to complete
-    //   const timer = setTimeout(() => {
-    //     commentInputRef.current?.focus();
-    //   }, 350);
-    //   return () => clearTimeout(timer);
-    // }
-  }, [showComments]);
-
-  const handleCopyText = () => {
-    navigator.clipboard.writeText(content);
-    toast.success('Text copied to clipboard');
-    setShowMenu(false);
+    commentInputRef.current.focus();
   };
 
   const handleSavePost = async () => {
@@ -471,7 +438,6 @@ export function PostCard({
 
     const wasSaved = isSaved;
     setIsSaved(!isSaved);
-    toast.success(!isSaved ? 'Post saved' : 'Post removed from saved');
 
     try {
       if (wasSaved) {
@@ -480,22 +446,23 @@ export function PostCard({
           .delete()
           .eq('user_id', currentUserId)
           .eq('post_id', id);
+        toast.success('Post removed from saved');
       } else {
         await supabase
           .from('saved_posts')
-          .insert({ user_id: currentUserId, post_id: id });
+          .upsert({ user_id: currentUserId, post_id: id });
+        toast.success('Post saved');
       }
     } catch (error) {
       setIsSaved(wasSaved);
-      toast.error('Failed to update saved post');
+      toast.error('Failed to update saved status');
     }
-    setShowMenu(false);
   };
 
-  const generateShareLink = () => {
-  // Create fixed unique link: @username + post ID
-  return `${window.location.origin}/${user.username}/${id}`;
-  };
+    const generateShareLink = () => {
+      if (typeof window === 'undefined') return '';
+      return `${window.location.origin}/post/${id}`;
+    };
 
     const handleSharePost = async () => {
       const shareLink = generateShareLink();
@@ -624,137 +591,6 @@ export function PostCard({
       supabase.removeChannel(channel);
     };
   }, [id, showComments]);
-
-  const handleLike = async () => {
-    if (!currentUserId) {
-      toast.error('Please login to like posts');
-      return;
-    }
-
-    if (liking) return;
-    setLiking(true);
-
-    const wasLiked = liked;
-    setLiked(!liked);
-    setLikesCount(prev => wasLiked ? prev - 1 : prev + 1);
-
-    try {
-      if (wasLiked) {
-        await supabase
-          .from('likes')
-          .delete()
-          .eq('user_id', currentUserId)
-          .eq('post_id', id);
-        
-        await supabase
-          .from('posts')
-          .update({ likes_count: likesCount - 1 })
-          .eq('id', id);
-      } else {
-          // Check if already liked in DB to prevent duplicates
-          const { data: existingLike } = await supabase
-            .from('likes')
-            .select('id')
-            .eq('user_id', currentUserId)
-            .eq('post_id', id)
-            .maybeSingle();
-
-          if (existingLike) {
-            // Already liked — sync local state and bail
-            setLiked(true);
-            setLikesCount(prev => prev); // no change
-            setLiking(false);
-            return;
-          }
-
-          await supabase
-            .from('likes')
-            .upsert({ user_id: currentUserId, post_id: id }, { onConflict: 'user_id,post_id', ignoreDuplicates: true });
-          
-          // Sync like to Drive
-          const driveFormData = new FormData();
-          driveFormData.append('type', 'interactions');
-          driveFormData.append('metadata', JSON.stringify({ type: 'like', post_id: id, timestamp: new Date().toISOString() }));
-          fetch('/api/drive/sync', { method: 'POST', body: driveFormData }).catch(console.error);
-          
-          await supabase
-            .from('posts')
-            .update({ likes_count: likesCount + 1 })
-            .eq('id', id);
-
-        if (user_id !== currentUserId) {
-          await supabase
-            .from('notifications')
-            .insert({
-              user_id: user_id,
-              from_user_id: currentUserId,
-              type: 'like',
-              post_id: id,
-            });
-        }
-      }
-    } catch (error) {
-      setLiked(wasLiked);
-      setLikesCount(prev => wasLiked ? prev + 1 : prev - 1);
-      toast.error('Failed to update like');
-    } finally {
-      setLiking(false);
-    }
-  };
-
-  const handleRepost = async () => {
-    if (!currentUserId) {
-      toast.error('Please login to repost');
-      return;
-    }
-
-    if (reposting) return;
-    setReposting(true);
-
-    try {
-      if (reposted) {
-        const res = await fetch('/api/repost', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id: currentUserId, post_id: id })
-        });
-        const data = await res.json();
-        if (data.success) {
-          setReposted(false);
-          setRepostsCount(prev => prev - 1);
-          toast.success('Repost removed');
-        } else {
-          throw new Error(data.error);
-        }
-      } else {
-        const res = await fetch('/api/repost', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id: currentUserId, post_id: id })
-        });
-        const data = await res.json();
-          if (data.success) {
-            setReposted(true);
-            setRepostsCount(prev => prev + 1);
-            
-            // Sync repost to Drive
-            const driveFormData = new FormData();
-            driveFormData.append('type', 'interactions');
-            driveFormData.append('metadata', JSON.stringify({ type: 'repost', post_id: id, timestamp: new Date().toISOString() }));
-            fetch('/api/drive/sync', { method: 'POST', body: driveFormData }).catch(console.error);
-
-            toast.success('Reposted successfully');
-          } else {
-          throw new Error(data.error);
-        }
-      }
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to update repost');
-    } finally {
-      setReposting(false);
-      setShowRepostConfirm(false);
-    }
-  };
 
   const loadComments = async () => {
     setLoadingComments(true);
@@ -949,13 +785,13 @@ export function PostCard({
           updated.sort((a, b) => {
             const voteDiff = (b.votes_count || 0) - (a.votes_count || 0);
             if (voteDiff !== 0) return voteDiff;
-            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
           });
           return updated;
         });
-        toast.success('Ranked!');
+        toast.success('Vote added');
       } else {
-        toast.error(error.message || 'Could not rank this comment');
+        toast.error(error.message || 'Could not add vote');
       }
     }
   };
@@ -969,128 +805,87 @@ export function PostCard({
     if (!newComment.trim()) return;
 
     setSubmittingComment(true);
-    
     try {
-      const insertData: any = {
-        user_id: currentUserId,
-        post_id: id,
-        content: newComment.trim(),
-      };
-
-      if (replyingTo) {
-        insertData.parent_id = replyingTo.id;
-      }
-
-        const { data, error } = await supabase
-          .from('comments')
-          .insert(insertData)
-          .select(`
-            id,
-            content,
-            created_at,
-            user_id,
-            parent_id,
-            user:profiles(full_name, avatar_url, username)
-          `)
-          .single();
+      const { data, error } = await supabase
+        .from('comments')
+        .insert({
+          post_id: id,
+          user_id: currentUserId,
+          content: newComment.trim(),
+          parent_id: replyingTo?.id || null,
+        })
+        .select(`
+          id,
+          content,
+          created_at,
+          user_id,
+          parent_id,
+          user:profiles(full_name, avatar_url, username)
+        `)
+        .single();
 
       if (error) throw error;
 
-      const newCommentData = data as any;
-
-      if (replyingTo) {
-        setComments(prev => prev.map(c => {
-          if (c.id === replyingTo.id) {
-            return {
-              ...c,
-              replies: [...(c.replies || []), {
-                id: newCommentData.id,
-                content: newCommentData.content,
-                created_at: newCommentData.created_at,
-                user_id: newCommentData.user_id,
-                user: newCommentData.user,
-              }],
-            };
-          }
-          return c;
-        }));
-        setExpandedReplies(prev => new Set(prev).add(replyingTo.id));
-      } else {
-        setComments(prev => [...prev, {
-          id: newCommentData.id,
-          content: newCommentData.content,
-          created_at: newCommentData.created_at,
-          user_id: newCommentData.user_id,
-          user: newCommentData.user,
-          replies: [],
-        }]);
-      }
-
-      if (!replyingTo) {
-        setCommentsCount(prev => prev + 1);
-        await supabase
-          .from('posts')
-          .update({ comments_count: commentsCount + 1 })
-          .eq('id', id);
-      }
-
+      if (data) {
+        if (replyingTo) {
+          setComments(prev => prev.map(c => {
+            if (c.id === replyingTo.id) {
+              return { ...c, replies: [...(c.replies || []), data as any] };
+            }
+            return c;
+          }));
+          setExpandedReplies(prev => new Set([...prev, replyingTo.id]));
+        } else {
+          setComments(prev => [data as any, ...prev]);
+        }
         setNewComment('');
         setReplyingTo(null);
+        setCommentsCount(prev => prev + 1);
+        toast.success('Comment added');
         
-        // Reset textarea height
-        if (commentInputRef.current) {
-          commentInputRef.current.style.height = 'auto';
+        // Notify post owner
+        if (user_id !== currentUserId) {
+          await supabase
+            .from('notifications')
+            .insert({
+              user_id: user_id,
+              from_user_id: currentUserId,
+              type: 'comment',
+              post_id: id,
+              comment_id: data.id,
+            });
         }
-
-        // Disabled: Do not auto-scroll to bottom when user posts a comment
-        // setTimeout(scrollToBottom, 100);
-
-      if (user_id !== currentUserId) {
-        await supabase
-          .from('notifications')
-          .insert({
-            user_id: user_id,
-            from_user_id: currentUserId,
-            type: 'comment',
-            post_id: id,
-            comment_id: newCommentData.id,
-          });
       }
     } catch (error) {
-      toast.error('Failed to post comment');
+      toast.error('Failed to add comment');
     } finally {
       setSubmittingComment(false);
     }
   };
 
-  const handleDeleteComment = async (commentId: string, isReply: boolean, parentId?: string) => {
+  const handleDeleteComment = async (commentId: string, isReply: boolean = false, parentId?: string) => {
+    if (!currentUserId) return;
+
     try {
       const { error } = await supabase
         .from('comments')
         .delete()
-        .eq('id', commentId);
+        .eq('id', commentId)
+        .eq('user_id', currentUserId);
 
       if (error) throw error;
 
       if (isReply && parentId) {
         setComments(prev => prev.map(c => {
           if (c.id === parentId) {
-            return {
-              ...c,
-              replies: (c.replies || []).filter(r => r.id !== commentId),
-            };
+            return { ...c, replies: c.replies?.filter(r => r.id !== commentId) };
           }
           return c;
         }));
       } else {
         setComments(prev => prev.filter(c => c.id !== commentId));
-        setCommentsCount(prev => prev - 1);
-        await supabase
-          .from('posts')
-          .update({ comments_count: Math.max(0, commentsCount - 1) })
-          .eq('id', id);
       }
-
+      setCommentsCount(prev => prev - 1);
       toast.success('Comment deleted');
     } catch (error) {
       toast.error('Failed to delete comment');
@@ -1176,94 +971,126 @@ export function PostCard({
     }
   };
 
-function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, formatTime, deletingCommentId, setDeletingCommentId, handleDeleteComment, setReplyingTo, setNewComment, commentInputRef, handleVoteComment, votedComments, showCommentMenu, setShowCommentMenu, replies, expandedReplies, toggleReplies }: any) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const content = comment.content || '';
-  const shouldTruncate = content.length > 115;
-  const displayedContent = isExpanded || !shouldTruncate ? content : content.slice(0, 115);
-  const hasVoted = votedComments?.has(comment.id);
-  const avatarSize = isReply ? 32 : 40;
-  const nameSize = isReply ? 'text-sm' : 'text-base';
-  const timeSize = isReply ? 'text-xs' : 'text-sm';
-  
-  return (
-  <div className={`flex gap-3 ${isReply ? 'ml-8' : ''}`}>
-  {/* Profile picture */}
-  <div className="flex-shrink-0" style={{ width: `${avatarSize}px`, height: `${avatarSize}px` }}>
-    <div className="w-full h-full rounded-full overflow-hidden border border-black/10 dark:border-white/10 bg-zinc-200 dark:bg-zinc-800">
-      <img
-        src={getAvatarUrl(comment.user.avatar_url, comment.user.full_name)}
-        alt={comment.user.full_name || 'User'}
-        className="w-full h-full object-cover"
-        onError={(e) => {
-          (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(comment.user.full_name || 'User')}`;
-        }}
-      />
-    </div>
-  </div>
-  
-  <div className="flex-1 min-w-0">
-    {/* Header row: name, timing, menu */}
-    <div className="flex items-center justify-between gap-2 mb-1">
-      <div className="flex items-center gap-2 min-w-0">
-        <span className={`font-bold ${nameSize}`}>{comment.user.full_name || comment.user.username || 'User'}</span>
-        <span className={`text-zinc-500 ${timeSize}`}>{formatTime(comment.created_at)}</span>
+  function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, formatTime, deletingCommentId, setDeletingCommentId, handleDeleteComment, setReplyingTo, setNewComment, commentInputRef, handleVoteComment, votedComments, showCommentMenu, setShowCommentMenu, replies, expandedReplies, toggleReplies }: any) {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const content = comment.content || '';
+    const shouldTruncate = content.length > 115;
+    const displayedContent = isExpanded || !shouldTruncate ? content : content.slice(0, 115);
+    const hasVoted = votedComments?.has(comment.id);
+    const avatarSize = isReply ? 'w-8 h-8' : 'w-10 h-10';
+
+    return (
+      <div className={`flex gap-3 ${isReply ? '' : ''}`}>
+        {/* Avatar */}
+        <div className={`${avatarSize} rounded-full overflow-hidden border border-black/10 dark:border-white/10 bg-zinc-200 dark:bg-zinc-800 flex-shrink-0`}>
+          <img 
+            src={getAvatarUrl(comment.user.avatar_url, comment.user.full_name)} 
+            alt={comment.user.full_name || 'User'}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(comment.user.full_name || 'User')}`;
+            }}
+          />
+        </div>
+        
+        <div className="flex-1 min-w-0">
+          {/* Header: Name, Timing, Three-dot Menu */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className={`font-bold ${isReply ? 'text-base' : 'text-base'}`}>{comment.user.full_name || comment.user.username || 'User'}</span>
+              <span className="text-zinc-500 text-sm">{formatTime(comment.created_at)}</span>
+            </div>
+            
+            {/* Three-dot Menu */}
+            <div className="relative flex-shrink-0">
+              {deletingCommentId === comment.id ? (
+                <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2 duration-200">
+                  <button
+                    onClick={() => setDeletingCommentId(null)}
+                    className="text-xs font-medium text-zinc-500 hover:text-black dark:hover:text-white"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleDeleteComment(comment.id, isReply, parentId);
+                      setDeletingCommentId(null);
+                    }}
+                    className="text-xs font-medium text-red-500 hover:text-red-600"
+                  >
+                    Confirm
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setSelectedCommentMenu(comment.id)}
+                  className="p-1 text-zinc-400 hover:text-black dark:hover:text-white rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                >
+                  <MoreHorizontal className="w-4 h-4" strokeWidth={1.5} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Content */}
+          <div 
+            onClick={() => shouldTruncate && setIsExpanded(!isExpanded)}
+            className={`${shouldTruncate ? 'cursor-pointer' : ''} group/comment-content mt-1`}
+          >
+            <p className="text-base text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap">
+              <MentionText text={displayedContent} />
+              {shouldTruncate && !isExpanded && <span>...</span>}
+              {shouldTruncate && (
+                <span className="ml-1 font-bold text-black dark:text-white group-hover/comment-content:underline">
+                  {isExpanded ? ' See less' : ' See more'}
+                </span>
+              )}
+            </p>
+          </div>
+
+          {/* Actions row */}
+          <div className="flex items-center gap-4 mt-2">
+            {/* Left: Reply, Replies */}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => {
+                  const username = (comment.user as any)?.username;
+                  setReplyingTo({
+                    id: isReply ? (parentId || comment.id) : comment.id,
+                    name: username ? `@${username}` : (comment.user?.full_name || 'User')
+                  });
+                  setNewComment(username ? `@${username} ` : '');
+                }}
+                className="text-sm text-zinc-500 hover:text-black dark:hover:text-white transition-colors"
+              >
+                Reply
+              </button>
+
+              {/* Replies toggle — only for main comments with replies */}
+              {!isReply && replies && replies.length > 0 && (
+                <button
+                  onClick={() => toggleReplies(comment.id)}
+                  className="text-sm text-zinc-500 hover:text-black dark:hover:text-white transition-colors"
+                >
+                  {expandedReplies?.has(comment.id) ? 'Hide' : `${replies.length} ${replies.length === 1 ? 'Reply' : 'Replies'}`}
+                </button>
+              )}
+            </div>
+
+            {/* Right: Like button */}
+            <div className="ml-auto">
+              <button
+                onClick={() => handleVoteComment(comment.id)}
+                className={`flex items-center text-sm transition-colors ${hasVoted ? 'text-red-500' : 'text-zinc-500 hover:text-red-500'}`}
+              >
+                <Heart className={`w-4 h-4 ${hasVoted ? 'fill-current' : ''}`} strokeWidth={1.5} />
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-      <button
-        onClick={() => setShowCommentMenu(comment.id)}
-        className="p-1 text-zinc-500 hover:text-black dark:hover:text-white rounded-full transition-colors hover:bg-black/5 dark:hover:bg-white/5 flex-shrink-0"
-      >
-        <MoreHorizontal className="w-6 h-6" strokeWidth={1.5} />
-      </button>
-    </div>
-  
-    {/* Content */}
-    <div
-      onClick={() => shouldTruncate && setIsExpanded(!isExpanded)}
-      className={`${shouldTruncate ? 'cursor-pointer' : ''} group/comment-content mb-2`}
-    >
-      <p className="text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap">
-        <MentionText text={displayedContent} />
-        {shouldTruncate && !isExpanded && <span>...</span>}
-        {shouldTruncate && (
-          <span className="ml-1 font-bold text-foreground group-hover/comment-content:underline">
-            {isExpanded ? ' See less' : ' See more'}
-          </span>
-        )}
-      </p>
-    </div>
-    
-    {/* Actions row — Reply | Replies */}
-    <div className="flex items-center gap-4">
-      {/* Reply button */}
-      <button
-        onClick={() => {
-          const username = (comment.user as any)?.username;
-          setReplyingTo({
-            id: isReply ? (parentId || comment.id) : comment.id,
-            name: username ? `@${username}` : (comment.user?.full_name || 'User')
-          });
-          setNewComment(username ? `@${username} ` : '');
-        }}
-        className="text-sm text-zinc-500 hover:text-black dark:hover:text-white transition-colors"
-      >
-        Reply
-      </button>
-      
-      {/* Replies toggle — only for main comments with replies */}
-      {!isReply && replies && replies.length > 0 && (
-        <button
-          onClick={() => toggleReplies(comment.id)}
-          className="text-sm text-zinc-500 hover:text-black dark:hover:text-white transition-colors"
-        >
-          {expandedReplies?.has(comment.id) ? '▲' : '▼'} {replies.length} {replies.length === 1 ? 'Reply' : 'Replies'}
-        </button>
-      )}
-    </div>
-  </div>
-  </div>
-  );
-}
+    );
+  }
 
   const renderComment = (comment: Comment | CommentReply, isReply: boolean = false, parentId?: string) => {
     if (!comment || !comment.user) return null;
@@ -1295,508 +1122,251 @@ function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, 
   };
 
   if (reposted_id && !isNested) {
-    const originalPostData = Array.isArray(original_post) ? original_post[0] : original_post;
-    
-    // If we have a reposted_id but no original_post data (deleted or failed join)
-    if (!originalPostData) {
+    if (!original_post) {
       return (
-        <div className="w-full bg-background overflow-hidden border-b border-black/[0.05] dark:border-white/[0.05] p-4">
-          <div className="flex items-center gap-2 text-zinc-500 italic">
+        <div className="p-4 border-b border-black/5 dark:border-white/5">
+          <div className="flex items-center gap-2 text-zinc-500 mb-2">
             <Repeat className="w-4 h-4" />
-            <span>Original post is no longer available</span>
+            <span className="text-sm font-medium">Reposted by {user.full_name}</span>
+          </div>
+          <div className="bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl p-4 border border-black/5 dark:border-white/5">
+            <p className="text-zinc-500 italic">Original post unavailable</p>
           </div>
         </div>
       );
     }
 
-    const originalUser = originalPostData.user || { full_name: 'Unknown User', avatar_url: null, username: 'unknown' };
-
     return (
-      <div className="w-full bg-background overflow-hidden border-b border-black/[0.05] dark:border-white/[0.05]">
-        {/* Reposter Header */}
-          <div className="flex items-center justify-between px-4 pt-4 pb-2">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <div className="relative">
-                <div 
-                  className="rounded-full overflow-hidden border border-black/10 dark:border-white/10 bg-zinc-100 dark:bg-zinc-900 flex-shrink-0"
-                  style={{ width: avatarSize, height: avatarSize }}
-                >
-                  <img 
-                    src={avatarSrc} 
-                    alt={user?.full_name || 'User'} 
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user?.full_name || 'User')}`;
-                    }}
-                  />
-                </div>
-                <div className="absolute -bottom-1 -right-1 bg-black dark:bg-white text-white dark:text-black p-0.5 rounded-full border border-white dark:border-black">
-                  <Repeat className="w-3 h-3" />
-                </div>
-              </div>
-              <div className="flex flex-col min-w-0">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="font-bold text-[16px] tracking-tight truncate">{user?.full_name || user?.username || 'Unknown User'}</span>
-                  <VerifiedBadge username={user?.username} className="w-[16px] h-[16px]" />
-                  {user?.identity_tag ? (
-                    <span className="text-[14px] px-2.5 py-0.5 bg-primary text-primary-foreground rounded-full font-medium">
-                      {user.identity_tag}
-                    </span>
-                  ) : (
-                    <span className="text-[14px] text-zinc-500 dark:text-zinc-400 font-medium">@{user?.username || 'user'}</span>
-                  )}
-                </div>
-              </div>
-            </div>
-          <button 
-            onClick={() => setShowMenu(true)}
-            className="p-2 -mr-2 text-zinc-500 hover:text-black dark:hover:text-white rounded-full transition-colors"
-          >
-            <MoreHorizontal className="w-6 h-6" strokeWidth={1.5} />
-          </button>
+      <div className="border-b border-black/5 dark:border-white/5 pb-2">
+        <div className="px-4 py-2 flex items-center gap-2 text-zinc-500">
+          <Repeat className="w-4 h-4" />
+          <span className="text-sm font-medium">Reposted by {user.full_name}</span>
         </div>
-
-        {/* Original Post Content - Rendered as part of the same flow */}
         <PostCard 
-          {...originalPostData}
-          user={originalUser}
+          {...original_post} 
           isNested={true} 
-          avatarSize={avatarSize}
+          currentUserId={currentUserId}
+          currentUserProfile={currentUserProfile}
+          initialLiked={initialLiked}
+          initialReposted={initialReposted}
+          initialSaved={initialSaved}
+          isVisible={isVisible}
         />
-
-            <Drawer open={showMenu} onOpenChange={(open) => { setShowMenu(open); if(!open) setShowDeleteConfirm(false); }}>
-              <DrawerContent className="bg-zinc-100 dark:bg-zinc-900 border-black/10 dark:border-white/10 pb-8 rounded-t-[8px]">
-              <div className="mx-auto w-full max-w-xl">
-                {showDeleteConfirm ? (
-                  <div className="py-6 px-4 space-y-4">
-                    <div className="text-center space-y-2">
-                      <h3 className="text-lg font-bold">Delete repost?</h3>
-                      <p className="text-zinc-500">Are you sure you want to remove this repost from your profile?</p>
-                    </div>
-                    <div className="flex gap-3 pt-2">
-                      <button
-                        onClick={() => setShowDeleteConfirm(false)}
-                        className="flex-1 px-4 py-3 text-base font-bold bg-zinc-200 dark:bg-zinc-800 rounded-2xl hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={handleDelete}
-                        disabled={deleting}
-                        className="flex-1 px-4 py-3 text-base font-bold bg-red-500 text-white rounded-2xl hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
-                      >
-                        {deleting ? <Loader centered={false} className="text-white" /> : 'Delete'}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex flex-col py-4">
-                    {/* Original Post Timing */}
-                    <div className="flex flex-col gap-4 px-4 py-4 border-b border-black/5 dark:border-white/5 mb-2">
-                      {/* Originally posted on */}
-                      <div className="flex items-center gap-4 text-zinc-500">
-                        <div className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center">
-                          <Clock className="w-5 h-5" strokeWidth={1.5} />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Posted on</span>
-                          <span className="text-base font-medium text-foreground">{originalPostData.created_at ? formatFullDate(originalPostData.created_at) : 'Unknown'}</span>
-                        </div>
-                      </div>
-
-                      {/* Original Creator Info */}
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full overflow-hidden border border-black/10 dark:border-white/10 bg-zinc-100 dark:bg-zinc-900">
-                          <img
-                            src={getAvatarUrl(originalUser?.avatar_url, originalUser?.full_name || 'User')}
-                            alt={originalUser?.full_name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Posted by</span>
-                          <span className="text-base font-bold text-foreground">{originalUser?.full_name || 'Unknown User'}</span>
-                        </div>
-                      </div>
-
-                      {/* Reposted on */}
-                      <div className="flex items-center gap-4 text-zinc-500">
-                        <div className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center">
-                          <Clock className="w-5 h-5" strokeWidth={1.5} />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Reposted on</span>
-                          <span className="text-base font-medium text-foreground">{created_at ? formatFullDate(created_at) : 'Unknown'}</span>
-                        </div>
-                      </div>
-
-                      {/* Reposter Info */}
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full overflow-hidden border border-black/10 dark:border-white/10 bg-zinc-100 dark:bg-zinc-900">
-                          <img
-                            src={getAvatarUrl(user?.avatar_url, user?.full_name || 'User')}
-                            alt={user?.full_name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Reposted by</span>
-                          <span className="text-base font-bold text-foreground">{user?.full_name || 'Unknown User'}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-1">
-                      {/* Save Repost */}
-                      <button
-                        onClick={async () => {
-                          if (!currentUserId) {
-                            toast.error('Please login to save posts');
-                            return;
-                          }
-                          const { data: existing } = await supabase
-                            .from('saved_posts')
-                            .select('id')
-                            .eq('user_id', currentUserId)
-                            .eq('post_id', id)
-                            .maybeSingle();
-
-                          if (existing) {
-                            await supabase.from('saved_posts').delete().eq('id', existing.id);
-                            toast.success('Removed from saved');
-                          } else {
-                            await supabase.from('saved_posts').insert({ user_id: currentUserId, post_id: id });
-                            toast.success('Repost saved');
-                          }
-                          setShowMenu(false);
-                        }}
-                        className="w-full flex items-center gap-4 px-4 py-4 hover:bg-black/5 dark:hover:bg-white/5 rounded-2xl transition-colors text-left"
-                      >
-                        <div className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center">
-                          <Bookmark className="w-5 h-5" strokeWidth={1.5} />
-                        </div>
-                        <span className="text-lg font-bold">Save repost</span>
-                      </button>
-
-                      {/* Copy Text */}
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(originalPostData.content);
-                          toast.success('Text copied');
-                          setShowMenu(false);
-                        }}
-                        className="w-full flex items-center gap-4 px-4 py-4 hover:bg-black/5 dark:hover:bg-white/5 rounded-2xl transition-colors text-left"
-                      >
-                        <div className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center">
-                          <Copy className="w-5 h-5" strokeWidth={1.5} />
-                        </div>
-                        <span className="text-lg font-bold">Copy text</span>
-                      </button>
-
-                      {/* Share Original */}
-                      <button
-                        onClick={async () => {
-                          const randomChars = Math.random().toString(36).substring(2, 8);
-                          const url = `${window.location.origin}/${originalUser.username}/${randomChars}`;
-                          if (navigator.share) {
-                            await navigator.share({ title: 'Sharable Post', text: 'Check out this post on Sharable', url });
-                          } else {
-                            await navigator.clipboard.writeText(url);
-                            toast.success('Link copied');
-                          }
-                          setShowMenu(false);
-                        }}
-                        className="w-full flex items-center gap-4 px-4 py-4 hover:bg-black/5 dark:hover:bg-white/5 rounded-2xl transition-colors text-left"
-                      >
-                        <div className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center">
-                          <Share2 className="w-5 h-5" strokeWidth={1.5} />
-                        </div>
-                        <span className="text-lg font-bold">Share original post</span>
-                      </button>
-
-                      {/* Delete Repost */}
-                      {currentUserId === user_id && (
-                        <button
-                          onClick={() => setShowDeleteConfirm(true)}
-                          className="w-full flex items-center gap-4 px-4 py-4 text-red-500 hover:bg-red-500/10 rounded-2xl transition-colors text-left mt-2 border-t border-black/5 dark:border-white/5"
-                        >
-                          <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
-                            <Trash2 className="w-5 h-5" strokeWidth={1.5} />
-                          </div>
-                          <span className="text-lg font-bold">Delete repost</span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </DrawerContent>
-          </Drawer>
       </div>
     );
   }
 
   return (
-    <>
-      <div
-        className={`w-full bg-background overflow-hidden ${isNested ? '' : ''}`}
-      >
-          {!isNested && (
-            <div className="flex items-center justify-between px-4 pt-4 pb-2">
-              <Link href={user?.username ? `/${user.username}` : '#'} className="flex items-center gap-2 min-w-0">
-                <div 
-                  className="rounded-full overflow-hidden border border-black/10 dark:border-white/10 bg-zinc-100 dark:bg-zinc-900 flex-shrink-0"
-                  style={{ width: '40px', height: '40px' }}
-                >
-                  <img 
-                    src={avatarSrc} 
-                    alt={user?.username || user?.full_name || 'User'} 
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.full_name || 'User'}`;
-                    }}
-                  />
-                </div>
-                <div className="flex flex-col min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="font-bold text-[16px] tracking-tight truncate">{user?.full_name || user?.username || 'Unknown User'}</span>
-                    <VerifiedBadge username={user?.username} className="w-[16px] h-[16px]" />
-                    {user?.identity_tag ? (
-                      <span className="text-[14px] px-2.5 py-0.5 bg-primary text-primary-foreground rounded-full font-medium">
-                        {user.identity_tag}
-                      </span>
-                    ) : (
-                      <span className="text-[14px] text-zinc-500 dark:text-zinc-400 font-medium">@{user?.username || 'user'}</span>
-                    )}
-                  </div>
-                </div>
-              </Link>
-              
-              <div className="relative flex-shrink-0 flex items-center gap-2">
-                <button 
-                  onClick={() => setShowMenu(true)}
-                  className="p-2 -mr-2 text-zinc-500 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors"
-                >
-                  <MoreHorizontal className="w-6 h-6" strokeWidth={1.5} />
-                </button>
-                
-                    <Drawer open={showMenu} onOpenChange={(open) => { setShowMenu(open); if(!open) setShowDeleteConfirm(false); }}>
-                      <DrawerContent className="bg-zinc-100 dark:bg-zinc-900 border-black/10 dark:border-white/10 pb-8 rounded-t-[8px]">
-                      <div className="mx-auto w-full max-w-xl">
-                        {showDeleteConfirm ? (
-                          <div className="py-6 px-4 space-y-4">
-                          <div className="text-center space-y-2">
-                            <h3 className="text-lg font-bold">Delete post?</h3>
-                            <p className="text-zinc-500">Are you sure you want to delete this post? This action cannot be undone.</p>
-                          </div>
-                          <div className="flex gap-3 pt-2">
-                            <button
-                              onClick={() => setShowDeleteConfirm(false)}
-                              className="flex-1 px-4 py-3 text-base font-bold bg-zinc-200 dark:bg-zinc-800 rounded-2xl hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors"
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              onClick={handleDelete}
-                              disabled={deleting}
-                              className="flex-1 px-4 py-3 text-base font-bold bg-red-500 text-white rounded-2xl hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
-                            >
-                              {deleting ? <Loader centered={false} className="text-white" /> : 'Delete'}
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col py-4">
-                          {/* Post Timing & Creator Info */}
-                          <div className="flex flex-col gap-4 px-4 py-4 border-b border-black/5 dark:border-white/5 mb-2">
-                            <div className="flex items-center gap-4 text-zinc-500">
-                              <div className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center">
-                                <Clock className="w-5 h-5" strokeWidth={1.5} />
-                              </div>
-                              <div className="flex flex-col">
-                                <span className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Posted on</span>
-                                <span className="text-base font-medium text-foreground">{created_at ? formatFullDate(created_at) : 'Unknown'}</span>
-                              </div>
-                            </div>
-
-                            {/* Creator Info */}
-                            <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 rounded-full overflow-hidden border border-black/10 dark:border-white/10 bg-zinc-100 dark:bg-zinc-900">
-                                <img 
-                                  src={getAvatarUrl(user?.avatar_url, user?.full_name || 'User')} 
-                                  alt={user?.full_name} 
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
-                              <div className="flex flex-col">
-                                <span className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Posted by</span>
-                                <span className="text-base font-bold text-foreground">{user?.full_name || 'Unknown User'}</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-1 gap-1">
-
-  
-                            {/* Copy Text */}
-                            <button
-                              onClick={handleCopyText}
-                              className="w-full flex items-center gap-4 px-4 py-4 hover:bg-black/5 dark:hover:bg-white/5 rounded-2xl transition-colors text-left"
-                            >
-                              <div className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center">
-                                <Copy className="w-5 h-5" strokeWidth={1.5} />
-                              </div>
-                              <span className="text-lg font-bold">Copy text</span>
-                            </button>
-  
-
-  
-                            {/* Share */}
-                            <button
-                              onClick={handleSharePost}
-                              className="w-full flex items-center gap-4 px-4 py-4 hover:bg-black/5 dark:hover:bg-white/5 rounded-2xl transition-colors text-left"
-                            >
-                              <div className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center">
-                                <Share2 className="w-5 h-5" strokeWidth={1.5} />
-                              </div>
-                              <span className="text-lg font-bold">Share post</span>
-                            </button>
-  
-                            {/* Delete */}
-                            {currentUserId === user_id && (
-                              <button
-                                onClick={() => setShowDeleteConfirm(true)}
-                                className="w-full flex items-center gap-4 px-4 py-4 text-red-500 hover:bg-red-500/10 rounded-2xl transition-colors text-left mt-2 border-t border-black/5 dark:border-white/5"
-                              >
-                                <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
-                                  <Trash2 className="w-5 h-5" strokeWidth={1.5} />
-                                </div>
-                                <span className="text-lg font-bold">Delete post</span>
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </DrawerContent>
-                </Drawer>
+    <div className={`flex flex-col ${isNested ? 'bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl mx-4 mb-2 border border-black/5 dark:border-white/5' : 'border-b border-black/5 dark:border-white/5'}`}>
+      <div className="flex flex-col p-4 pb-2">
+        {/* Header: Avatar, Name, Community, More */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <Link href={`/${user.username || user_id}`} className="shrink-0">
+              <div className="rounded-full overflow-hidden border border-black/5 dark:border-white/10 bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center" style={{ width: avatarSize, height: avatarSize }}>
+                <img 
+                  src={avatarSrc} 
+                  alt={user.full_name} 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.full_name || 'User')}`;
+                  }}
+                />
+              </div>
+            </Link>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1.5">
+                <Link href={`/${user.username || user_id}`} className="font-bold text-[16px] hover:underline leading-tight">
+                  {user.full_name}
+                </Link>
+                {user.identity_tag && (
+                  <VerifiedBadge identity_tag={user.identity_tag} />
+                )}
+                {isFollower && !isNested && (
+                  <>
+                    <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                    <span className="text-[13px] font-medium text-zinc-400">Following</span>
+                  </>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5 text-zinc-500 text-[13px]">
+                <span className="font-medium">@{user.username || 'user'}</span>
+                <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                <span>{created_at ? formatTime(created_at) : 'now'}</span>
+                {community && (
+                  <>
+                    <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                    <Link href={`/community/${community.id}`} className="text-blue-500 hover:underline font-medium">
+                      {community.name}
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
-          )}
-  
-            <div className="px-4 pb-2">
-                  <div
-                    onClick={() => shouldTruncate && setIsExpanded(!isExpanded)}
-                    className={`${shouldTruncate ? 'cursor-pointer' : ''} group/content`}
-                  >
-                    <p className="text-[16px] leading-relaxed text-zinc-700 dark:text-zinc-200 whitespace-pre-wrap">
-                      <MentionText text={displayedContent} />
-                      {shouldTruncate && !isExpanded && <span>...</span>}
-                      {shouldTruncate && (
-                        <span className="ml-1 font-bold text-foreground group-hover/content:underline">
-                          {isExpanded ? ' See less' : ' See more'}
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                </div>
-
-            {hasMedia && (
-              <div className="rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 mx-4 my-2">
-                {/* Facebook-style grid layout */}
-                {finalMediaUrls.length === 1 && (
-                  <div className="relative w-full h-auto">
-                    <MediaGridCell
-                      url={finalMediaUrls[0]}
-                      type={finalMediaTypes[0]}
-                      index={0}
-                      isVisible={isVisible}
-                      isSingle={true}
+          </div>
+          {!isNested && (
+            <div className="relative">
+              <button 
+                onClick={() => setShowMenu(!showMenu)}
+                className="p-2 text-zinc-400 hover:text-black dark:hover:text-white rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+              >
+                <MoreHorizontal size={20} strokeWidth={1.5} />
+              </button>
+              
+              <AnimatePresence>
+                {showMenu && (
+                  <>
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="fixed inset-0 z-30"
+                      onClick={() => setShowMenu(false)}
                     />
-                  </div>
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                      className="absolute right-0 mt-1 w-48 bg-white dark:bg-zinc-900 border border-black/10 dark:border-white/10 rounded-2xl shadow-xl z-40 overflow-hidden"
+                    >
+                      <button 
+                        onClick={handleSharePost}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                      >
+                        <Copy size={18} strokeWidth={1.5} />
+                        Copy Link
+                      </button>
+                      <button 
+                        onClick={handleDownloadMedia}
+                        disabled={!hasMedia}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/5 transition-colors disabled:opacity-50"
+                      >
+                        <CornerRightDown size={18} strokeWidth={1.5} />
+                        Download
+                      </button>
+                      {currentUserId === user_id && (
+                        <button 
+                          onClick={() => setShowDeleteConfirm(true)}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        >
+                          <Trash2 size={18} strokeWidth={1.5} />
+                          Delete Post
+                        </button>
+                      )}
+                    </motion.div>
+                  </>
                 )}
+              </AnimatePresence>
+            </div>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="mb-3">
+          <p className="text-[16px] text-zinc-800 dark:text-zinc-200 leading-normal whitespace-pre-wrap break-words">
+            <MentionText text={content} />
+          </p>
+        </div>
+
+        {/* Media */}
+        {hasMedia && (
+          <div className="mb-3 rounded-2xl overflow-hidden border border-black/5 dark:border-white/10">
+            {finalMediaUrls.length === 1 ? (
+              <MediaGridCell
+                url={finalMediaUrls[0]}
+                type={finalMediaTypes[0]}
+                index={0}
+                isVisible={isVisible}
+                onOpen={(url, type) => setFullscreenMedia({ url, type, index: 0 })}
+                isSingle={true}
+              />
+            ) : (
+              <div className="flex flex-col gap-1">
+                {/* Facebook-style Grid Logic */}
                 {finalMediaUrls.length === 2 && (
-                  <div className="grid grid-cols-2 gap-1">
+                  <div className="grid grid-cols-2 gap-1 aspect-square">
                     {finalMediaUrls.map((url, index) => (
-                      <div key={index} className="relative w-full aspect-square">
-                        <MediaGridCell
-                          url={url}
-                          type={finalMediaTypes[index]}
-                          index={index}
-                          isVisible={isVisible}
-                          isSingle={false}
-                        />
-                      </div>
+                      <MediaGridCell
+                        key={index}
+                        url={url}
+                        type={finalMediaTypes[index]}
+                        index={index}
+                        isVisible={isVisible}
+                        onOpen={(url, type) => setFullscreenMedia({ url, type, index })}
+                        isSingle={false}
+                      />
                     ))}
                   </div>
                 )}
                 {finalMediaUrls.length === 3 && (
-                  <div className="grid gap-1">
-                    <div className="relative w-full aspect-video">
+                  <div className="flex flex-col gap-1">
+                    <div className="w-full aspect-video">
                       <MediaGridCell
                         url={finalMediaUrls[0]}
                         type={finalMediaTypes[0]}
                         index={0}
                         isVisible={isVisible}
+                        onOpen={(url, type) => setFullscreenMedia({ url, type, index: 0 })}
                         isSingle={false}
                       />
                     </div>
-                    <div className="grid grid-cols-2 gap-1">
+                    <div className="grid grid-cols-2 gap-1 aspect-[2/1]">
                       {finalMediaUrls.slice(1, 3).map((url, index) => (
-                        <div key={index + 1} className="relative w-full aspect-square">
-                          <MediaGridCell
-                            url={url}
-                            type={finalMediaTypes[index + 1]}
-                            index={index + 1}
-                            isVisible={isVisible}
-                            isSingle={false}
-                          />
-                        </div>
+                        <MediaGridCell
+                          key={index + 1}
+                          url={url}
+                          type={finalMediaTypes[index + 1]}
+                          index={index + 1}
+                          isVisible={isVisible}
+                          onOpen={(url, type) => setFullscreenMedia({ url, type, index: index + 1 })}
+                          isSingle={false}
+                        />
                       ))}
                     </div>
                   </div>
                 )}
                 {finalMediaUrls.length === 4 && (
-                  <div className="grid grid-cols-2 gap-1">
+                  <div className="grid grid-cols-2 grid-rows-2 gap-1 aspect-square">
                     {finalMediaUrls.map((url, index) => (
-                      <div key={index} className="relative w-full aspect-square">
-                        <MediaGridCell
-                          url={url}
-                          type={finalMediaTypes[index]}
-                          index={index}
-                          isVisible={isVisible}
-                          isSingle={false}
-                        />
-                      </div>
+                      <MediaGridCell
+                        key={index}
+                        url={url}
+                        type={finalMediaTypes[index]}
+                        index={index}
+                        isVisible={isVisible}
+                        onOpen={(url, type) => setFullscreenMedia({ url, type, index })}
+                        isSingle={false}
+                      />
                     ))}
                   </div>
                 )}
                 {finalMediaUrls.length >= 5 && (
-                  <div className="grid gap-1">
-                    <div className="grid grid-cols-2 gap-1">
+                  <div className="flex flex-col gap-1">
+                    <div className="grid grid-cols-2 gap-1 aspect-[2/1]">
                       {finalMediaUrls.slice(0, 2).map((url, index) => (
-                        <div key={index} className="relative w-full aspect-square">
-                          <MediaGridCell
-                            url={url}
-                            type={finalMediaTypes[index]}
-                            index={index}
-                            isVisible={isVisible}
-                            isSingle={false}
-                          />
-                        </div>
+                        <MediaGridCell
+                          key={index}
+                          url={url}
+                          type={finalMediaTypes[index]}
+                          index={index}
+                          isVisible={isVisible}
+                          onOpen={(url, type) => setFullscreenMedia({ url, type, index })}
+                          isSingle={false}
+                        />
                       ))}
                     </div>
-                    <div className="grid grid-cols-3 gap-1">
+                    <div className="grid grid-cols-3 gap-1 aspect-[3/1]">
                       {finalMediaUrls.slice(2, 5).map((url, index) => (
-                        <div key={index + 2} className="relative w-full aspect-square">
-                          <MediaGridCell
-                            url={url}
-                            type={finalMediaTypes[index + 2]}
-                            index={index + 2}
-                            isVisible={isVisible}
-                            isSingle={false}
-                          />
-                        </div>
+                        <MediaGridCell
+                          key={index + 2}
+                          url={url}
+                          type={finalMediaTypes[index + 2]}
+                          index={index + 2}
+                          overlay={index === 2 && finalMediaUrls.length > 5 ? finalMediaUrls.length - 5 : 0}
+                          isVisible={isVisible}
+                          onOpen={(url, type) => setFullscreenMedia({ url, type, index: index + 2 })}
+                          isSingle={false}
+                        />
                       ))}
                     </div>
                     {finalMediaUrls.length > 5 && (
@@ -1818,172 +1388,174 @@ function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, 
                 )}
               </div>
             )}
-
-                <div className="flex items-center justify-between px-4 pt-0 pb-1">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={handleLike}
-                      className={`flex items-center gap-1.5 p-2 -ml-2 rounded-full group transition-colors ${
-                        liked ? 'text-red-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10'
-                      }`}
-                    >
-                      <Heart
-                        className={`w-6 h-6 group-active:scale-125 transition-transform ${liked ? 'fill-current' : ''}`}
-                          strokeWidth={1.5}
-                        />
-                        <span className="text-base font-medium">{likesCount}</span>
-                      </button>
-                    <button
-                      onClick={handleOpenComments}
-                      className="flex items-center gap-1.5 p-2 rounded-full group text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
-                    >
-                        <MessageCircle className="w-6 h-6 group-active:scale-125 transition-transform" strokeWidth={1.5} />
-                        <span className="text-base font-medium">{commentsCount}</span>
-                      </button>
-                    <button
-                      onClick={handleSharePost}
-                      className="flex items-center gap-1.5 p-2 rounded-full group text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
-                    >
-                        <Share2 className="w-6 h-6 group-active:scale-125 transition-transform" strokeWidth={1.5} />
-                      </button>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setShowRepostConfirm(true)}
-                      className={`flex items-center gap-1.5 p-2 rounded-full group transition-colors ${
-                        reposted ? 'text-green-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10'
-                      }`}
-                    >
-                      <Repeat className={`w-6 h-6 group-active:rotate-180 transition-transform ${reposted ? 'stroke-[2.5px]' : ''}`} strokeWidth={1.5} />
-                      <span className="text-base font-medium">{repostsCount}</span>
-                    </button>
-                    <button
-                      onClick={handleSavePost}
-                      className={`flex items-center p-2 -mr-2 rounded-full group transition-colors ${
-                        isSaved ? 'text-yellow-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10'
-                      }`}
-                    >
-                      <Bookmark className={`w-6 h-6 group-active:scale-125 transition-transform ${isSaved ? 'fill-current' : ''}`} strokeWidth={1.5} />
-                    </button>
-                  </div>
-                </div>
           </div>
+        )}
 
-                <Drawer open={showRepostConfirm} onOpenChange={setShowRepostConfirm}>
-                  <DrawerContent className="bg-zinc-100 dark:bg-zinc-900 border-black/10 dark:border-white/10 pb-8 rounded-t-[8px]">
-                  <div className="mx-auto w-full max-w-xl">
-                    <div className="py-6 px-4 space-y-4">
-                    <div className="text-center space-y-2">
-                      <h3 className="text-lg font-bold">{reposted ? 'Remove repost?' : 'Repost this?'}</h3>
-                      <p className="text-zinc-500">
-                        {reposted 
-                          ? 'This will remove the repost from your profile and feed.' 
-                          : 'This will share this post to your profile and the feed of your followers.'}
-                      </p>
-                    </div>
-                    <div className="flex gap-3 pt-2">
-                      <button
-                        onClick={() => setShowRepostConfirm(false)}
-                        className="flex-1 px-4 py-3 text-base font-bold bg-zinc-200 dark:bg-zinc-800 rounded-2xl hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={handleRepost}
-                        disabled={reposting}
-                        className={`flex-1 px-4 py-3 text-base font-bold text-white rounded-2xl transition-colors flex items-center justify-center gap-2 ${
-                          reposted ? 'bg-red-500 hover:bg-red-600' : 'bg-black dark:bg-white dark:text-black hover:bg-zinc-800'
-                        }`}
-                      >
-                        {reposting ? <Loader centered={false} className="text-current" /> : (reposted ? 'Remove' : 'Repost')}
-                      </button>
-                    </div>
-                  </div>
+            <div className="flex items-center justify-between px-4 pt-0 pb-1">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleLike}
+                  className={`flex items-center gap-1.5 p-2 -ml-2 rounded-full group transition-colors ${
+                    liked ? 'text-red-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10'
+                  }`}
+                >
+                  <Heart
+                    className={`w-6 h-6 group-active:scale-125 transition-transform ${liked ? 'fill-current' : ''}`}
+                      strokeWidth={1.5}
+                    />
+                    <span className="text-base font-medium">{likesCount}</span>
+                  </button>
+                <button
+                  onClick={handleOpenComments}
+                  className="flex items-center gap-1.5 p-2 rounded-full group text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+                >
+                    <MessageCircle className="w-6 h-6 group-active:scale-125 transition-transform" strokeWidth={1.5} />
+                    <span className="text-base font-medium">{commentsCount}</span>
+                  </button>
+                <button
+                  onClick={handleSharePost}
+                  className="flex items-center gap-1.5 p-2 rounded-full group text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+                >
+                    <Share2 className="w-6 h-6 group-active:scale-125 transition-transform" strokeWidth={1.5} />
+                  </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowRepostConfirm(true)}
+                  className={`flex items-center gap-1.5 p-2 rounded-full group transition-colors ${
+                    reposted ? 'text-green-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10'
+                  }`}
+                >
+                  <Repeat className={`w-6 h-6 group-active:rotate-180 transition-transform ${reposted ? 'stroke-[2.5px]' : ''}`} strokeWidth={1.5} />
+                  <span className="text-base font-medium">{repostsCount}</span>
+                </button>
+                <button
+                  onClick={handleSavePost}
+                  className={`flex items-center p-2 -mr-2 rounded-full group transition-colors ${
+                    isSaved ? 'text-yellow-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10'
+                  }`}
+                >
+                  <Bookmark className={`w-6 h-6 group-active:scale-125 transition-transform ${isSaved ? 'fill-current' : ''}`} strokeWidth={1.5} />
+                </button>
+              </div>
+            </div>
+      </div>
+
+            <Drawer open={showRepostConfirm} onOpenChange={setShowRepostConfirm}>
+              <DrawerContent className="bg-zinc-100 dark:bg-zinc-900 border-black/10 dark:border-white/10 pb-8 rounded-t-[8px]">
+              <div className="mx-auto w-full max-w-xl">
+                <div className="py-6 px-4 space-y-4">
+                <div className="text-center space-y-2">
+                  <h3 className="text-lg font-bold">{reposted ? 'Remove repost?' : 'Repost this?'}</h3>
+                  <p className="text-zinc-500">
+                    {reposted 
+                      ? 'This will remove the repost from your profile and feed.' 
+                      : 'This will share this post to your profile and the feed of your followers.'}
+                  </p>
                 </div>
-              </DrawerContent>
-            </Drawer>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => setShowRepostConfirm(false)}
+                    className="flex-1 px-4 py-3 text-base font-bold bg-zinc-200 dark:bg-zinc-800 rounded-2xl hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleRepost}
+                    disabled={reposting}
+                    className={`flex-1 px-4 py-3 text-base font-bold text-white rounded-2xl transition-colors flex items-center justify-center gap-2 ${
+                      reposted ? 'bg-red-500 hover:bg-red-600' : 'bg-black dark:bg-white dark:text-black hover:bg-zinc-800'
+                    }`}
+                  >
+                    {reposting ? <Loader centered={false} className="text-current" /> : (reposted ? 'Remove' : 'Repost')}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </DrawerContent>
+        </Drawer>
 
-              <AnimatePresence>
-                  {showComments && (
-                    <motion.div
-                      key={`comment-overlay-${id}`}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="fixed inset-0 bg-background z-[60] flex items-end justify-center overflow-hidden"
-                      onClick={() => { setShowComments(false); setReplyingTo(null); }}
-                      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
-                    >                        <motion.div
-                          drag="y"
-                          dragConstraints={{ top: 0, bottom: 0 }}
-                          dragElastic={0.05}
-                            onDragEnd={(_, info) => {
-                              if (info.offset.y > 100 || info.velocity.y > 300) {
-                                setShowComments(false);
-                                setReplyingTo(null);
-                              }
-                            }}
-                            initial={{ y: '100%' }}
-                            animate={{ y: 0 }}
-                            exit={{ y: '100%' }}
-                            transition={{ type: 'tween', duration: 0.3, ease: 'easeOut' }}
-                            onClick={(e) => e.stopPropagation()}
-                              style={{ height: viewportHeight ? `${viewportHeight}px` : '90dvh', WebkitOverflowScrolling: 'touch' }}
-                                className="w-full max-w-xl bg-zinc-100 dark:bg-zinc-900 text-foreground flex flex-col relative rounded-t-2xl overflow-hidden shadow-2xl pt-10 will-change-transform" onTouchMove={(e) => e.preventDefault()}
+          <AnimatePresence>
+              {showComments && (
+                <motion.div
+                  key={`comment-overlay-${id}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 bg-background z-[60] flex items-end justify-center overflow-hidden"
+                  onClick={() => { setShowComments(false); setReplyingTo(null); }}
+                  style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+                >                        <motion.div
+                      drag="y"
+                      dragConstraints={{ top: 0, bottom: 0 }}
+                      dragElastic={0.05}
+                        onDragEnd={(_, info) => {
+                          if (info.offset.y > 100 || info.velocity.y > 300) {
+                            setShowComments(false);
+                            setReplyingTo(null);
+                          }
+                        }}
+                        initial={{ y: '100%' }}
+                        animate={{ y: 0 }}
+                        exit={{ y: '100%' }}
+                        transition={{ type: 'tween', duration: 0.3, ease: 'easeOut' }}
+                        onClick={(e) => e.stopPropagation()}
+                          style={{ height: viewportHeight ? `${viewportHeight}px` : '90dvh', WebkitOverflowScrolling: 'touch' }}
+                            className="w-full max-w-xl bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white flex flex-col relative rounded-t-[24px] overflow-hidden shadow-2xl will-change-transform" onTouchMove={(e) => e.preventDefault()}
   >
-  {/* Grabber */}
-  <div className="absolute left-1/2 -translate-x-1/2 bg-zinc-300 dark:bg-zinc-700 rounded-full cursor-grab active:cursor-grabbing" style={{ top: '16px', width: '48px', height: '8px' }} />
+  {/* Grabber — 8px below top border */}
+  <div className="flex justify-center pt-2 pb-2">
+    <div className="bg-zinc-300 dark:bg-zinc-700 rounded-full cursor-grab active:cursor-grabbing" style={{ width: '48px', height: '8px' }} />
+  </div>
   
-  {/* Comment Sheet Header — fixed h-16 with centered handler and interactions */}
-                                <div className="h-16 shrink-0 flex flex-col items-center justify-center border-b border-black/5 dark:border-white/5">
-                                  {/* Handler */}
-                                  <div className="mb-2" style={{ width: '48px', height: '8px', background: 'currentColor', opacity: 0.2, borderRadius: '999px' }} />
-                                  
-                                  {/* Interactions - Left side (likes, comments, share) Right side (reposts, save) */}
-                                  <div className="w-full flex items-center justify-between px-4">
-                                    {/* Left side: likes, comments, share */}
+  {/* Comment Sheet Header — interactions row */}
+                                <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-black/5 dark:border-white/5">
+                                    {/* Left: Like+count, Comment+count, Share */}
                                     <div className="flex items-center gap-4">
                                       <button
                                         onClick={handleLike}
                                         disabled={liking}
-                                        className={`flex items-center gap-1.5 transition-colors disabled:opacity-50 ${liked ? 'text-red-500' : 'text-zinc-500 hover:text-red-500 dark:hover:text-red-400'}`}
+                                        className={`flex items-center gap-1 text-sm transition-colors disabled:opacity-50 ${liked ? 'text-red-500' : 'text-zinc-500 hover:text-red-500 dark:hover:text-red-400'}`}
                                       >
-                                        <Heart className={`w-6 h-6 ${liked ? 'fill-current' : ''}`} strokeWidth={1.5} />
+                                        <Heart className={`w-5 h-5 ${liked ? 'fill-current' : ''}`} strokeWidth={1.5} />
+                                        <span className="font-medium">{likesCount}</span>
                                       </button>
                                       <button
-                                        className="flex items-center gap-1.5 text-zinc-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+                                        className="flex items-center gap-1 text-sm text-zinc-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
                                       >
-                                        <MessageCircle className="w-6 h-6" strokeWidth={1.5} />
+                                        <MessageCircle className="w-5 h-5" strokeWidth={1.5} />
+                                        <span className="font-medium">{commentsCount}</span>
                                       </button>
                                       <button
                                         onClick={handleSharePost}
-                                        className="flex items-center gap-1.5 text-zinc-500 hover:text-black dark:hover:text-white transition-colors"
+                                        className="flex items-center text-sm text-zinc-500 hover:text-black dark:hover:text-white transition-colors"
                                       >
-                                        <Share2 className="w-6 h-6" strokeWidth={1.5} />
+                                        <Share2 className="w-5 h-5" strokeWidth={1.5} />
                                       </button>
                                     </div>
                                     
-                                    {/* Right side: reposts, save, sort */}
+                                    {/* Right: Repost+count, Save, Sort */}
                                     <div className="flex items-center gap-4">
                                       <button
                                         onClick={() => setShowRepostConfirm(true)}
                                         disabled={reposting}
-                                        className={`flex items-center gap-1.5 transition-colors disabled:opacity-50 ${reposted ? 'text-green-500' : 'text-zinc-500 hover:text-green-500 dark:hover:text-green-400'}`}
+                                        className={`flex items-center gap-1 text-sm transition-colors disabled:opacity-50 ${reposted ? 'text-green-500' : 'text-zinc-500 hover:text-green-500 dark:hover:text-green-400'}`}
                                       >
-                                        <Repeat className={`w-6 h-6 ${reposted ? 'stroke-[2.5px]' : ''}`} strokeWidth={1.5} />
+                                        <Repeat className={`w-5 h-5 ${reposted ? 'stroke-[2.5px]' : ''}`} strokeWidth={1.5} />
+                                        <span className="font-medium">{repostsCount}</span>
                                       </button>
                                       <button
                                         onClick={handleSavePost}
-                                        className={`flex items-center gap-1.5 transition-colors ${isSaved ? 'text-foreground' : 'text-zinc-500 hover:text-black dark:hover:text-white'}`}
+                                        className={`flex items-center text-sm transition-colors ${isSaved ? 'text-black dark:text-white' : 'text-zinc-500 hover:text-black dark:hover:text-white'}`}
                                       >
-                                        <Bookmark className={`w-6 h-6 ${isSaved ? 'fill-current' : ''}`} strokeWidth={1.5} />
+                                        <Bookmark className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`} strokeWidth={1.5} />
                                       </button>
                                       <div className="relative">
                                         <button
                                           onClick={() => setShowCommentSortMenu(prev => !prev)}
-                                          className={`p-1 rounded-full transition-colors ${showCommentSortMenu ? 'bg-black/10 dark:bg-white/10 text-foreground' : 'text-zinc-500 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'}`}
+                                          className={`p-1 rounded-full transition-colors ${showCommentSortMenu ? 'bg-black/10 dark:bg-white/10 text-black dark:text-white' : 'text-zinc-500 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'}`}
                                         >
-                                          <Settings2 className="w-6 h-6" strokeWidth={1.5} />
+                                          <Settings2 className="w-5 h-5" strokeWidth={1.5} />
                                         </button>
                                         <AnimatePresence>
                                           {showCommentSortMenu && (
@@ -2008,7 +1580,7 @@ function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, 
                                                     onClick={() => { handleCommentSortChange(option); setShowCommentSortMenu(false); }}
                                                     className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium transition-colors text-left ${
                                                       commentSortOrder === option
-                                                        ? 'text-foreground bg-black/5 dark:bg-white/10'
+                                                        ? 'text-black dark:text-white bg-black/5 dark:bg-white/10'
                                                         : 'text-zinc-600 dark:text-zinc-400 hover:bg-black/5 dark:hover:bg-white/5'
                                                     }`}
                                                   >
@@ -2024,7 +1596,6 @@ function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, 
                                         </AnimatePresence>
                                       </div>
                                     </div>
-                                  </div>
                                 </div>
                                 
                                 {/* HR separator */}
@@ -2099,103 +1670,35 @@ function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, 
                               />
                             </div>
                           )}
-                          
-                          <div className="flex-1 flex items-end gap-2 bg-zinc-200 dark:bg-zinc-800 rounded-full px-4 py-2">
-                            <textarea
-                              ref={commentInputRef}
-                              rows={1}
-                              value={newComment}
-                              onChange={handleCommentChange}
-                              placeholder={replyingTo ? `Reply to ${replyingTo.name}...` : 'Add a comment...'}
-                              className="flex-1 bg-transparent text-foreground text-sm outline-none placeholder-zinc-500 resize-none min-h-[36px] max-h-[90px] leading-snug overflow-y-auto py-1"
-                            />
-                            
-                            <button
-                              onClick={handleSubmitComment}
-                              disabled={submittingComment || !newComment.trim()}
-                              className={`flex items-center justify-center rounded-full transition-colors flex-shrink-0 ${
-                                submittingComment || !newComment.trim()
-                                  ? 'text-zinc-400 dark:text-zinc-600 opacity-50'
-                                  : 'text-foreground hover:opacity-70'
-                              }`}
-                            >
-                              {submittingComment ? (
-                                <Loader centered={false} className="text-current" />
-                              ) : (
-                                <Send className="w-5 h-5" strokeWidth={1.5} />
-                              )}
-                            </button>
-                          </div>
+                          <textarea
+                            ref={commentInputRef}
+                            rows={1}
+                            value={newComment}
+                            onChange={handleCommentChange}
+                            placeholder={replyingTo ? `Reply to ${replyingTo.name}...` : 'Add a comment...'}
+                            className="flex-1 bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white px-4 py-3 rounded-2xl text-[16px] outline-none placeholder-zinc-500 resize-none min-h-[40px] max-h-32 leading-snug overflow-y-auto"
+                          />
+                          <button
+                            onClick={handleSubmitComment}
+                            disabled={submittingComment || !newComment.trim()}
+                            className={`px-6 py-2 rounded-full font-medium transition-colors flex-shrink-0 text-sm ${
+                              submittingComment || !newComment.trim()
+                                ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-600'
+                                : 'bg-black dark:bg-white text-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-200'
+                            }`}
+                          >
+                            {submittingComment ? (
+                              <Loader centered={false} className="text-current" />
+                            ) : (
+                              'Send'
+                            )}
+                          </button>
                         </div>
                       </div>
                     </motion.div>
                   </motion.div>
-                )}
-              </AnimatePresence>
-
-            {/* Nested Comment Menu Bottom Sheet */}
-            <AnimatePresence>
-              {showComments && selectedCommentMenu && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="fixed inset-0 bg-black/40 z-[70]"
-                  onClick={() => setSelectedCommentMenu(null)}
-                />
               )}
-              {showComments && selectedCommentMenu && (
-                <motion.div
-                  initial={{ y: '100%' }}
-                  animate={{ y: 0 }}
-                  exit={{ y: '100%' }}
-                  transition={{ type: 'tween', duration: 0.3 }}
-                  className="fixed bottom-0 left-0 right-0 z-[80] max-w-xl mx-auto rounded-t-2xl bg-zinc-100 dark:bg-zinc-900 overflow-hidden"
-                  onClick={(e) => e.stopPropagation()}
-  >
-  <div className="flex justify-center" style={{ paddingTop: '16px', paddingBottom: '16px' }}>
-    <div className="bg-zinc-300 dark:bg-zinc-700 rounded-full" style={{ width: '48px', height: '8px' }} />
-  </div>
-  
-  <div className="px-4 pb-6 space-y-3">
-                    {(() => {
-                      const comment = comments.find(c => c.id === selectedCommentMenu || c.replies?.find(r => r.id === selectedCommentMenu));
-                      const targetComment = comment?.id === selectedCommentMenu ? comment : comment?.replies?.find(r => r.id === selectedCommentMenu);
-                      
-                      if (!targetComment) return null;
-                      
-                      return (
-                        <>
-                          {currentUserId === targetComment.user_id && (
-                            <button
-                              onClick={() => {
-                                setDeletingCommentId(targetComment.id);
-                                setSelectedCommentMenu(null);
-                              }}
-                              className="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-500/10 rounded-xl transition-colors text-left font-medium"
-                            >
-                              <Trash2 className="w-5 h-5" strokeWidth={1.5} />
-                              <span>Delete</span>
-                            </button>
-                          )}
-                          <button
-                            onClick={() => {
-                              navigator.clipboard.writeText(targetComment.content);
-                              toast.success('Comment copied');
-                              setSelectedCommentMenu(null);
-                            }}
-                            className="w-full flex items-center gap-3 px-4 py-3 text-zinc-700 dark:text-zinc-300 hover:bg-black/5 dark:hover:bg-white/5 rounded-xl transition-colors text-left font-medium"
-                          >
-                            <Copy className="w-5 h-5" strokeWidth={1.5} />
-                            <span>Copy</span>
-                          </button>
-                        </>
-                      );
-                    })()}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+          </AnimatePresence>
 
           <AnimatePresence>
             {fullscreenMedia && (
@@ -2203,118 +1706,151 @@ function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[100] bg-black flex flex-col overflow-hidden"
+                className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center select-none"
                 onClick={closeFullscreen}
               >
-                {/* Header with user profile, media count, and close button */}
-                <div className="h-16 flex items-center justify-between px-4 border-b border-white/10 z-[110] flex-shrink-0">
-                  {/* Left: User Avatar (40px) */}
-                  <div className="w-10 h-10 rounded-full overflow-hidden border border-white/20 bg-zinc-900 flex-shrink-0">
-                    <img 
-                      src={avatarSrc} 
-                      alt={user?.username || user?.full_name || 'User'} 
-                      className="w-full h-full object-cover"
-                    />
+                <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-10 bg-gradient-to-b from-black/50 to-transparent">
+                  <div className="text-white text-sm font-medium">
+                    {fullscreenMedia.index + 1} / {finalMediaUrls.length}
                   </div>
-
-                  {/* Middle: Media Count */}
-                  <div className="text-white font-medium">
-                    {mediaCarouselIndex + 1}/{finalMediaUrls.length}
-                  </div>
-
-                  {/* Right: Close Button */}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); closeFullscreen(); }}
+                  <button 
+                    onClick={closeFullscreen}
                     className="p-2 text-white hover:bg-white/10 rounded-full transition-colors"
                   >
-                    <X className="w-6 h-6" strokeWidth={1.5} />
+                    <X size={24} />
                   </button>
                 </div>
 
-                {/* Media Container */}
-                <div className="flex-1 flex items-center justify-center relative overflow-hidden touch-none">
-                  {/* Carousel for multiple media */}
-                  {finalMediaUrls.length > 1 && (
-                    <>
-                      {/* Previous button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const prevIndex = mediaCarouselIndex === 0 ? finalMediaUrls.length - 1 : mediaCarouselIndex - 1;
-                          setMediaCarouselIndex(prevIndex);
-                          setFullscreenMedia({ 
-                            url: finalMediaUrls[prevIndex], 
-                            type: finalMediaTypes[prevIndex],
-                            index: prevIndex
-                          });
-                          setScale(1);
-                        }}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors backdrop-blur-md border border-white/10"
-                      >
-                        <ChevronUp className="w-6 h-6 rotate-90" strokeWidth={2} />
-                      </button>
-
-                      {/* Next button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const nextIndex = mediaCarouselIndex === finalMediaUrls.length - 1 ? 0 : mediaCarouselIndex + 1;
-                          setMediaCarouselIndex(nextIndex);
-                          setFullscreenMedia({ 
-                            url: finalMediaUrls[nextIndex], 
-                            type: finalMediaTypes[nextIndex],
-                            index: nextIndex
-                          });
-                          setScale(1);
-                        }}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors backdrop-blur-md border border-white/10"
-                      >
-                        <ChevronDown className="w-6 h-6 rotate-90" strokeWidth={2} />
-                      </button>
-                    </>
-                  )}
-                
-                  <motion.div
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0.9, opacity: 0 }}
-                    transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                    className="w-full h-full flex items-center justify-center relative"
-                    onClick={(e) => e.stopPropagation()}
-                    onTouchStart={handleTouchStart}
-                    onTouchMove={handleTouchMove}
-                    onTouchEnd={handleTouchEnd}
+                <div className="w-full h-full flex items-center justify-center overflow-hidden">
+                  <Carousel 
+                    className="w-full h-full"
+                    setApi={(api) => {
+                      if (api) {
+                        api.on("select", () => {
+                          const index = api.selectedScrollSnap();
+                          setMediaCarouselIndex(index);
+                          setFullscreenMedia(prev => prev ? { ...prev, index, url: finalMediaUrls[index], type: finalMediaTypes[index] } : null);
+                        });
+                        api.scrollTo(fullscreenMedia.index, true);
+                      }
+                    }}
                   >
-                    {fullscreenMedia.type === 'video' ? (
-                      <video 
-                        src={fullscreenMedia.url} 
-                        controls 
-                        autoPlay
-                        className="w-full h-full object-contain"
-                      />
-                    ) : (
-                      <motion.div
-                        className="w-full h-full flex items-center justify-center"
-                        initial={{ scale: 1 }}
-                        animate={{ scale }}
-                        onDoubleClick={() => setScale(s => s === 1 ? 2.5 : 1)}
-                      >
-                        <motion.img 
-                          drag={scale > 1}
-                          dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-                          dragElastic={0}
-                          src={fullscreenMedia.url} 
-                          alt={`Media ${mediaCarouselIndex + 1}`}
-                          className={`w-full h-full object-contain ${scale > 1 ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'}`}
-                        />
-                      </motion.div>
-                    )}
-                  </motion.div>
+                    <CarouselContent className="h-full ml-0">
+                      {finalMediaUrls.map((url, index) => (
+                        <CarouselItem key={index} className="h-full pl-0 flex items-center justify-center">
+                          <div 
+                            className="relative w-full h-full flex items-center justify-center p-2"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {finalMediaTypes[index] === 'video' ? (
+                              <LazyVideo 
+                                src={url} 
+                                className="max-w-full max-h-full object-contain" 
+                                controls 
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            ) : (
+                              <motion.img
+                                src={url}
+                                alt="Fullscreen"
+                                className="max-w-full max-h-full object-contain cursor-zoom-in"
+                                style={{ scale }}
+                                drag={scale > 1}
+                                dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                                onTouchStart={handleTouchStart}
+                                onTouchMove={handleTouchMove}
+                                onTouchEnd={handleTouchEnd}
+                              />
+                            )}
+                          </div>
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                  </Carousel>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
 
-    </>
+          <Drawer open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+            <DrawerContent className="bg-zinc-100 dark:bg-zinc-900 border-black/10 dark:border-white/10 pb-8 rounded-t-3xl">
+              <div className="mx-auto w-full max-w-xl">
+                <div className="py-6 px-4 space-y-4">
+                  <div className="text-center space-y-2">
+                    <h3 className="text-lg font-bold">Delete this post?</h3>
+                    <p className="text-zinc-500">This action cannot be undone.</p>
+                  </div>
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      onClick={() => setShowDeleteConfirm(false)}
+                      className="flex-1 px-4 py-3 text-base font-bold bg-zinc-200 dark:bg-zinc-800 rounded-2xl hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleDelete}
+                      disabled={deleting}
+                      className="flex-1 px-4 py-3 text-base font-bold bg-red-500 text-white rounded-2xl hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
+                    >
+                      {deleting ? <Loader centered={false} className="text-current" /> : 'Delete'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </DrawerContent>
+          </Drawer>
+
+          <AnimatePresence>
+            {selectedCommentMenu && (
+              <>
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-[70] bg-black/20 dark:bg-black/40 backdrop-blur-sm"
+                  onClick={() => setSelectedCommentMenu(null)}
+                />
+                <motion.div
+                  initial={{ opacity: 0, y: 100 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 100 }}
+                  className="fixed bottom-0 left-0 right-0 z-[80] max-w-xl mx-auto bg-white dark:bg-zinc-900 rounded-t-3xl shadow-2xl overflow-hidden pb-[env(safe-area-inset-bottom,16px)]"
+                >
+                  <div className="w-12 h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full mx-auto mt-3 mb-2" />
+                  <div className="px-2 py-2">
+                    <button 
+                      onClick={() => {
+                        const comment = comments.find(c => c.id === selectedCommentMenu) || 
+                                       comments.flatMap(c => c.replies || []).find(r => r.id === selectedCommentMenu);
+                        if (comment) {
+                          navigator.clipboard.writeText(comment.content);
+                          toast.success('Comment copied');
+                        }
+                        setSelectedCommentMenu(null);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-4 text-base font-medium hover:bg-black/5 dark:hover:bg-white/5 transition-colors rounded-2xl"
+                    >
+                      <Copy size={20} strokeWidth={1.5} />
+                      Copy Text
+                    </button>
+                    {(comments.find(c => c.id === selectedCommentMenu)?.user_id === currentUserId || 
+                      comments.flatMap(c => c.replies || []).find(r => r.id === selectedCommentMenu)?.user_id === currentUserId) && (
+                      <button 
+                        onClick={() => {
+                          setDeletingCommentId(selectedCommentMenu);
+                          setSelectedCommentMenu(null);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-4 text-base font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors rounded-2xl"
+                      >
+                        <Trash2 size={20} strokeWidth={1.5} />
+                        Delete Comment
+                      </button>
+                    )}
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+    </div>
   );
 }

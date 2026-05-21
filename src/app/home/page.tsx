@@ -67,6 +67,7 @@ export default function HomePage() {
   const [visibleIndices, setVisibleIndices] = useState<Set<number>>(new Set([0, 1, 2]));
   const postRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const pathname = usePathname();
+  const isVisible = useScrollDirection();
 
   const observer = useRef<IntersectionObserver | null>(null);
   const visibilityObserver = useRef<IntersectionObserver | null>(null);
@@ -339,62 +340,55 @@ export default function HomePage() {
                 }));
                 return { ...post, media_urls: urls, media_types: types, is_community_post: true };
               });
-              fetchedPosts = [...fetchedPosts, ...formattedCommunityPosts]
-                .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-                .slice(0, PAGE_SIZE);
+              fetchedPosts = [...fetchedPosts, ...formattedCommunityPosts].sort((a, b) => 
+                new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+              );
             }
           }
         }
 
       if (isLoadMore) {
         setPosts(prev => [...prev, ...fetchedPosts]);
+        setOffset(currentOffset + PAGE_SIZE);
       } else {
         setPosts(fetchedPosts);
+        setOffset(PAGE_SIZE);
       }
+      setHasMore(fetchedPosts.length >= PAGE_SIZE);
 
-      // Batch-fetch like/repost/save status for all fetched post IDs in one go
+      // After fetching posts, fetch user's interactions for these posts
       if (user && fetchedPosts.length > 0) {
-        const postIds = fetchedPosts.map((p: any) => p.id);
-        const [likesRes, repostsRes, savedRes] = await Promise.all([
-          supabase.from('likes').select('post_id').eq('user_id', user.id).in('post_id', postIds),
-          supabase.from('reposts').select('post_id').eq('user_id', user.id).in('post_id', postIds),
-          supabase.from('saved_posts').select('post_id').eq('user_id', user.id).in('post_id', postIds),
-        ]);
-        setUserPostStatus(prev => {
-          const liked = new Set(prev.liked);
-          const reposted = new Set(prev.reposted);
-          const saved = new Set(prev.saved);
-          (likesRes.data || []).forEach((r: any) => liked.add(r.post_id));
-          (repostsRes.data || []).forEach((r: any) => reposted.add(r.post_id));
-          (savedRes.data || []).forEach((r: any) => saved.add(r.post_id));
-          return { liked, reposted, saved };
-        });
+        const postIds = fetchedPosts.filter(p => !p.is_community_post).map(p => p.id);
+        if (postIds.length > 0) {
+          const [likesRes, repostsRes, savesRes] = await Promise.all([
+            supabase.from('post_likes').select('post_id').eq('user_id', user.id).in('post_id', postIds),
+            supabase.from('reposts').select('post_id').eq('user_id', user.id).in('post_id', postIds),
+            supabase.from('saved_posts').select('post_id').eq('user_id', user.id).in('post_id', postIds),
+          ]);
+
+          setUserPostStatus(prev => ({
+            liked: new Set([...prev.liked, ...(likesRes.data?.map(l => l.post_id) || [])]),
+            reposted: new Set([...prev.reposted, ...(repostsRes.data?.map(r => r.post_id) || [])]),
+            saved: new Set([...prev.saved, ...(savesRes.data?.map(s => s.post_id) || [])]),
+          }));
+        }
       }
 
-      // For trending and explore modes the raw fetch pool is larger than PAGE_SIZE.
-      // hasMore should reflect whether the DB had more rows in that pool.
-      const advanceBy = (mode === 'trending' || mode === 'explore')
-        ? PAGE_SIZE * TRENDING_FETCH_MULTIPLIER
-        : fetchedPosts.length;
-      setHasMore(fetchedPosts.length === PAGE_SIZE);
-      setOffset(currentOffset + advanceBy);
-
-    } catch (err: any) {
-      const errorMessage = err?.message || err?.details || err?.hint || JSON.stringify(err) || 'Unknown error';
-      console.error('fetchPosts error:', err);
-      toast.error('Failed to load posts: ' + errorMessage);
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+      toast.error('Failed to load posts');
     } finally {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [profile, feedMode]);
+  }, [currentUser, profile]);
 
-    useEffect(() => {
-      setOffset(0);
-      setHasMore(true);
-      fetchPosts(0, feedMode);
+  useEffect(() => {
+    fetchPosts(0, feedMode);
+  }, [feedMode, fetchPosts]);
 
-      // Set up Realtime for posts
+  // Set up realtime listener for new posts
+  useEffect(() => {
       const channel = supabase
         .channel('public:posts')
         .on('postgres_changes', {
@@ -461,7 +455,7 @@ export default function HomePage() {
         onPinnedFeedChange={(mode) => setPinnedFeed(mode)}
       />
 
-        <header className={`fixed top-0 left-0 right-0 h-16 z-50 px-4 bg-background transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+        <header className={`fixed top-0 left-0 right-0 h-16 z-50 px-4 bg-white dark:bg-black rounded-b-[16px] transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
         <div className="h-full flex items-center justify-between">
           {/* Left: Settings */}
           <button
