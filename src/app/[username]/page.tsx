@@ -267,7 +267,7 @@ export default function UserProfilePage() {
 
   return (
       <div className="min-h-screen bg-background text-foreground selection:bg-black dark:selection:bg-white selection:text-white dark:selection:text-black">
-        <header className={`fixed top-0 left-0 right-0 z-50 px-4 h-16 flex items-center bg-transparent transition-transform duration-300 hidden ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+        <header className={`fixed top-0 md:left-64 left-0 right-0 z-50 px-4 h-16 flex items-center bg-transparent transition-transform duration-300 hidden ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'}`}>
           <button onClick={() => goBack()} className="p-2 -ml-2 text-foreground hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -276,7 +276,7 @@ export default function UserProfilePage() {
             <VerifiedBadge username={username} className="w-3.5 h-3.5 text-white shrink-0" />
           </div>
         </header>
-        <main className="max-w-xl mx-auto pb-20">
+        <main className="max-w-7xl mx-auto pb-20">
         <div className="relative">
           <div className="w-full bg-zinc-100 dark:bg-zinc-900 overflow-hidden" style={{height: '120px'}}>
           {coverSrc ? (
