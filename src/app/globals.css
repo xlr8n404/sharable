@@ -174,3 +174,21 @@
   touch-action: none;
   -webkit-overflow-scrolling: none;
 }
+
+/* Responsive Layout Utilities */
+@layer utilities {
+  /* Feed Container - responsive width */
+  .feed-container {
+    @apply max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-6xl;
+  }
+
+  /* Mobile-first padding adjustments */
+  .responsive-px {
+    @apply px-4 md:px-6 lg:px-8;
+  }
+
+  /* Main content area with proper padding for desktop sidebar */
+  .main-content {
+    @apply md:pl-0;
+  }
+}
