@@ -701,6 +701,124 @@ export function PostCard({
     setLoadingComments(false);
   };
 
+  const handleLike = async () => {
+    if (!currentUserId) {
+      toast.error('Please login to like posts');
+      return;
+    }
+    if (liking) return;
+    setLiking(true);
+    const wasLiked = liked;
+    setLiked(!liked);
+    setLikesCount(prev => wasLiked ? prev - 1 : prev + 1);
+    try {
+      if (wasLiked) {
+        await supabase
+          .from('likes')
+          .delete()
+          .eq('user_id', currentUserId)
+          .eq('post_id', id);
+        await supabase
+          .from('posts')
+          .update({ likes_count: likesCount - 1 })
+          .eq('id', id);
+      } else {
+          // Check if already liked in DB to prevent duplicates
+          const { data: existingLike } = await supabase
+            .from('likes')
+            .select('id')
+            .eq('user_id', currentUserId)
+            .eq('post_id', id)
+            .maybeSingle();
+          if (existingLike) {
+            // Already liked — sync local state and bail
+            setLiked(true);
+            setLikesCount(prev => prev); // no change
+            setLiking(false);
+            return;
+          }
+          await supabase
+            .from('likes')
+            .upsert({ user_id: currentUserId, post_id: id }, { onConflict: 'user_id,post_id', ignoreDuplicates: true });
+          // Sync like to Drive
+          const driveFormData = new FormData();
+          driveFormData.append('type', 'interactions');
+          driveFormData.append('metadata', JSON.stringify({ type: 'like', post_id: id, timestamp: new Date().toISOString() }));
+          fetch('/api/drive/sync', { method: 'POST', body: driveFormData }).catch(console.error);
+          await supabase
+            .from('posts')
+            .update({ likes_count: likesCount + 1 })
+            .eq('id', id);
+        if (user_id !== currentUserId) {
+          await supabase
+            .from('notifications')
+            .insert({
+              user_id: user_id,
+              from_user_id: currentUserId,
+              type: 'like',
+              post_id: id,
+            });
+        }
+      }
+    } catch (error) {
+      setLiked(wasLiked);
+      setLikesCount(prev => wasLiked ? prev + 1 : prev - 1);
+      toast.error('Failed to update like');
+    } finally {
+      setLiking(false);
+    }
+  };
+
+  const handleRepost = async () => {
+    if (!currentUserId) {
+      toast.error('Please login to repost');
+      return;
+    }
+    if (reposting) return;
+    setReposting(true);
+    try {
+      if (reposted) {
+        const res = await fetch('/api/repost', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: currentUserId, post_id: id })
+        });
+        const data = await res.json();
+        if (data.success) {
+          setReposted(false);
+          setRepostsCount(prev => prev - 1);
+          toast.success('Repost removed');
+        } else {
+          throw new Error(data.error);
+        }
+      } else {
+        const res = await fetch('/api/repost', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: currentUserId, post_id: id })
+        });
+        const data = await res.json();
+          if (data.success) {
+            setReposted(true);
+            setRepostsCount(prev => prev + 1);
+            // Sync repost to Drive
+            const driveFormData = new FormData();
+            driveFormData.append('type', 'interactions');
+            driveFormData.append('metadata', JSON.stringify({ type: 'repost', post_id: id, timestamp: new Date().toISOString() }));
+            fetch('/api/drive/sync', { method: 'POST', body: driveFormData }).catch(console.error);
+            toast.success('Reposted successfully');
+          } else {
+          throw new Error(data.error);
+        }
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update repost');
+    } finally {
+      setReposting(false);
+      setShowRepostConfirm(false);
+    }
+  };
+
   const handleOpenComments = () => {
     setShowComments(true);
     loadComments();
