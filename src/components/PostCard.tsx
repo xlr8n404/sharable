@@ -1317,9 +1317,9 @@ export function PostCard({
                 ))}
               </div>
             ) : (
-              // 3 media: first full width 1:1, then two below side by side 1:1
-              <div className="flex flex-col gap-[2px]">
-                <div className="aspect-square overflow-hidden">
+              // 3 media: left 1 large 1:1, right 2 stacked 1:1
+              <div className="grid grid-cols-2 gap-[2px]" style={{ aspectRatio: '2/1' }}>
+                <div className="overflow-hidden">
                   <MediaGridCell
                     url={displayMediaUrls[0]}
                     type={displayMediaTypes[0]}
@@ -1328,9 +1328,9 @@ export function PostCard({
                     isSingle={false}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-[2px]">
+                <div className="flex flex-col gap-[2px]">
                   {displayMediaUrls.slice(1, 3).map((url, index) => (
-                    <div key={index + 1} className="aspect-square overflow-hidden">
+                    <div key={index + 1} className="flex-1 overflow-hidden">
                       <MediaGridCell
                         url={url}
                         type={displayMediaTypes[index + 1]}
@@ -1346,11 +1346,11 @@ export function PostCard({
           </div>
         )}
 
-            <div className="flex items-center justify-between px-4 pt-0 pb-1">
+            <div className="flex items-center justify-between pt-0 pb-1">
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleLike}
-                  className={`flex items-center gap-1.5 p-2 -ml-2 rounded-full group transition-colors ${
+                  className={`flex items-center gap-1.5 p-2 rounded-full group transition-colors ${
                     liked ? 'text-red-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10'
                   }`}
                 >
@@ -1386,7 +1386,7 @@ export function PostCard({
                 </button>
                 <button
                   onClick={handleSavePost}
-                  className={`flex items-center p-2 -mr-2 rounded-full group transition-colors ${
+                  className={`flex items-center p-2 rounded-full group transition-colors ${
                     isSaved ? 'text-yellow-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10'
                   }`}
                 >
