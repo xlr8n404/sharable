@@ -122,7 +122,7 @@ export default function CreatePostPage() {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
-    const remainingSlots = 4 - mediaFiles.length;
+    const remainingSlots = 3 - mediaFiles.length;
     const filesToProcess = files.slice(0, remainingSlots);
 
     const processedFiles: File[] = [];
@@ -384,9 +384,9 @@ export default function CreatePostPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => fileInputRef.current?.click()}
-              disabled={mediaFiles.length >= 4}
+              disabled={mediaFiles.length >= 3}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-full border transition-colors ${
-                  mediaFiles.length >= 4
+                  mediaFiles.length >= 3
                     ? 'border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 cursor-not-allowed'
                     : 'border-black/10 dark:border-white/10 text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:border-black/20 dark:hover:border-white/20'
               }`}
@@ -396,9 +396,9 @@ export default function CreatePostPage() {
             </button>
             <button
               onClick={() => audioInputRef.current?.click()}
-              disabled={mediaFiles.length >= 4}
+              disabled={mediaFiles.length >= 3}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-full border transition-colors ${
-                  mediaFiles.length >= 4
+                  mediaFiles.length >= 3
                     ? 'border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 cursor-not-allowed'
                     : 'border-black/10 dark:border-white/10 text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:border-black/20 dark:hover:border-white/20'
               }`}

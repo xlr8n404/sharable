@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Heart, MessageCircle, Share2, MoreHorizontal, X, Send, Trash2, Clock, Reply, ChevronDown, ChevronUp, Bookmark, Copy, Maximize2, Repeat, TrendingUp, CornerRightDown, Settings2, Music, Play, Eye } from 'lucide-react';
+import { Heart, MessageCircle, Share2, MoreHorizontal, Trash2, Bookmark, Copy, Repeat, CornerRightDown, Settings2, Play } from 'lucide-react';
 import { Loader } from '@/components/ui/loader';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
@@ -10,8 +10,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { MentionText } from '@/components/MentionText';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
-import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Drawer, DrawerContent } from '@/components/ui/drawer';
 
 // Global video manager — only one video plays at a time across all PostCards
@@ -251,7 +249,11 @@ export function PostCard({
   const rawTypes = (media_types && media_types.length > 0) ? media_types : (media_type ? [media_type] : []);
   const finalMediaTypes = finalMediaUrls.map((url, i) => rawTypes[i] || inferType(url));
 
-  const hasMedia = finalMediaUrls.length > 0 && finalMediaUrls[0] !== null && finalMediaUrls[0] !== '';
+  // Limit to max 3 media items per post
+  const displayMediaUrls = finalMediaUrls.slice(0, 3);
+  const displayMediaTypes = finalMediaTypes.slice(0, 3);
+
+  const hasMedia = displayMediaUrls.length > 0 && displayMediaUrls[0] !== null && displayMediaUrls[0] !== '';
 
   const [currentUserId, setCurrentUserId] = useState<string | null>(propCurrentUserId ?? null);
   const [liked, setLiked] = useState(initialLiked);
@@ -276,7 +278,7 @@ export function PostCard({
   const [selectedCommentMenu, setSelectedCommentMenu] = useState<string | null>(null);
   const [newComment, setNewComment] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
+  const [showPostMenuSheet, setShowPostMenuSheet] = useState(false);
   const [deleting, setDeleting] = useState(false);
     const [replyingTo, setReplyingTo] = useState<{ id: string; name: string } | null>(null);
     const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
@@ -287,10 +289,6 @@ export function PostCard({
       const [isSaved, setIsSaved] = useState(initialSaved);
       const [mentionResults, setMentionResults] = useState<any[]>([]);
       const [showMentions, setShowMentions] = useState(false);
-      const [fullscreenMedia, setFullscreenMedia] = useState<{ url: string; type: string; index: number } | null>(null);
-        const [scale, setScale] = useState(1);
-        const [mediaCarouselIndex, setMediaCarouselIndex] = useState(0);
-        const [showHeartAnim, setShowHeartAnim] = useState(false);
         const [viewportHeight, setViewportHeight] = useState<number | null>(null);
         const [votedComments, setVotedComments] = useState<Set<string>>(new Set());
         const [showCommentMenu, setShowCommentMenu] = useState<string | null>(null);
@@ -331,55 +329,7 @@ export function PostCard({
             };
           }, []); // Only once on mount
 
-        useEffect(() => {
-
-      }, [!!fullscreenMedia]);
-
-      const closeFullscreen = () => {
-        setFullscreenMedia(null);
-      };
-
-      const initialDistance = useRef<number | null>(null);
-      const initialScale = useRef(1);
-      const commentInputRef = useRef<HTMLTextAreaElement>(null);
-
-      useEffect(() => {
-        if (!fullscreenMedia) {
-          setScale(1);
-          initialDistance.current = null;
-        }
-      }, [fullscreenMedia]);
-
-      const handleMediaDoubleClick = async (_e: React.MouseEvent) => {
-        // double-tap like removed
-      };
-
-      const handleTouchStart = (e: React.TouchEvent) => {
-
-      if (e.touches.length === 2) {
-        const dist = Math.hypot(
-          e.touches[0].pageX - e.touches[1].pageX,
-          e.touches[0].pageY - e.touches[1].pageY
-        );
-        initialDistance.current = dist;
-        initialScale.current = scale;
-      }
-    };
-
-    const handleTouchMove = (e: React.TouchEvent) => {
-      if (e.touches.length === 2 && initialDistance.current !== null) {
-        const dist = Math.hypot(
-          e.touches[0].pageX - e.touches[1].pageX,
-          e.touches[0].pageY - e.touches[1].pageY
-        );
-        const newScale = (dist / initialDistance.current) * initialScale.current;
-        setScale(Math.min(Math.max(1, newScale), 5));
-      }
-    };
-
-    const handleTouchEnd = () => {
-      initialDistance.current = null;
-    };
+        const commentInputRef = useRef<HTMLTextAreaElement>(null);
 
 
   const handleCommentChange = async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -482,7 +432,7 @@ export function PostCard({
       } catch (err) {
         console.error('Error sharing:', err);
       }
-      setShowMenu(false);
+      setShowPostMenuSheet(false);
     };
 
     const handleDownloadMedia = async () => {
@@ -508,7 +458,7 @@ export function PostCard({
       } catch (err) {
         toast.error('Failed to download media');
       }
-      setShowMenu(false);
+      setShowPostMenuSheet(false);
     };
 
         const shouldTruncate = content.length > 115;
@@ -1076,7 +1026,7 @@ export function PostCard({
       if (error) throw error;
 
       toast.success('Post deleted');
-      setShowMenu(false);
+      setShowPostMenuSheet(false);
       if (onDelete) {
         onDelete(id);
       } else {
@@ -1323,59 +1273,12 @@ export function PostCard({
             </div>
           </div>
           {!isNested && (
-            <div className="relative">
-              <button 
-                onClick={() => setShowMenu(!showMenu)}
-                className="p-2 text-zinc-400 hover:text-black dark:hover:text-white rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-              >
-                <MoreHorizontal size={20} strokeWidth={1.5} />
-              </button>
-              
-              <AnimatePresence>
-                {showMenu && (
-                  <>
-                    <motion.div 
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="fixed inset-0 z-30"
-                      onClick={() => setShowMenu(false)}
-                    />
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                      className="absolute right-0 mt-1 w-48 bg-white dark:bg-zinc-900 border border-black/10 dark:border-white/10 rounded-2xl shadow-xl z-40 overflow-hidden"
-                    >
-                      <button 
-                        onClick={handleSharePost}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-                      >
-                        <Copy size={18} strokeWidth={1.5} />
-                        Copy Link
-                      </button>
-                      <button 
-                        onClick={handleDownloadMedia}
-                        disabled={!hasMedia}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/5 transition-colors disabled:opacity-50"
-                      >
-                        <CornerRightDown size={18} strokeWidth={1.5} />
-                        Download
-                      </button>
-                      {currentUserId === user_id && (
-                        <button 
-                          onClick={() => setShowDeleteConfirm(true)}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                        >
-                          <Trash2 size={18} strokeWidth={1.5} />
-                          Delete Post
-                        </button>
-                      )}
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
-            </div>
+            <button
+              onClick={() => setShowPostMenuSheet(true)}
+              className="p-2 text-zinc-400 hover:text-black dark:hover:text-white rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+            >
+              <MoreHorizontal size={20} strokeWidth={1.5} />
+            </button>
           )}
         </div>
 
@@ -1389,121 +1292,55 @@ export function PostCard({
         {/* Media */}
         {hasMedia && (
           <div className="mb-3 rounded-2xl overflow-hidden border border-black/5 dark:border-white/10">
-            {finalMediaUrls.length === 1 ? (
+            {displayMediaUrls.length === 1 ? (
+              // Single media: show at original aspect ratio
               <MediaGridCell
-                url={finalMediaUrls[0]}
-                type={finalMediaTypes[0]}
+                url={displayMediaUrls[0]}
+                type={displayMediaTypes[0]}
                 index={0}
                 isVisible={isVisible}
-                onOpen={(url, type) => setFullscreenMedia({ url, type, index: 0 })}
                 isSingle={true}
               />
+            ) : displayMediaUrls.length === 2 ? (
+              // 2 media: side by side 1:1 each
+              <div className="grid grid-cols-2 gap-[2px]">
+                {displayMediaUrls.map((url, index) => (
+                  <div key={index} className="aspect-square overflow-hidden">
+                    <MediaGridCell
+                      url={url}
+                      type={displayMediaTypes[index]}
+                      index={index}
+                      isVisible={isVisible}
+                      isSingle={false}
+                    />
+                  </div>
+                ))}
+              </div>
             ) : (
-              <div className="flex flex-col gap-1">
-                {/* Facebook-style Grid Logic */}
-                {finalMediaUrls.length === 2 && (
-                  <div className="grid grid-cols-2 gap-1 aspect-square">
-                    {finalMediaUrls.map((url, index) => (
+              // 3 media: first full width 1:1, then two below side by side 1:1
+              <div className="flex flex-col gap-[2px]">
+                <div className="aspect-square overflow-hidden">
+                  <MediaGridCell
+                    url={displayMediaUrls[0]}
+                    type={displayMediaTypes[0]}
+                    index={0}
+                    isVisible={isVisible}
+                    isSingle={false}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-[2px]">
+                  {displayMediaUrls.slice(1, 3).map((url, index) => (
+                    <div key={index + 1} className="aspect-square overflow-hidden">
                       <MediaGridCell
-                        key={index}
                         url={url}
-                        type={finalMediaTypes[index]}
-                        index={index}
+                        type={displayMediaTypes[index + 1]}
+                        index={index + 1}
                         isVisible={isVisible}
-                        onOpen={(url, type) => setFullscreenMedia({ url, type, index })}
-                        isSingle={false}
-                      />
-                    ))}
-                  </div>
-                )}
-                {finalMediaUrls.length === 3 && (
-                  <div className="flex flex-col gap-1">
-                    <div className="w-full aspect-video">
-                      <MediaGridCell
-                        url={finalMediaUrls[0]}
-                        type={finalMediaTypes[0]}
-                        index={0}
-                        isVisible={isVisible}
-                        onOpen={(url, type) => setFullscreenMedia({ url, type, index: 0 })}
                         isSingle={false}
                       />
                     </div>
-                    <div className="grid grid-cols-2 gap-1 aspect-[2/1]">
-                      {finalMediaUrls.slice(1, 3).map((url, index) => (
-                        <MediaGridCell
-                          key={index + 1}
-                          url={url}
-                          type={finalMediaTypes[index + 1]}
-                          index={index + 1}
-                          isVisible={isVisible}
-                          onOpen={(url, type) => setFullscreenMedia({ url, type, index: index + 1 })}
-                          isSingle={false}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {finalMediaUrls.length === 4 && (
-                  <div className="grid grid-cols-2 grid-rows-2 gap-1 aspect-square">
-                    {finalMediaUrls.map((url, index) => (
-                      <MediaGridCell
-                        key={index}
-                        url={url}
-                        type={finalMediaTypes[index]}
-                        index={index}
-                        isVisible={isVisible}
-                        onOpen={(url, type) => setFullscreenMedia({ url, type, index })}
-                        isSingle={false}
-                      />
-                    ))}
-                  </div>
-                )}
-                {finalMediaUrls.length >= 5 && (
-                  <div className="flex flex-col gap-1">
-                    <div className="grid grid-cols-2 gap-1 aspect-[2/1]">
-                      {finalMediaUrls.slice(0, 2).map((url, index) => (
-                        <MediaGridCell
-                          key={index}
-                          url={url}
-                          type={finalMediaTypes[index]}
-                          index={index}
-                          isVisible={isVisible}
-                          onOpen={(url, type) => setFullscreenMedia({ url, type, index })}
-                          isSingle={false}
-                        />
-                      ))}
-                    </div>
-                    <div className="grid grid-cols-3 gap-1 aspect-[3/1]">
-                      {finalMediaUrls.slice(2, 5).map((url, index) => (
-                        <MediaGridCell
-                          key={index + 2}
-                          url={url}
-                          type={finalMediaTypes[index + 2]}
-                          index={index + 2}
-                          overlay={index === 2 && finalMediaUrls.length > 5 ? finalMediaUrls.length - 5 : 0}
-                          isVisible={isVisible}
-                          onOpen={(url, type) => setFullscreenMedia({ url, type, index: index + 2 })}
-                          isSingle={false}
-                        />
-                      ))}
-                    </div>
-                    {finalMediaUrls.length > 5 && (
-                      <div className="grid grid-cols-3 gap-1">
-                        {finalMediaUrls.slice(5, 8).map((url, index) => (
-                          <div key={index + 5} className="relative w-full aspect-square">
-                            <MediaGridCell
-                              url={url}
-                              type={finalMediaTypes[index + 5]}
-                              index={index + 5}
-                              isVisible={isVisible}
-                              isSingle={false}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -1818,75 +1655,52 @@ export function PostCard({
               )}
           </AnimatePresence>
 
+          {/* Post Options Bottom Sheet */}
           <AnimatePresence>
-            {fullscreenMedia && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center select-none"
-                onClick={closeFullscreen}
-              >
-                <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-10 bg-gradient-to-b from-black/50 to-transparent">
-                  <div className="text-white text-sm font-medium">
-                    {fullscreenMedia.index + 1} / {finalMediaUrls.length}
+            {showPostMenuSheet && (
+              <>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-[70] bg-black/20 dark:bg-black/40 backdrop-blur-sm"
+                  onClick={() => setShowPostMenuSheet(false)}
+                />
+                <motion.div
+                  initial={{ opacity: 0, y: 100 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 100 }}
+                  className="fixed bottom-0 left-0 right-0 z-[80] bg-white dark:bg-zinc-900 rounded-t-3xl shadow-2xl overflow-hidden pb-[env(safe-area-inset-bottom,16px)]"
+                >
+                  <div className="w-12 h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full mx-auto mt-3 mb-2" />
+                  <div className="px-2 py-2">
+                    <button
+                      onClick={handleSharePost}
+                      className="w-full flex items-center gap-3 px-4 py-4 text-base font-medium hover:bg-black/5 dark:hover:bg-white/5 transition-colors rounded-2xl"
+                    >
+                      <Copy size={20} strokeWidth={1.5} />
+                      Copy Link
+                    </button>
+                    <button
+                      onClick={handleDownloadMedia}
+                      disabled={!hasMedia}
+                      className="w-full flex items-center gap-3 px-4 py-4 text-base font-medium hover:bg-black/5 dark:hover:bg-white/5 transition-colors rounded-2xl disabled:opacity-50"
+                    >
+                      <CornerRightDown size={20} strokeWidth={1.5} />
+                      Download
+                    </button>
+                    {currentUserId === user_id && (
+                      <button
+                        onClick={() => { setShowDeleteConfirm(true); setShowPostMenuSheet(false); }}
+                        className="w-full flex items-center gap-3 px-4 py-4 text-base font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors rounded-2xl"
+                      >
+                        <Trash2 size={20} strokeWidth={1.5} />
+                        Delete Post
+                      </button>
+                    )}
                   </div>
-                  <button 
-                    onClick={closeFullscreen}
-                    className="p-2 text-white hover:bg-white/10 rounded-full transition-colors"
-                  >
-                    <X size={24} />
-                  </button>
-                </div>
-
-                <div className="w-full h-full flex items-center justify-center overflow-hidden">
-                  <Carousel 
-                    className="w-full h-full"
-                    setApi={(api) => {
-                      if (api) {
-                        api.on("select", () => {
-                          const index = api.selectedScrollSnap();
-                          setMediaCarouselIndex(index);
-                          setFullscreenMedia(prev => prev ? { ...prev, index, url: finalMediaUrls[index], type: finalMediaTypes[index] } : null);
-                        });
-                        api.scrollTo(fullscreenMedia.index, true);
-                      }
-                    }}
-                  >
-                    <CarouselContent className="h-full ml-0">
-                      {finalMediaUrls.map((url, index) => (
-                        <CarouselItem key={index} className="h-full pl-0 flex items-center justify-center">
-                          <div 
-                            className="relative w-full h-full flex items-center justify-center p-2"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {finalMediaTypes[index] === 'video' ? (
-                              <LazyVideo 
-                                src={url} 
-                                className="max-w-full max-h-full object-contain" 
-                                controls 
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                            ) : (
-                              <motion.img
-                                src={url}
-                                alt="Fullscreen"
-                                className="max-w-full max-h-full object-contain cursor-zoom-in"
-                                style={{ scale }}
-                                drag={scale > 1}
-                                dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-                                onTouchStart={handleTouchStart}
-                                onTouchMove={handleTouchMove}
-                                onTouchEnd={handleTouchEnd}
-                              />
-                            )}
-                          </div>
-                        </CarouselItem>
-                      ))}
-                    </CarouselContent>
-                  </Carousel>
-                </div>
-              </motion.div>
+                </motion.div>
+              </>
             )}
           </AnimatePresence>
 
