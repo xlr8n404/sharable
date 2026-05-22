@@ -95,14 +95,16 @@ interface Comment {
 }
 
 // A video that only loads when src is set, and pauses other playing videos
-function LazyVideo({ src, className, controls, onClick, onDoubleClick }: {
+function LazyVideo({ src, className, controls, isSingle, onClick, onDoubleClick }: {
   src: string;
   className?: string;
   controls?: boolean;
+  isSingle?: boolean;
   onClick?: (e: React.MouseEvent<HTMLVideoElement>) => void;
   onDoubleClick?: (e: React.MouseEvent<HTMLVideoElement>) => void;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
+  const [metaLoaded, setMetaLoaded] = useState(false);
 
   const handlePlay = useCallback(() => {
     if (ref.current) videoManager.register(ref.current);
@@ -117,24 +119,33 @@ function LazyVideo({ src, className, controls, onClick, onDoubleClick }: {
   if (!src) {
     // Placeholder while not visible
     return (
-      <div className={`${className} bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center`}>
+      <div className={`${className} bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center ${isSingle ? 'aspect-video' : ''}`}>
         <Play className="w-10 h-10 text-zinc-400" />
       </div>
     );
   }
 
   return (
-    <video
-      ref={ref}
-      src={src}
-      className={className}
-      controls={controls}
-      preload="metadata"
-      playsInline
-      onClick={onClick}
-      onDoubleClick={onDoubleClick}
-      onPlay={handlePlay}
-    />
+    <div className={isSingle ? 'w-full' : 'w-full h-full'}>
+      {/* Show 16:9 placeholder until metadata (dimensions) are known */}
+      {isSingle && !metaLoaded && (
+        <div className="w-full aspect-video bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
+          <Play className="w-10 h-10 text-zinc-400" />
+        </div>
+      )}
+      <video
+        ref={ref}
+        src={src}
+        className={`${className} ${isSingle && !metaLoaded ? 'hidden' : ''}`}
+        controls={controls}
+        preload="metadata"
+        playsInline
+        onClick={onClick}
+        onDoubleClick={onDoubleClick}
+        onPlay={handlePlay}
+        onLoadedMetadata={() => setMetaLoaded(true)}
+      />
+    </div>
   );
 }
 
@@ -166,6 +177,7 @@ function MediaGridCell({
           src={isVisible ? url : ''}
           className={`w-full ${isSingle ? 'h-auto' : 'h-full object-cover'}`}
           controls={isSingle}
+          isSingle={isSingle}
         />
       ) : (
         <img
