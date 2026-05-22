@@ -123,11 +123,11 @@
     -moz-user-select: none;
     -ms-user-select: none;
     overflow-x: hidden;
-    background-color: #F0F0F0;
+    background-color: ffffff;
   }
   
   .dark body {
-    background-color: #202020;
+    background-color: 000000;
   }
 
   #root, main, .app-container {
