@@ -129,7 +129,7 @@ function LazyVideo({ src, className, controls, onClick, onDoubleClick }: {
       src={src}
       className={className}
       controls={controls}
-      preload="none"
+      preload="metadata"
       playsInline
       onClick={onClick}
       onDoubleClick={onDoubleClick}
@@ -158,20 +158,20 @@ function MediaGridCell({
 }) {
   return (
     <div
-      className={`relative overflow-hidden bg-zinc-100 dark:bg-zinc-900 cursor-pointer group w-full ${isSingle ? 'h-auto' : 'h-full'}`}
+      className={`relative overflow-hidden bg-zinc-100 dark:bg-zinc-900 cursor-pointer group w-full ${isSingle ? 'h-auto' : 'absolute inset-0'}`}
       onClick={() => onOpen?.(url, type)}
     >
       {type === 'video' ? (
-        <LazyVideo 
-          src={isVisible ? url : ''} 
-          className={`w-full ${isSingle ? 'h-auto max-h-[70vh]' : 'h-full object-cover'}`} 
+        <LazyVideo
+          src={isVisible ? url : ''}
+          className={`w-full ${isSingle ? 'h-auto' : 'h-full object-cover'}`}
           controls={isSingle}
         />
       ) : (
         <img
           src={url}
           alt={`Post media ${index + 1}`}
-          className={`w-full ${isSingle ? 'h-auto max-h-[70vh] object-contain' : 'h-full object-cover'}`}
+          className={`w-full ${isSingle ? 'h-auto object-contain' : 'h-full object-cover'}`}
           loading="lazy"
           onError={(e) => {
             const img = e.target as HTMLImageElement;
@@ -1305,7 +1305,7 @@ export function PostCard({
               // 2 media: side by side 1:1 each
               <div className="grid grid-cols-2 gap-[2px]">
                 {displayMediaUrls.map((url, index) => (
-                  <div key={index} className="aspect-square overflow-hidden">
+                  <div key={index} className="relative aspect-square overflow-hidden">
                     <MediaGridCell
                       url={url}
                       type={displayMediaTypes[index]}
@@ -1318,8 +1318,8 @@ export function PostCard({
               </div>
             ) : (
               // 3 media: left 1 large 1:1, right 2 stacked 1:1
-              <div className="grid grid-cols-2 gap-[2px]" style={{ aspectRatio: '2/1' }}>
-                <div className="overflow-hidden">
+              <div className="grid grid-cols-2 gap-[2px]">
+                <div className="relative aspect-square overflow-hidden">
                   <MediaGridCell
                     url={displayMediaUrls[0]}
                     type={displayMediaTypes[0]}
@@ -1330,7 +1330,7 @@ export function PostCard({
                 </div>
                 <div className="flex flex-col gap-[2px]">
                   {displayMediaUrls.slice(1, 3).map((url, index) => (
-                    <div key={index + 1} className="flex-1 overflow-hidden">
+                    <div key={index + 1} className="relative aspect-square overflow-hidden">
                       <MediaGridCell
                         url={url}
                         type={displayMediaTypes[index + 1]}

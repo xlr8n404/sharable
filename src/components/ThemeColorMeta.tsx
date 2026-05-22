@@ -7,7 +7,12 @@ export function ThemeColorMeta() {
   const { resolvedTheme } = useTheme();
 
   useEffect(() => {
-    const statusBarColor = resolvedTheme === 'dark' ? '#111111' : '#f0f0f0';
+    // resolvedTheme can be undefined on first render — fall back to system preference
+    let theme = resolvedTheme;
+    if (!theme) {
+      theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    const statusBarColor = theme === 'dark' ? '#111111' : '#f0f0f0';
     let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
     if (!meta) {
       meta = document.createElement('meta');
