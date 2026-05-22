@@ -113,7 +113,7 @@ export default function CreateCommunityPage() {
         <h1 className="text-xl font-bold font-[family-name:var(--font-syne)]">Create Community</h1>
       </header>
 
-      <main className="max-w-xl mx-auto pt-20 px-4">
+      <main className="w-full pt-20 px-4">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Profile Picture Upload */}
           <div>

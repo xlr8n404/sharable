@@ -59,7 +59,7 @@ export default function StoriesPage() {
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col">
         <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-background">
-          <div className="max-w-xl mx-auto flex items-center px-4 h-full">
+          <div className="flex items-center px-4 h-full">
             <h1 className="text-xl font-bold tracking-tight">Stories</h1>
           </div>
         </header>
@@ -99,7 +99,7 @@ export default function StoriesPage() {
     <div className="min-h-screen bg-background text-foreground">
       {/* Top Bar — 64px */}
       <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-background">
-        <div className="max-w-xl mx-auto flex items-center justify-between px-4 h-full">
+        <div className="flex items-center justify-between px-4 h-full">
           <h1 className="text-xl font-bold tracking-tight">Stories</h1>
           <Link
             href="/create/story"
@@ -110,7 +110,7 @@ export default function StoriesPage() {
         </div>
       </header>
 
-      <main className="max-w-xl mx-auto pt-16 pb-24 px-4">
+      <main className="w-full pt-16 pb-24 px-4">
         {loading ? (
           <div className="grid grid-cols-2 gap-3 mt-4">
             {[...Array(4)].map((_, i) => (

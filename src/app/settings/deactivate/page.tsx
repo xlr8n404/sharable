@@ -115,7 +115,7 @@ export default function DeactivateAccountPage() {
         <span className="ml-2 font-bold text-lg">Deactivate Account</span>
       </header>
 
-      <main className="max-w-xl mx-auto pt-16 pb-20">
+      <main className="w-full pt-16 pb-20">
         <div className="p-4">
           {/* Warning Banner */}
           <div className="mb-6 p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/50 rounded-2xl">

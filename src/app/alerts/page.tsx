@@ -203,14 +203,14 @@ export default function AlertsPage() {
           isHeaderVisible ? 'translate-y-0' : '-translate-y-full'
         }`}
       >
-        <div className="max-w-xl mx-auto px-4 h-16 flex items-center">
+        <div className="px-4 h-16 flex items-center">
           <span className="font-bold text-2xl tracking-tight font-[family-name:var(--font-syne)]">
             Alerts
           </span>
         </div>
       </header>
 
-      <main className="max-w-xl mx-auto pt-16 pb-20">
+      <main className="w-full pt-16 pb-20">
         {loading ? (
           <div>
             {[...Array(10)].map((_, i) => (

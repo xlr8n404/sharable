@@ -226,7 +226,7 @@ export default function CommunityDetailPage() {
   if (!community) {
     return (
       <div className="min-h-screen bg-background pb-28 animate-pulse">
-        <div className="max-w-xl mx-auto">
+        <div className="w-full">
           <Skeleton className="w-full bg-zinc-100 dark:bg-zinc-900" style={{ height: '120px' }} />
           <div className="px-4">
             <div className="relative" style={{ height: '56px' }}>
@@ -253,7 +253,7 @@ export default function CommunityDetailPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-28">
-      <div className="max-w-xl mx-auto">
+      <div className="w-full">
 
         {/* ── Cover + Avatar ─────────────────────────────────────────────── */}
         <div className="relative">

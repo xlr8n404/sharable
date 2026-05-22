@@ -115,7 +115,7 @@ export default function SettingsPage() {
             <span className="font-bold text-2xl">Settings & more</span>
           </div>
         </header>
-        <main className="max-w-xl mx-auto p-4 space-y-3">
+        <main className="w-full p-4 space-y-3">
           {[...Array(6)].map((_, i) => (
             <Skeleton key={i} className="h-20 w-full rounded-2xl bg-zinc-100 dark:bg-zinc-900" />
           ))}
@@ -138,7 +138,7 @@ export default function SettingsPage() {
         </div>
       </header>
 
-      <main className="max-w-xl mx-auto pt-16 pb-20">
+      <main className="w-full pt-16 pb-20">
         {/* Recommended Section */}
         {mounted && (() => {
           const recs = [

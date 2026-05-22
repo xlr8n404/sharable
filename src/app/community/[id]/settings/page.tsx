@@ -259,7 +259,7 @@ export default function CommunitySettingsPage() {
     return (
       <div className="min-h-screen bg-background animate-pulse">
         <div className="w-full bg-zinc-100 dark:bg-zinc-900" style={{ height: '120px' }} />
-        <div className="max-w-xl mx-auto px-4 pt-12 pb-8 space-y-6">
+        <div className="w-full px-4 pt-12 pb-8 space-y-6">
           {[...Array(5)].map((_, i) => (
             <div key={i}>
               <div className="h-4 w-24 bg-zinc-200 dark:bg-zinc-800 rounded mb-2" />
@@ -340,7 +340,7 @@ export default function CommunitySettingsPage() {
       </div>
 
       {/* ── Form ──────────────────────────────────────────────────────── */}
-      <main className="max-w-xl mx-auto pt-14 pb-16">
+      <main className="w-full pt-14 pb-16">
         <div className="px-4 space-y-6">
 
           {/* Community Name */}

@@ -279,7 +279,7 @@ function SearchContent() {
         </AnimatePresence>
       </header>
 
-      <main className="pt-20 px-4 pb-24 max-w-xl mx-auto">
+      <main className="pt-20 px-4 pb-24 w-full">
         <AnimatePresence mode="wait">
           {loading ? (
             <motion.div

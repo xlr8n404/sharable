@@ -486,7 +486,7 @@ function MessagesContent() {
                       exit={{ opacity: 0, height: 0 }}
                       className="fixed top-16 left-0 right-0 z-40 bg-background px-4 py-3"
                     >
-                      <div className="flex items-center gap-2 w-full max-w-xl mx-auto">
+                      <div className="flex items-center gap-2 w-full">
                         <button
                           onClick={() => setActiveTab('inbox')}
                           className={`flex-1 py-3 rounded-full text-base font-bold transition-all ${
@@ -522,7 +522,7 @@ function MessagesContent() {
                   )}
                 </AnimatePresence>
 
-            <main className={`max-w-xl mx-auto pb-28 px-4 transition-all ${showFilters ? 'pt-40' : 'pt-20'}`}>
+            <main className={`w-full pb-28 px-4 transition-all ${showFilters ? 'pt-40' : 'pt-20'}`}>
               {loading ? (
                 <ConversationSkeleton />
               ) : activeTab === 'suggestions' ? (

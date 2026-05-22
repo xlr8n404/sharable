@@ -101,7 +101,7 @@ export default function CommunitiesPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-xl mx-auto pt-20 px-4">
+      <main className="w-full pt-20 px-4">
         {loading ? (
           <div className="space-y-4">
             {[...Array(6)].map((_, i) => (

@@ -455,8 +455,8 @@ export default function HomePage() {
         onPinnedFeedChange={(mode) => setPinnedFeed(mode)}
       />
 
-        <header className={`fixed top-0 md:left-64 left-0 right-0 h-16 z-50 px-4 bg-white dark:bg-black rounded-b-[16px] transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-        <div className="h-full flex items-center justify-between max-w-7xl mx-auto">
+        <header className={`fixed top-0 left-0 right-0 h-16 z-50 px-4 bg-white dark:bg-black rounded-b-[16px] transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+        <div className="h-full flex items-center justify-between">
           {/* Left: Settings */}
           <button
             onClick={() => setMainMenuOpen(true)}
@@ -481,7 +481,7 @@ export default function HomePage() {
       </header>
 
       <main
-        className="max-w-7xl mx-auto pt-16 pb-20 md:px-0 px-0"
+        className="w-full pt-16 pb-20"
       >
         <div className="px-4 py-4 flex items-center gap-3">
           <div className="shrink-0 w-10 h-10 rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">

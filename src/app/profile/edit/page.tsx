@@ -331,7 +331,7 @@ export default function EditProfilePage() {
         </div>
 
         {/* Form Content - Left Aligned */}
-        <main className="max-w-xl mx-auto pt-12 pb-8">
+        <main className="w-full pt-12 pb-8">
           <div className="px-4 space-y-6">
             {/* Full Name */}
             <div>
@@ -498,7 +498,7 @@ function EditProfileSkeleton() {
       <div className="w-full bg-zinc-100 dark:bg-zinc-900" style={{height: '120px'}} />
 
       {/* Avatar Skeleton - 80px, halfway down */}
-      <div className="max-w-xl mx-auto px-4 relative">
+      <div className="w-full px-4 relative">
         <div 
           className="w-20 h-20 rounded-full border-4 border-white dark:border-black bg-zinc-200 dark:bg-zinc-800"
           style={{marginTop: '-40px'}}
@@ -506,7 +506,7 @@ function EditProfileSkeleton() {
       </div>
 
       {/* Form Fields Skeleton */}
-      <div className="max-w-xl mx-auto px-4 pt-12 pb-8 space-y-6">
+      <div className="w-full px-4 pt-12 pb-8 space-y-6">
         {/* Full Name */}
         <div>
           <div className="h-4 w-24 bg-zinc-200 dark:bg-zinc-800 rounded mb-2" />

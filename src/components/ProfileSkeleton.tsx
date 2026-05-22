@@ -4,7 +4,7 @@ import { PostSkeleton } from "./PostSkeleton";
 export function ProfileSkeleton() {
   return (
     <div className="min-h-screen bg-background animate-pulse pb-20">
-      <div className="max-w-xl mx-auto">
+      <div className="w-full">
         {/* Cover Photo - 100% width, 120px height */}
         <Skeleton className="w-full bg-zinc-100 dark:bg-zinc-900" style={{height: '120px'}} />
 

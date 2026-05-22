@@ -80,7 +80,7 @@ export default function ChangePasswordPage() {
         <span className="ml-2 font-bold text-lg">Change Password</span>
       </header>
 
-      <main className="max-w-xl mx-auto pt-16 pb-20">
+      <main className="w-full pt-16 pb-20">
         <div className="p-4">
           {success ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">

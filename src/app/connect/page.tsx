@@ -202,7 +202,7 @@ export default function ConnectPage() {
     <div className="min-h-screen bg-background text-foreground">
       {/* Top bar: "Connect" title + search bar */}
       <header className="sticky top-0 z-50 bg-background">
-        <div className="max-w-xl mx-auto px-4 h-16 flex items-center gap-3">
+        <div className="px-4 h-16 flex items-center gap-3">
           <span className="font-bold text-2xl tracking-tight font-[family-name:var(--font-syne)] flex-shrink-0">
             Connect
           </span>
@@ -227,7 +227,7 @@ export default function ConnectPage() {
         </div>
       </header>
 
-      <main className="max-w-xl mx-auto px-4 py-4 pb-24">
+      <main className="w-full px-4 py-4 pb-24">
         {loading || loadingSuggested ? (
           <div className="space-y-4">
             {[...Array(4)].map((_, i) => (

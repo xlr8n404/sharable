@@ -45,7 +45,7 @@
 
 :root {
   --radius: 0.5rem; /* 8px */
-  --background: #F0F0F0;
+  --background: #ffffff;
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
@@ -79,7 +79,7 @@
 }
 
 .dark {
-  --background: #202020;
+  --background: #000000;
   --foreground: oklch(0.985 0 0);
   --card: oklch(0 0 0);
   --card-foreground: oklch(0.985 0 0);
@@ -123,11 +123,6 @@
     -moz-user-select: none;
     -ms-user-select: none;
     overflow-x: hidden;
-    background-color: ffffff;
-  }
-  
-  .dark body {
-    background-color: 000000;
   }
 
   #root, main, .app-container {
@@ -177,18 +172,18 @@
 
 /* Responsive Layout Utilities */
 @layer utilities {
-  /* Feed Container - responsive width */
+  /* Feed Container - full width */
   .feed-container {
-    @apply max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-6xl;
+    @apply w-full;
   }
 
   /* Mobile-first padding adjustments */
   .responsive-px {
-    @apply px-4 md:px-6 lg:px-8;
+    @apply px-4;
   }
 
-  /* Main content area with proper padding for desktop sidebar */
+  /* Main content area */
   .main-content {
-    @apply md:pl-0;
+    @apply w-full;
   }
 }

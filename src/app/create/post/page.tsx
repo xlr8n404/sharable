@@ -252,7 +252,7 @@ export default function CreatePostPage() {
           </div>
           <Skeleton className="h-9 w-20 rounded-full bg-zinc-200 dark:bg-zinc-800" />
         </header>
-        <main className="max-w-xl mx-auto p-4 space-y-4">
+        <main className="w-full p-4 space-y-4">
           <Skeleton className="h-32 w-full rounded-xl bg-zinc-100 dark:bg-zinc-900" />
           <div className="flex gap-4">
             <Skeleton className="w-12 h-12 rounded-xl bg-zinc-100 dark:bg-zinc-900" />
@@ -303,7 +303,7 @@ export default function CreatePostPage() {
           </button>
       </header>
 
-      <main className="max-w-xl mx-auto pt-16 pb-20 px-4">
+      <main className="w-full pt-16 pb-20 px-4">
         <div className="py-4 relative">
             {showMentions && (
               <div className="absolute top-0 left-0 right-0 -translate-y-full bg-white dark:bg-zinc-900 border border-black/10 dark:border-white/10 rounded-xl shadow-2xl z-20 overflow-hidden mb-2">

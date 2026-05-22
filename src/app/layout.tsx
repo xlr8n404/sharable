@@ -11,7 +11,7 @@ import PresenceProvider from "@/components/PresenceProvider";
 import MediaContextMenuBlocker from "@/components/MediaContextMenuBlocker";
 import { NavigationHistoryProvider } from "@/components/NavigationHistoryProvider";
 import { ThemeColorMeta } from "@/components/ThemeColorMeta";
-import { DesktopSidebar } from "@/components/DesktopSidebar";
+
 
 const APP_URL = 'https://sharableofc.vercel.app';
 
@@ -101,8 +101,8 @@ export const viewport = {
   userScalable: false,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+    { media: "(prefers-color-scheme: light)", color: "#f0f0f0" },
+    { media: "(prefers-color-scheme: dark)", color: "#111111" },
   ],
 };
 
@@ -113,9 +113,8 @@ export default function RootLayout({
 }>) {
   return (
       <html lang="en" suppressHydrationWarning>
-        <body className="antialiased font-sans bg-background text-foreground md:ml-64">
+        <body className="antialiased font-sans bg-background text-foreground">
         <ThemeProvider>
-          <DesktopSidebar />
           <NavigationHistoryProvider>
           <LanguageProvider>
             <PresenceProvider>

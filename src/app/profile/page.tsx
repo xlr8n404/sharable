@@ -366,7 +366,7 @@ export default function ProfilePage() {
         avatarSrc={avatarSrc}
       />
 
-      <main className="max-w-xl mx-auto pb-20">
+      <main className="w-full pb-20">
         <div className="relative">
           <div className="w-full bg-zinc-100 dark:bg-zinc-900 overflow-hidden" style={{height: '120px'}}>
             {coverSrc ? (

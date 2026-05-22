@@ -7,7 +7,7 @@ export function ThemeColorMeta() {
   const { resolvedTheme } = useTheme();
 
   useEffect(() => {
-    const statusBarColor = resolvedTheme === 'dark' ? '#101010' : '#f5f5f5';
+    const statusBarColor = resolvedTheme === 'dark' ? '#111111' : '#f0f0f0';
     let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
     if (!meta) {
       meta = document.createElement('meta');
