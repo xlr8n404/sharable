@@ -1317,9 +1317,9 @@ export function PostCard({
                 ))}
               </div>
             ) : (
-              // 3 media: left 1 large 1:1, right 2 stacked 1:1
-              <div className="grid grid-cols-2 gap-[2px]">
-                <div className="relative aspect-square overflow-hidden">
+              // 3 media: left 1 large, right 2 stacked — all same height via aspect-square container
+              <div className="grid grid-cols-2 gap-[2px] aspect-square">
+                <div className="relative overflow-hidden">
                   <MediaGridCell
                     url={displayMediaUrls[0]}
                     type={displayMediaTypes[0]}
@@ -1328,9 +1328,9 @@ export function PostCard({
                     isSingle={false}
                   />
                 </div>
-                <div className="flex flex-col gap-[2px]">
+                <div className="flex flex-col gap-[2px] h-full">
                   {displayMediaUrls.slice(1, 3).map((url, index) => (
-                    <div key={index + 1} className="relative aspect-square overflow-hidden">
+                    <div key={index + 1} className="relative flex-1 overflow-hidden">
                       <MediaGridCell
                         url={url}
                         type={displayMediaTypes[index + 1]}
