@@ -440,79 +440,64 @@ export default function CommunityDetailPage() {
           )}
 
           {activeTab === 'about' && (
-            <div className="px-4 py-4 space-y-4">
-              <div className="bg-zinc-100 dark:bg-zinc-900/50 rounded-2xl p-4 border border-black/5 dark:border-white/5 space-y-5">
-
-                {/* Community Name */}
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-zinc-500 dark:text-zinc-400 flex-shrink-0">
-                    <Users size={20} strokeWidth={1.5} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Community Name</p>
-                    <p className="font-semibold text-foreground truncate">{community.name}</p>
-                  </div>
-                </div>
-
-                {/* Sharable ID */}
-                {community.username && (
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-zinc-500 dark:text-zinc-400 flex-shrink-0">
-                      <span className="text-base font-bold">@</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Sharable ID</p>
-                      <p className="font-semibold text-foreground">@{community.username}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Category */}
-                {community.category && (
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-zinc-500 dark:text-zinc-400 flex-shrink-0">
-                      <Info size={20} strokeWidth={1.5} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Category</p>
-                      <p className="font-semibold text-foreground capitalize">{community.category}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Members */}
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-zinc-500 dark:text-zinc-400 flex-shrink-0">
-                    <UserCircle size={20} strokeWidth={1.5} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Members</p>
-                    <p className="font-semibold text-foreground">{memberCount}</p>
-                  </div>
-                </div>
-
-                {/* Created At */}
-                {community.created_at && (
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-zinc-500 dark:text-zinc-400 flex-shrink-0">
-                      <Info size={20} strokeWidth={1.5} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Created</p>
-                      <p className="font-semibold text-foreground">{formatDate(community.created_at)}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Description */}
-              {description && (
+              <div className="px-4 py-4 space-y-4">
+                {/* Description Box */}
                 <div className="bg-zinc-100 dark:bg-zinc-900/50 rounded-2xl p-4 border border-black/5 dark:border-white/5">
-                  <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium uppercase tracking-widest mb-3">About</p>
-                  <p className="text-foreground text-[15px] leading-relaxed">{description}</p>
+                  <div className="mb-4">
+                    <h3 className="text-sm font-bold text-foreground mb-2">Description</h3>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="px-3 py-1 bg-black/5 dark:bg-white/5 rounded-full text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                        Community
+                      </span>
+                    </div>
+                  </div>
+                  {description ? (
+                    <p className="text-foreground leading-relaxed text-[15px]">{description}</p>
+                  ) : (
+                    <p className="text-zinc-500 text-[15px]">No description yet.</p>
+                  )}
                 </div>
-              )}
-            </div>
+
+                {/* Community Details Box */}
+                <div className="bg-zinc-100 dark:bg-zinc-900/50 rounded-2xl p-4 border border-black/5 dark:border-white/5 space-y-6">
+                  {/* Community Name */}
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-zinc-500 dark:text-zinc-400 flex-shrink-0">
+                      <User size={20} strokeWidth={1.5} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">community name</p>
+                      <p className="font-semibold text-foreground truncate">{community.name}</p>
+                    </div>
+                  </div>
+
+                  {/* Username */}
+                  {community.username && (
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-zinc-500 dark:text-zinc-400 flex-shrink-0">
+                        <span className="text-base font-bold">@</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">username</p>
+                        <p className="font-semibold text-foreground">@{community.username}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Active From */}
+                  {community.created_at && (
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-zinc-500 dark:text-zinc-400 flex-shrink-0">
+                        <Calendar size={20} strokeWidth={1.5} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Active From</p>
+                        <p className="font-semibold text-foreground">{formatDate(community.created_at)}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
           )}
         </div>
       </div>

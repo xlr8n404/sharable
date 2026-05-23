@@ -67,7 +67,7 @@ export default function UserProfilePage() {
 
       const { data: profileData } = await supabase
       .from('profiles')
-      .select('id, full_name, username, avatar_url, cover_url, account_type, bio, description, date_of_birth, gender, since, org_type, saved_visibility, relationship_status, created_at')
+      .select('id, full_name, username, avatar_url, cover_url, account_type, identity_tag, bio, description, date_of_birth, gender, since, org_type, saved_visibility, relationship_status, created_at')
       .eq('username', sharableId)
         .single();
 
@@ -517,10 +517,20 @@ export default function UserProfilePage() {
             <div className="px-4 py-4 space-y-4">
               {/* Bio / Description Box */}
               <div className="bg-zinc-100 dark:bg-zinc-900/50 rounded-2xl p-4 border border-black/5 dark:border-white/5">
-                <div className="flex items-center gap-3 text-zinc-500 dark:text-zinc-400 mb-3">
-                  <span className="text-xs font-bold uppercase tracking-widest">
+                <div className="mb-4">
+                  <h3 className="text-sm font-bold text-foreground mb-2">
                     {profile?.account_type === 'brand' ? 'Description' : 'Bio'}
-                  </span>
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="px-3 py-1 bg-black/5 dark:bg-white/5 rounded-full text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                      {profile?.account_type === 'brand' ? 'Brand Account' : 'Personal Account'}
+                    </span>
+                    {profile?.identity_tag && (
+                      <span className="px-3 py-1 bg-black/5 dark:bg-white/5 rounded-full text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                        {profile.identity_tag}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <p className="text-foreground leading-relaxed text-[15px]">
                   {profile?.account_type === 'brand'
@@ -532,23 +542,6 @@ export default function UserProfilePage() {
 
               {/* Details Box */}
               <div className="bg-zinc-100 dark:bg-zinc-900/50 rounded-2xl p-4 border border-black/5 dark:border-white/5 space-y-6">
-                {/* Account Type — always shown */}
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-zinc-500 dark:text-zinc-400">
-                    {profile?.account_type === 'brand' ? (
-                      <Briefcase size={22} strokeWidth={1.5} />
-                    ) : (
-                      <User size={22} strokeWidth={1.5} />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Account Type</p>
-                    <p className="font-semibold text-foreground">
-                      {profile?.account_type === 'brand' ? 'Brand Account' : 'Personal Account'}
-                    </p>
-                  </div>
-                </div>
-
                 {/* Full Name — always shown */}
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-zinc-500 dark:text-zinc-400">
@@ -566,7 +559,7 @@ export default function UserProfilePage() {
                     <AtSign size={22} strokeWidth={1.5} />
                   </div>
                   <div className="flex-1">
-                    <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Sharable ID</p>
+                    <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">username</p>
                     <p className="font-semibold text-foreground">@{profile?.username || 'Not set'}</p>
                   </div>
                 </div>
@@ -623,7 +616,7 @@ export default function UserProfilePage() {
                       <Calendar size={22} strokeWidth={1.5} />
                     </div>
                     <div className="flex-1">
-                      <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">Since</p>
+                      <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">since</p>
                       <p className="font-semibold text-foreground">{profile?.since ? formatDate(profile.since) : 'Not set'}</p>
                     </div>
                   </div>
