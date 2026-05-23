@@ -3,7 +3,7 @@ import { useNavBack } from '@/components/NavigationHistoryProvider';
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Users, ArrowLeft, Share2, Pin, Info, FileText, UserCircle, Settings } from 'lucide-react';
+import { Users, User, ArrowLeft, Share2, Pin, Info, FileText, UserCircle, Settings, Calendar } from 'lucide-react';
 import CommunityPostCard from '@/components/CommunityPostCard';
 import { supabase } from '@/lib/supabase';
 import { BottomNav } from '@/components/BottomNav';
