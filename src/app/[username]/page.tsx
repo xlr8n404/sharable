@@ -25,6 +25,7 @@ interface Profile {
   avatar_url: string;
   cover_url: string;
   account_type?: string;
+  identity_tag?: string | null;
   // Personal fields
   bio?: string;
   date_of_birth?: string;
