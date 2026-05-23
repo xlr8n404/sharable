@@ -169,7 +169,7 @@ function MediaGridCell({
 }) {
   return (
     <div
-      className={`relative overflow-hidden bg-zinc-100 dark:bg-zinc-900 cursor-pointer group w-full ${isSingle ? 'h-auto' : 'absolute inset-0'}`}
+      className={`relative overflow-hidden bg-zinc-100 dark:bg-zinc-900 cursor-pointer group w-full ${isSingle ? 'h-auto' : 'h-full'}`}
       onClick={() => onOpen?.(url, type)}
     >
       {type === 'video' ? (
@@ -1318,38 +1318,44 @@ export function PostCard({
               <div className="grid grid-cols-2 gap-[2px]">
                 {displayMediaUrls.map((url, index) => (
                   <div key={index} className="relative aspect-square overflow-hidden">
-                    <MediaGridCell
-                      url={url}
-                      type={displayMediaTypes[index]}
-                      index={index}
-                      isVisible={isVisible}
-                      isSingle={false}
-                    />
+                    <div className="absolute inset-0">
+                      <MediaGridCell
+                        url={url}
+                        type={displayMediaTypes[index]}
+                        index={index}
+                        isVisible={isVisible}
+                        isSingle={false}
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
             ) : (
-              // 3 media: left 1 large, right 2 stacked — all same height via aspect-square container
-              <div className="grid grid-cols-2 gap-[2px] aspect-square">
-                <div className="relative overflow-hidden">
-                  <MediaGridCell
-                    url={displayMediaUrls[0]}
-                    type={displayMediaTypes[0]}
-                    index={0}
-                    isVisible={isVisible}
-                    isSingle={false}
-                  />
+              // 3 media: left 1 large full-height, right 2 stacked equal halves
+              <div className="grid grid-cols-2 gap-[2px]" style={{ aspectRatio: '1/1' }}>
+                <div className="relative overflow-hidden" style={{ height: '100%' }}>
+                  <div className="absolute inset-0">
+                    <MediaGridCell
+                      url={displayMediaUrls[0]}
+                      type={displayMediaTypes[0]}
+                      index={0}
+                      isVisible={isVisible}
+                      isSingle={false}
+                    />
+                  </div>
                 </div>
-                <div className="flex flex-col gap-[2px] h-full">
+                <div className="flex flex-col gap-[2px]" style={{ height: '100%' }}>
                   {displayMediaUrls.slice(1, 3).map((url, index) => (
-                    <div key={index + 1} className="relative flex-1 overflow-hidden">
-                      <MediaGridCell
-                        url={url}
-                        type={displayMediaTypes[index + 1]}
-                        index={index + 1}
-                        isVisible={isVisible}
-                        isSingle={false}
-                      />
+                    <div key={index + 1} className="relative overflow-hidden" style={{ flex: 1, minHeight: 0 }}>
+                      <div className="absolute inset-0">
+                        <MediaGridCell
+                          url={url}
+                          type={displayMediaTypes[index + 1]}
+                          index={index + 1}
+                          isVisible={isVisible}
+                          isSingle={false}
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>
