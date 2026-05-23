@@ -33,9 +33,7 @@ export function CreateBottomSheet({ isOpen, onClose }: CreateBottomSheetProps) {
           >
             <div className="max-w-xl mx-auto w-full px-6 py-6">
               {/* Grabber */}
-              <div className="flex justify-center pt-2 pb-6">
-                <div className="bg-neutral-300 dark:bg-neutral-600 rounded-full" style={{ width: '48px', height: '8px' }} />
-              </div>
+              <div className="w-12 h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full mx-auto mt-3 mb-2" />
 
               {/* Title */}
               <h2 className="text-xl font-bold mb-2 text-foreground">Create</h2>

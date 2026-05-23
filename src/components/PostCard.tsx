@@ -1477,9 +1477,7 @@ export function PostCard({
                             className="w-full max-w-xl bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white flex flex-col relative rounded-t-[24px] overflow-hidden shadow-2xl will-change-transform" onTouchMove={(e) => e.preventDefault()}
   >
   {/* Grabber — 8px below top border */}
-  <div className="flex justify-center pt-2 pb-2">
-    <div className="bg-zinc-300 dark:bg-zinc-700 rounded-full cursor-grab active:cursor-grabbing" style={{ width: '48px', height: '8px' }} />
-  </div>
+  <div className="w-12 h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full mx-auto mt-3 mb-2 shrink-0" />
   
   {/* Comment Sheet Header — interactions row */}
                                 <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-black/5 dark:border-white/5">

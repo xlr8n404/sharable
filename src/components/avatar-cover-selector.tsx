@@ -47,9 +47,7 @@ export function AvatarCoverSelector({
             onClick={(e) => e.stopPropagation()}
           >
             {/* Grabber */}
-            <div className="flex justify-center" style={{ paddingTop: '16px', paddingBottom: '16px' }}>
-              <div className="bg-zinc-300 dark:bg-zinc-700 rounded-full" style={{ width: '48px', height: '8px' }} />
-            </div>
+            <div className="w-12 h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full mx-auto mt-3 mb-2" />
 
             <div className="px-4 pb-8">
               <div className="text-center mb-6">

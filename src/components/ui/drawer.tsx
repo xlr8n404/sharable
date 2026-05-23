@@ -65,7 +65,7 @@ function DrawerContent({
             )}
             {...props}
           >
-            <div className="bg-zinc-300 dark:bg-zinc-700 mx-auto h-2 w-12 shrink-0 rounded-full group-data-[vaul-drawer-direction=bottom]/drawer-content:block" style={{ marginTop: '16px', marginBottom: '16px', width: '48px', height: '8px' }} />
+            <div className="w-12 h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full mx-auto mt-3 mb-2 shrink-0 group-data-[vaul-drawer-direction=bottom]/drawer-content:block" />
             {children}
           </DrawerPrimitive.Content>
     </DrawerPortal>
