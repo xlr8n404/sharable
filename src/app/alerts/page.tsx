@@ -4,13 +4,13 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { BottomNav } from '@/components/BottomNav';
 import { useScrollDirection } from '@/hooks/use-scroll-direction';
-import { Heart, MessageCircle, UserPlus, Repeat, Bell, AtSign } from 'lucide-react';
+import { Heart, MessageCircle, UserPlus, Repeat, Bell, AtSign, FileText } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
 
 interface Alert {
   id: string;
-  type: 'like' | 'comment' | 'follow' | 'repost' | 'mention' | 'message';
+  type: 'like' | 'comment' | 'follow' | 'repost' | 'mention' | 'message' | 'post';
   read: boolean;
   created_at: string;
   post_id: string | null;
@@ -139,6 +139,12 @@ export default function AlertsPage() {
             <MessageCircle size={11} className="text-indigo-500" />
           </span>
         );
+      case 'post':
+        return (
+          <span className="flex items-center justify-center w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-900/40">
+            <FileText size={11} className="text-amber-500" />
+          </span>
+        );
       default:
         return null;
     }
@@ -158,6 +164,8 @@ export default function AlertsPage() {
         return 'mentioned you in a comment';
       case 'message':
         return 'sent you a message';
+      case 'post':
+        return 'shared a new post';
       default:
         return 'interacted with you';
     }

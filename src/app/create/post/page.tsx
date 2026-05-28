@@ -224,12 +224,51 @@ export default function CreatePostPage() {
           media_urls: mediaUrls.length > 0 ? mediaUrls : null,
           media_types: mediaTypes.length > 0 ? mediaTypes : null,
         })
-        .select('post_number')
+        .select('id, post_number')
         .single();
 
       if (postError) throw postError;
 
       toast.success('Post shared successfully!');
+
+      // Notify all followers about the new post
+      try {
+        const postId = postData?.id ?? null;
+        // Fetch all followers of the current user
+        const { data: followers } = await supabase
+          .from('follows')
+          .select('follower_id')
+          .eq('following_id', profile.id);
+
+        if (followers && followers.length > 0) {
+          // Insert in-app notifications for each follower
+          const notifRows = followers.map((f: any) => ({
+            user_id: f.follower_id,
+            from_user_id: profile.id,
+            type: 'post',
+            post_id: postId,
+            read: false,
+          }));
+          await supabase.from('notifications').insert(notifRows);
+
+          // Send push notifications (fire-and-forget)
+          for (const f of followers) {
+            fetch('/api/push-notify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                user_id: f.follower_id,
+                title: profile.full_name || profile.username || 'Someone',
+                body: content.trim() ? content.trim().slice(0, 100) : 'Shared a new post',
+                url: `/post/${postId}`,
+              }),
+            }).catch(() => {});
+          }
+        }
+      } catch {
+        // Notification errors should not block the post flow
+      }
+
       // Redirect to home page
       router.push('/home');
     } catch (error) {

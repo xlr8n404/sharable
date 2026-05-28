@@ -1,11 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-// Each skeleton instance picks a fixed media count so the layout is stable
-const MEDIA_VARIANTS = [1, 1, 2, 3] as const; // weighted: more singles
-
 export function PostSkeleton({ mediaCount }: { mediaCount?: 1 | 2 | 3 }) {
-  // If not supplied, pick one deterministically based on component identity
-  const count: 1 | 2 | 3 = mediaCount ?? MEDIA_VARIANTS[Math.floor(Math.random() * MEDIA_VARIANTS.length)];
+  const count: 1 | 2 | 3 = mediaCount ?? 3;
 
   return (
     <div className="w-full bg-background border-b border-black/[0.05] dark:border-white/[0.05] animate-pulse">
