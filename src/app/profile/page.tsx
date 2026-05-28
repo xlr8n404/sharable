@@ -405,13 +405,13 @@ export default function ProfilePage() {
           </button>
         </div>
 
-        <div className="mt-[4.5rem] px-4">
+        <div className="mt-12 px-4">
           <div className="flex items-center gap-x-2 gap-y-1 flex-wrap">
             <h1 className="text-2xl font-bold">{profile?.full_name || profile?.username}</h1>
             <VerifiedBadge username={profile?.username} />
             <p className="text-sm text-zinc-500 dark:text-zinc-400">@{profile?.username}</p>
           </div>
-          <div className="flex items-center gap-4 mt-3">
+          <div className="flex items-center gap-4 mt-4">
             <div className="text-center">
               <span className="font-bold">{posts.length}</span>
               <span className="text-zinc-500 text-sm ml-1">Posts</span>

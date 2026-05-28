@@ -277,7 +277,7 @@ export default function UserProfilePage() {
             <VerifiedBadge username={username} className="w-3.5 h-3.5 text-white shrink-0" />
           </div>
         </header>
-        <main className="max-w-7xl mx-auto pb-20">
+        <main className="w-full pb-20">
         <div className="relative">
           <div className="w-full bg-zinc-100 dark:bg-zinc-900 overflow-hidden" style={{height: '120px'}}>
           {coverSrc ? (
@@ -309,13 +309,13 @@ export default function UserProfilePage() {
 
       </div>
 
-            <div className="mt-[4.5rem] px-4">
+            <div className="mt-12 px-4">
               <div className="flex items-center gap-x-2 gap-y-1 flex-wrap">
                 <h1 className="text-2xl font-bold">{profile?.full_name || profile?.username}</h1>
                 <VerifiedBadge username={profile?.username} />
                 <p className="text-sm text-zinc-500 dark:text-zinc-400">@{profile?.username}</p>
               </div>
-        <div className="flex items-center gap-4 mt-3">
+        <div className="flex items-center gap-4 mt-4">
             <div className="text-center">
               <span className="font-bold">{posts.length}</span>
               <span className="text-zinc-500 text-sm ml-1">Posts</span>
