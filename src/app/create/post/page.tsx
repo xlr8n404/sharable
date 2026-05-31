@@ -1,14 +1,14 @@
 'use client';
 import { useNavBack } from '@/components/NavigationHistoryProvider';
-
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { ArrowLeft, Image as ImageIcon, Music, X } from 'lucide-react';
+import {
+  ArrowLeft, Image as ImageIcon, Music, X, Type, AtSign,
+  Smile, Sticker, Hash, MapPin, Settings2,
+  Users, UserCheck, Globe, MessageCircle,
+} from 'lucide-react';
 import { Loader } from '@/components/ui/loader';
 import { Skeleton } from '@/components/ui/skeleton';
-import { BottomNav } from '@/components/BottomNav';
-import { useScrollDirection } from '@/hooks/use-scroll-direction';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import imageCompression from 'browser-image-compression';
@@ -20,48 +20,66 @@ interface Profile {
   username?: string;
 }
 
+type Audience    = 'Anyone' | 'Followers' | 'Following';
+type CommentPerm = 'Anyone' | 'Followers' | 'Following' | 'Mentioned';
+
 export default function CreatePostPage() {
-  const isHeaderVisible = useScrollDirection();
   const router = useRouter();
   const { goBack } = useNavBack();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [content, setContent] = useState('');
-  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
-  const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [posting, setPosting] = useState(false);
-  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
-  const [mentionResults, setMentionResults] = useState<any[]>([]);
-  const [showMentions, setShowMentions] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const audioInputRef = useRef<HTMLInputElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const [profile,       setProfile]       = useState<Profile | null>(null);
+  const [content,       setContent]       = useState('');
+  const [heading,       setHeading]       = useState('');
+  const [headingActive, setHeadingActive] = useState(false);
+  const [mediaFiles,    setMediaFiles]    = useState<File[]>([]);
+  const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
+  const [loading,       setLoading]       = useState(true);
+  const [posting,       setPosting]       = useState(false);
+  const [mentionResults,setMentionResults]= useState<any[]>([]);
+  const [showMentions,  setShowMentions]  = useState(false);
+  const [showSettings,  setShowSettings]  = useState(false);
+  const [audience,      setAudience]      = useState<Audience>('Anyone');
+  const [commentPerm,   setCommentPerm]   = useState<CommentPerm>('Anyone');
+
+  const fileInputRef   = useRef<HTMLInputElement>(null);
+  const audioInputRef  = useRef<HTMLInputElement>(null);
+  const textareaRef    = useRef<HTMLTextAreaElement>(null);
+  const headingRef     = useRef<HTMLInputElement>(null);
+
+  // ── Fetch profile ───────────────────────────────────────────────────────────
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { router.push('/login'); return; }
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url, username')
+        .eq('id', user.id)
+        .single();
+      if (data) setProfile(data);
+      setLoading(false);
+    })();
+  }, [router]);
+
+  const avatarSrc = profile?.avatar_url
+    ? `/api/media/avatars/${profile.avatar_url}`
+    : `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.full_name ?? 'default'}`;
+
+  // ── Mention detection ───────────────────────────────────────────────────────
   const handleTextChange = async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     setContent(value);
-
-    const cursorPosition = e.target.selectionStart;
-    const textBeforeCursor = value.substring(0, cursorPosition);
-    const words = textBeforeCursor.split(/\s/);
-    const lastWord = words[words.length - 1];
-
+    const before = value.substring(0, e.target.selectionStart);
+    const lastWord = before.split(/\s/).pop() ?? '';
     if (lastWord.startsWith('@') && lastWord.length > 1) {
-      const query = lastWord.substring(1);
-      setMentionQuery(query);
-      
+      const q = lastWord.slice(1);
       const { data } = await supabase
         .from('profiles')
         .select('username, full_name, avatar_url')
-        .ilike('username', `${query}%`)
+        .ilike('username', `${q}%`)
         .limit(5);
-      
-      if (data && data.length > 0) {
-        setMentionResults(data);
-        setShowMentions(true);
-      } else {
-        setShowMentions(false);
-      }
+      if (data?.length) { setMentionResults(data); setShowMentions(true); }
+      else setShowMentions(false);
     } else {
       setShowMentions(false);
     }
@@ -69,385 +87,442 @@ export default function CreatePostPage() {
 
   const selectMention = (username: string) => {
     if (!textareaRef.current) return;
-    
-    const cursorPosition = textareaRef.current.selectionStart;
-    const textBeforeCursor = content.substring(0, cursorPosition);
-    const textAfterCursor = content.substring(cursorPosition);
-    
-    const words = textBeforeCursor.split(/\s/);
+    const pos    = textareaRef.current.selectionStart;
+    const before = content.substring(0, pos);
+    const after  = content.substring(pos);
+    const words  = before.split(/\s/);
     words[words.length - 1] = `@${username} `;
-    
-    const newContent = words.join(' ') + textAfterCursor;
-    setContent(newContent);
+    setContent(words.join(' ') + after);
     setShowMentions(false);
-    
-    // Maintain focus
+    setTimeout(() => textareaRef.current?.focus(), 0);
+  };
+
+  const insertMentionSymbol = () => {
+    if (!textareaRef.current) return;
+    const pos    = textareaRef.current.selectionStart;
+    const before = content.substring(0, pos);
+    const after  = content.substring(pos);
+    const sep    = before.length > 0 && !before.endsWith(' ') ? ' @' : '@';
+    setContent(before + sep + after);
     setTimeout(() => {
-      textareaRef.current?.focus();
+      if (textareaRef.current) {
+        const next = pos + sep.length;
+        textareaRef.current.focus();
+        textareaRef.current.setSelectionRange(next, next);
+      }
     }, 0);
   };
 
-  useEffect(() => {
-    async function fetchProfile() {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        router.push('/login');
-        return;
-      }
+  // ── Heading toggle ──────────────────────────────────────────────────────────
+  const toggleHeading = () => {
+    setHeadingActive(prev => {
+      if (!prev) setTimeout(() => headingRef.current?.focus(), 50);
+      return !prev;
+    });
+  };
 
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('id, full_name, avatar_url, username')
-        .eq('id', user.id)
-        .single();
-
-      if (profileData) {
-        setProfile(profileData);
-      }
-      
-      setLoading(false);
-    }
-
-    fetchProfile();
-  }, [router]);
-
-  const avatarSrc = profile?.avatar_url
-    ? `/api/media/avatars/${profile.avatar_url}`
-    : profile?.full_name
-      ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.full_name}`
-      : `https://api.dicebear.com/7.x/avataaars/svg?seed=default`;
-
+  // ── Media compression & selection ──────────────────────────────────────────
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length === 0) return;
-
-    const remainingSlots = 3 - mediaFiles.length;
-    const filesToProcess = files.slice(0, remainingSlots);
-
-    const processedFiles: File[] = [];
-    const loadingToast = toast.loading('Processing media...');
-
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = '';
+    if (!files.length) return;
+    const slots = 3 - mediaFiles.length;
+    if (slots <= 0) return;
+    const toProcess = files.slice(0, slots);
+    const loadingId = toast.loading('Processing media…');
+    const processed: File[] = [];
     try {
-      for (const file of filesToProcess) {
+      for (const file of toProcess) {
         if (file.type.startsWith('image/')) {
-          // Image compression
-          const options = {
-            maxSizeMB: 1, // Target size 1MB
-            maxWidthOrHeight: 1920,
+          // Compress to max 800 KB, max 1080 px, convert to WebP
+          const comp = await imageCompression(file, {
+            maxSizeMB: 0.8,
+            maxWidthOrHeight: 1080,
             useWebWorker: true,
-          };
-          const compressedFile = await imageCompression(file, options);
-          processedFiles.push(new File([compressedFile], file.name, { type: file.type }));
-        } else if (file.type.startsWith('video/') || file.type.startsWith('audio/')) {
-          // No size or duration limit — accept any video or audio
-          processedFiles.push(file);
+            fileType: 'image/webp',
+            initialQuality: 0.82,
+          });
+          processed.push(new File([comp], file.name.replace(/\.[^.]+$/, '.webp'), { type: 'image/webp' }));
+        } else {
+          // video / audio — accept as-is
+          processed.push(file);
         }
       }
-
-      if (processedFiles.length > 0) {
-        const newFiles = [...mediaFiles, ...processedFiles];
+      if (processed.length) {
+        const newFiles = [...mediaFiles, ...processed];
+        mediaPreviews.forEach(u => URL.revokeObjectURL(u));
         setMediaFiles(newFiles);
-
-        const newPreviews = newFiles.map(file => URL.createObjectURL(file));
-        mediaPreviews.forEach(url => URL.revokeObjectURL(url));
-        setMediaPreviews(newPreviews);
-        toast.success('Media added successfully', { id: loadingToast });
+        setMediaPreviews(newFiles.map(f => URL.createObjectURL(f)));
+        toast.success('Media added', { id: loadingId });
       } else {
-        toast.dismiss(loadingToast);
+        toast.dismiss(loadingId);
       }
     } catch {
-      toast.error('Failed to process some media', { id: loadingToast });
+      toast.error('Failed to process media', { id: loadingId });
     }
   };
 
-  const removeMedia = (index: number) => {
-    URL.revokeObjectURL(mediaPreviews[index]);
-    setMediaFiles(prev => prev.filter((_, i) => i !== index));
-    setMediaPreviews(prev => prev.filter((_, i) => i !== index));
+  const removeMedia = (i: number) => {
+    URL.revokeObjectURL(mediaPreviews[i]);
+    setMediaFiles(prev => prev.filter((_, idx) => idx !== i));
+    setMediaPreviews(prev => prev.filter((_, idx) => idx !== i));
   };
 
+  // ── Submit ──────────────────────────────────────────────────────────────────
   const handlePost = async () => {
-    if (!content.trim() && mediaFiles.length === 0) {
-      toast.error('Please add some content or media');
-      return;
-    }
-
+    if (!content.trim() && !mediaFiles.length) { toast.error('Add some content or media'); return; }
     if (!profile) return;
-
     setPosting(true);
-
     try {
-      let mediaUrls: string[] = [];
-      let mediaTypes: string[] = [];
-
-      // Upload media via presigned URL — server auth, client upload, no size limit
-      if (mediaFiles.length > 0) {
-        for (const file of mediaFiles) {
-          // Step 1: get a signed upload URL from the server
-          const presignRes = await fetch('/api/upload/presign', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fileName: file.name, fileType: file.type, bucket: 'posts' }),
-          });
-
-          if (!presignRes.ok) {
-            const { error } = await presignRes.json();
-            throw new Error(error || 'Failed to get upload URL');
-          }
-
-          const { signedUrl, publicUrl } = await presignRes.json();
-
-          // Step 2: upload directly to Supabase Storage via the signed URL
-          const uploadRes = await fetch(signedUrl, {
-            method: 'PUT',
-            headers: { 'Content-Type': file.type },
-            body: file,
-          });
-
-          if (!uploadRes.ok) throw new Error('File upload failed');
-
-          const type = file.type.startsWith('video/') ? 'video' : file.type.startsWith('audio/') ? 'audio' : 'image';
-          mediaUrls.push(publicUrl);
-          mediaTypes.push(type);
-        }
+      const mediaUrls: string[] = [];
+      const mediaTypes: string[] = [];
+      for (const file of mediaFiles) {
+        const res = await fetch('/api/upload/presign', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fileName: file.name, fileType: file.type, bucket: 'posts' }),
+        });
+        if (!res.ok) { const { error } = await res.json(); throw new Error(error || 'Presign failed'); }
+        const { signedUrl, publicUrl } = await res.json();
+        const up = await fetch(signedUrl, { method: 'PUT', headers: { 'Content-Type': file.type }, body: file });
+        if (!up.ok) throw new Error('Upload failed');
+        mediaUrls.push(publicUrl);
+        mediaTypes.push(file.type.startsWith('video/') ? 'video' : file.type.startsWith('audio/') ? 'audio' : 'image');
       }
-
-      // Save post to the posts table (post_number is auto-incremented by trigger)
       const { data: postData, error: postError } = await supabase
         .from('posts')
         .insert({
-          user_id: profile.id,
-          content: content.trim(),
-          media_url: mediaUrls[0] || null,
-          media_type: mediaTypes[0] || null,
-          media_urls: mediaUrls.length > 0 ? mediaUrls : null,
-          media_types: mediaTypes.length > 0 ? mediaTypes : null,
+          user_id:     profile.id,
+          content:     content.trim(),
+          media_url:   mediaUrls[0]  ?? null,
+          media_type:  mediaTypes[0] ?? null,
+          media_urls:  mediaUrls.length  ? mediaUrls  : null,
+          media_types: mediaTypes.length ? mediaTypes : null,
         })
         .select('id, post_number')
         .single();
-
       if (postError) throw postError;
-
-      toast.success('Post shared successfully!');
-
-      // Notify all followers about the new post
-      try {
-        const postId = postData?.id ?? null;
-        // Fetch all followers of the current user
-        const { data: followers } = await supabase
-          .from('follows')
-          .select('follower_id')
-          .eq('following_id', profile.id);
-
-        if (followers && followers.length > 0) {
-          // Insert in-app notifications for each follower
-          const notifRows = followers.map((f: any) => ({
-            user_id: f.follower_id,
-            from_user_id: profile.id,
-            type: 'post',
-            post_id: postId,
-            read: false,
-          }));
-          await supabase.from('notifications').insert(notifRows);
-
-          // Send push notifications (fire-and-forget)
-          for (const f of followers) {
-            fetch('/api/push-notify', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                user_id: f.follower_id,
-                title: profile.full_name || profile.username || 'Someone',
-                body: content.trim() ? content.trim().slice(0, 100) : 'Shared a new post',
-                url: `/post/${postId}`,
-              }),
-            }).catch(() => {});
-          }
-        }
-      } catch {
-        // Notification errors should not block the post flow
-      }
-
-      // Redirect to home page
+      toast.success('Post shared!');
+      // Notifications (non-blocking)
+      const postId = postData?.id ?? null;
+      supabase.from('follows').select('follower_id').eq('following_id', profile.id).then(({ data: followers }) => {
+        if (!followers?.length) return;
+        supabase.from('notifications').insert(followers.map((f: any) => ({ user_id: f.follower_id, from_user_id: profile.id, type: 'post', post_id: postId, read: false })));
+        followers.forEach((f: any) => fetch('/api/push-notify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: f.follower_id, title: profile.full_name || profile.username || 'Someone', body: content.trim().slice(0, 100) || 'Shared a new post', url: `/post/${postId}` }) }).catch(() => {}));
+      }).catch(() => {});
       router.push('/home');
-    } catch (error) {
-      console.error('[v0] Post creation error:', error);
+    } catch (err) {
+      console.error('[create-post]', err);
       toast.error('Failed to create post');
     } finally {
       setPosting(false);
     }
   };
 
-  const isPostDisabled = posting || (!content.trim() && mediaFiles.length === 0);
+  const isPostDisabled = posting || (!content.trim() && !mediaFiles.length);
 
+  // ── Loading skeleton ────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="h-16 flex items-center justify-between px-4 bg-background">
+        <header className="h-16 flex items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <Skeleton className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-800" />
             <Skeleton className="h-4 w-24 bg-zinc-100 dark:bg-zinc-900" />
           </div>
           <Skeleton className="h-9 w-20 rounded-full bg-zinc-200 dark:bg-zinc-800" />
         </header>
-        <main className="w-full p-4 space-y-4">
-          <Skeleton className="h-32 w-full rounded-xl bg-zinc-100 dark:bg-zinc-900" />
-          <div className="flex gap-4">
-            <Skeleton className="w-12 h-12 rounded-xl bg-zinc-100 dark:bg-zinc-900" />
-            <Skeleton className="w-12 h-12 rounded-xl bg-zinc-100 dark:bg-zinc-900" />
-          </div>
-        </main>
-        <BottomNav />
       </div>
     );
   }
 
+  // ── Render ──────────────────────────────────────────────────────────────────
   return (
-      <div className="min-h-screen bg-background text-foreground selection:bg-black dark:selection:bg-white selection:text-white dark:selection:text-black">
-        <header className={`fixed top-0 left-0 right-0 z-50 px-4 h-16 flex items-center justify-between bg-background transition-transform duration-300 ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-          <div className="flex items-center gap-3">
-            <Link href="/home" className="p-2 -ml-2 text-foreground hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors" onClick={(e) => { e.preventDefault(); goBack(); }}>
-              <ArrowLeft className="w-6 h-6" />
-            </Link>
-            <div className="w-10 h-10 rounded-full overflow-hidden border border-black/10 dark:border-white/10 bg-zinc-100 dark:bg-zinc-900">
-            <img
-              src={avatarSrc}
-              alt={profile?.full_name || 'User'}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=default`;
-              }}
-            />
-          </div>
-          <span className="text-[16px] font-semibold text-foreground truncate max-w-[120px]">
-            {profile?.full_name}
-          </span>
-        </div>
-          <button
-            onClick={handlePost}
-            disabled={isPostDisabled}
-              className={`px-5 py-2 font-bold text-sm rounded-full transition-colors ${
-                isPostDisabled
-                  ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 cursor-not-allowed'
-                  : 'bg-black dark:bg-white text-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-200'
-            }`}
-          >
-                {posting ? (
-                  <Loader centered={false} className="text-current" />
-                ) : (
-                  'Share'
-                )}
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
 
-          </button>
+      {/* ─── Top bar 64px ──────────────────────────────────────────────────── */}
+      <header className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center gap-3 px-4 bg-background border-b border-black/5 dark:border-white/5">
+        {/* Back arrow 24px */}
+        <button
+          onClick={goBack}
+          className="p-2 -ml-2 rounded-full text-foreground hover:bg-black/8 dark:hover:bg-white/8 transition-colors shrink-0"
+        >
+          <ArrowLeft className="w-6 h-6" />
+        </button>
+
+        {/* Avatar 40px */}
+        <div className="w-10 h-10 rounded-full overflow-hidden border border-black/10 dark:border-white/10 bg-zinc-100 dark:bg-zinc-900 shrink-0">
+          <img
+            src={avatarSrc}
+            alt={profile?.full_name ?? 'User'}
+            className="w-full h-full object-cover"
+            onError={(e) => { (e.target as HTMLImageElement).src = 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'; }}
+          />
+        </div>
+
+        {/* Full name */}
+        <span className="flex-1 text-[15px] font-semibold truncate">{profile?.full_name}</span>
+
+        {/* Post pill button */}
+        <button
+          onClick={handlePost}
+          disabled={isPostDisabled}
+          className={`px-5 h-9 rounded-full text-sm font-bold transition-all shrink-0 ${
+            isPostDisabled
+              ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 cursor-not-allowed'
+              : 'bg-black dark:bg-white text-white dark:text-black hover:opacity-80 active:scale-95'
+          }`}
+        >
+          {posting ? <Loader centered={false} className="text-current" /> : 'Post'}
+        </button>
       </header>
 
-      <main className="w-full pt-16 pb-20 px-4">
-        <div className="py-4 relative">
-            {showMentions && (
-              <div className="absolute top-0 left-0 right-0 -translate-y-full bg-white dark:bg-zinc-900 border border-black/10 dark:border-white/10 rounded-xl shadow-2xl z-20 overflow-hidden mb-2">
-                {mentionResults.map((user) => (
-                  <button
-                    key={user.username}
-                    onClick={() => selectMention(user.username)}
-                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-left"
-                  >
-                    <div className="w-8 h-8 rounded-full overflow-hidden border border-black/10 dark:border-white/10 bg-zinc-100 dark:bg-zinc-800">
-                      <img
-                        src={user.avatar_url ? `/api/media/avatars/${user.avatar_url}` : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.full_name}`}
-                        alt={user.full_name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold">{user.full_name}</span>
-                      <span className="text-xs text-zinc-500">@{user.username}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-            <textarea
-              ref={textareaRef}
-              value={content}
-              onChange={handleTextChange}
-              placeholder="What's on your mind?"
-              className="w-full bg-transparent text-foreground text-lg placeholder-zinc-400 dark:placeholder-zinc-600 resize-none outline-none min-h-[120px]"
-              autoFocus
+      {/* ─── Scrollable body ───────────────────────────────────────────────── */}
+      <main className="flex-1 pt-16 pb-32 px-4 overflow-y-auto">
+        {/* Heading field */}
+        {headingActive && (
+          <div className="pt-4 pb-1">
+            <input
+              ref={headingRef}
+              type="text"
+              maxLength={115}
+              value={heading}
+              onChange={(e) => setHeading(e.target.value)}
+              placeholder="Add a heading…"
+              className="w-full bg-transparent text-foreground text-[18px] font-bold placeholder-zinc-400 dark:placeholder-zinc-600 outline-none border-b border-black/10 dark:border-white/10 pb-2"
             />
+            <p className="text-right text-[11px] text-zinc-400 mt-1">{heading.length}/115</p>
+          </div>
+        )}
+
+        {/* Mention dropdown */}
+        <div className="relative">
+          {showMentions && (
+            <div className="absolute top-0 left-0 right-0 z-20 bg-background border border-black/10 dark:border-white/10 rounded-xl shadow-xl overflow-hidden mt-1">
+              {mentionResults.map((u) => (
+                <button
+                  key={u.username}
+                  onClick={() => selectMention(u.username)}
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-left"
+                >
+                  <div className="w-8 h-8 rounded-full overflow-hidden border border-black/10 dark:border-white/10 bg-zinc-100 dark:bg-zinc-800 shrink-0">
+                    <img
+                      src={u.avatar_url ? `/api/media/avatars/${u.avatar_url}` : `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.full_name}`}
+                      alt={u.full_name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold leading-none">{u.full_name}</p>
+                    <p className="text-xs text-zinc-500 mt-0.5">@{u.username}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Main textarea — 16px text */}
+          <textarea
+            ref={textareaRef}
+            value={content}
+            onChange={handleTextChange}
+            placeholder="What's on your mind?"
+            className="w-full bg-transparent text-foreground text-[16px] placeholder-zinc-400 dark:placeholder-zinc-600 resize-none outline-none min-h-[200px] pt-4"
+            autoFocus
+          />
         </div>
 
+        {/* Media previews */}
         {mediaPreviews.length > 0 && (
           <div className={`grid gap-2 mb-4 ${mediaPreviews.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
-            {mediaPreviews.map((preview, index) => (
-                <div key={index} className="relative aspect-square rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-900">
-                {mediaFiles[index]?.type.startsWith('video/') ? (
-                  <video src={preview} className="w-full h-full object-cover" controls />
-                ) : mediaFiles[index]?.type.startsWith('audio/') ? (
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-100 dark:bg-zinc-900 gap-2 p-3">
+            {mediaPreviews.map((src, i) => (
+              <div key={i} className="relative aspect-square rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-900">
+                {mediaFiles[i]?.type.startsWith('video/') ? (
+                  <video src={src} className="w-full h-full object-cover" controls />
+                ) : mediaFiles[i]?.type.startsWith('audio/') ? (
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-2 p-3">
                     <Music className="w-10 h-10 text-zinc-400" />
-                    <span className="text-xs text-zinc-500 text-center truncate w-full px-2">{mediaFiles[index].name}</span>
-                    <audio src={preview} controls className="w-full" />
+                    <span className="text-xs text-zinc-500 truncate w-full text-center px-2">{mediaFiles[i].name}</span>
+                    <audio src={src} controls className="w-full" />
                   </div>
                 ) : (
-                  <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                  <img src={src} alt="Preview" className="w-full h-full object-cover" />
                 )}
-                  <button
-                    onClick={() => removeMedia(index)}
-                    className="absolute top-2 right-2 p-1.5 bg-black/70 dark:bg-black/70 rounded-full hover:bg-black transition-colors text-white"
+                <button
+                  onClick={() => removeMedia(i)}
+                  className="absolute top-2 right-2 p-1.5 bg-black/70 rounded-full text-white hover:bg-black transition-colors"
                 >
-                  <X className="w-6 h-6" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             ))}
           </div>
         )}
+      </main>
 
-          <div className="border-t border-black/10 dark:border-white/10 pt-4">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*,video/*"
-            multiple
-            onChange={handleFileSelect}
-            className="hidden"
-          />
-          <input
-            ref={audioInputRef}
-            type="file"
-            accept="audio/*"
-            multiple
-            onChange={handleFileSelect}
-            className="hidden"
-          />
-          <div className="flex items-center gap-3">
+      {/* ─── Bottom toolbar 64px ───────────────────────────────────────────── */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 h-16 flex items-center px-2 bg-background border-t border-black/5 dark:border-white/5">
+        <input ref={fileInputRef}  type="file" accept="image/*,video/*" multiple onChange={handleFileSelect} className="hidden" />
+        <input ref={audioInputRef} type="file" accept="audio/*"         multiple onChange={handleFileSelect} className="hidden" />
+
+        {/* Left icons */}
+        <div className="flex items-center gap-0 flex-1">
+          {/* Photo/Video */}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={mediaFiles.length >= 3}
+            title="Photo / Video"
+            className="p-2.5 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-foreground hover:bg-black/8 dark:hover:bg-white/8 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            <ImageIcon className="w-6 h-6" />
+          </button>
+
+          {/* Audio */}
+          <button
+            onClick={() => audioInputRef.current?.click()}
+            disabled={mediaFiles.length >= 3}
+            title="Audio"
+            className="p-2.5 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-foreground hover:bg-black/8 dark:hover:bg-white/8 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            <Music className="w-6 h-6" />
+          </button>
+
+          {/* Heading */}
+          <button
+            onClick={toggleHeading}
+            title="Heading"
+            className={`p-2.5 rounded-full transition-colors ${
+              headingActive
+                ? 'text-foreground bg-black/10 dark:bg-white/10'
+                : 'text-zinc-500 dark:text-zinc-400 hover:text-foreground hover:bg-black/8 dark:hover:bg-white/8'
+            }`}
+          >
+            <Type className="w-6 h-6" />
+          </button>
+
+          {/* Mention */}
+          <button
+            onClick={insertMentionSymbol}
+            title="Mention someone"
+            className="p-2.5 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-foreground hover:bg-black/8 dark:hover:bg-white/8 transition-colors"
+          >
+            <AtSign className="w-6 h-6" />
+          </button>
+
+          {/* GIF */}
+          <button
+            title="GIF"
+            onClick={() => toast('GIF picker coming soon')}
+            className="p-2.5 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-foreground hover:bg-black/8 dark:hover:bg-white/8 transition-colors"
+          >
+            <Smile className="w-6 h-6" />
+          </button>
+
+          {/* Stickers */}
+          <button
+            title="Stickers"
+            onClick={() => toast('Stickers coming soon')}
+            className="p-2.5 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-foreground hover:bg-black/8 dark:hover:bg-white/8 transition-colors"
+          >
+            <Sticker className="w-6 h-6" />
+          </button>
+
+          {/* Topic */}
+          <button
+            title="Topic"
+            onClick={() => toast('Topic selection coming soon')}
+            className="p-2.5 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-foreground hover:bg-black/8 dark:hover:bg-white/8 transition-colors"
+          >
+            <Hash className="w-6 h-6" />
+          </button>
+
+          {/* Location */}
+          <button
+            title="Location"
+            onClick={() => toast('Location coming soon')}
+            className="p-2.5 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-foreground hover:bg-black/8 dark:hover:bg-white/8 transition-colors"
+          >
+            <MapPin className="w-6 h-6" />
+          </button>
+        </div>
+
+        {/* Post settings — right side */}
+        <button
+          onClick={() => setShowSettings(true)}
+          title="Post settings"
+          className="p-2.5 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-foreground hover:bg-black/8 dark:hover:bg-white/8 transition-colors"
+        >
+          <Settings2 className="w-6 h-6" />
+        </button>
+      </div>
+
+      {/* ─── Settings bottom sheet ─────────────────────────────────────────── */}
+      {showSettings && (
+        <div className="fixed inset-0 z-[100] flex flex-col justify-end">
+          <div className="absolute inset-0 bg-black/40 dark:bg-black/60" onClick={() => setShowSettings(false)} />
+          <div className="relative bg-background rounded-t-2xl px-4 pt-4 pb-10 space-y-5 shadow-2xl">
+            {/* Handle */}
+            <div className="w-10 h-1 rounded-full bg-black/20 dark:bg-white/20 mx-auto mb-1" />
+            <h3 className="text-[16px] font-bold">Post settings</h3>
+
+            {/* Who can see */}
+            <div>
+              <p className="text-[12px] font-semibold text-zinc-500 uppercase tracking-wider mb-2">Who can see this post</p>
+              <div className="flex flex-col gap-1">
+                {(['Anyone', 'Followers', 'Following'] as Audience[]).map((opt) => {
+                  const icons: Record<Audience, React.ReactNode> = {
+                    Anyone:    <Globe      className="w-4 h-4" />,
+                    Followers: <Users      className="w-4 h-4" />,
+                    Following: <UserCheck  className="w-4 h-4" />,
+                  };
+                  return (
+                    <button
+                      key={opt}
+                      onClick={() => setAudience(opt)}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${
+                        audience === opt
+                          ? 'bg-black dark:bg-white text-white dark:text-black'
+                          : 'hover:bg-black/5 dark:hover:bg-white/5 text-foreground'
+                      }`}
+                    >
+                      {icons[opt]}
+                      {opt}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Who can comment */}
+            <div>
+              <p className="text-[12px] font-semibold text-zinc-500 uppercase tracking-wider mb-2">Who can comment</p>
+              <div className="flex flex-col gap-1">
+                {(['Anyone', 'Followers', 'Following', 'Mentioned'] as CommentPerm[]).map((opt) => (
+                  <button
+                    key={opt}
+                    onClick={() => setCommentPerm(opt)}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${
+                      commentPerm === opt
+                        ? 'bg-black dark:bg-white text-white dark:text-black'
+                        : 'hover:bg-black/5 dark:hover:bg-white/5 text-foreground'
+                    }`}
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={mediaFiles.length >= 3}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-full border transition-colors ${
-                  mediaFiles.length >= 3
-                    ? 'border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 cursor-not-allowed'
-                    : 'border-black/10 dark:border-white/10 text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:border-black/20 dark:hover:border-white/20'
-              }`}
+              onClick={() => setShowSettings(false)}
+              className="w-full h-12 rounded-xl bg-black dark:bg-white text-white dark:text-black font-bold text-[15px] active:scale-95 transition-transform"
             >
-              <ImageIcon className="w-6 h-6" />
-              <span className="text-sm font-medium">Photo/Video</span>
-            </button>
-            <button
-              onClick={() => audioInputRef.current?.click()}
-              disabled={mediaFiles.length >= 3}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-full border transition-colors ${
-                  mediaFiles.length >= 3
-                    ? 'border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 cursor-not-allowed'
-                    : 'border-black/10 dark:border-white/10 text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:border-black/20 dark:hover:border-white/20'
-              }`}
-            >
-              <Music className="w-6 h-6" />
-              <span className="text-sm font-medium">Audio</span>
+              Done
             </button>
           </div>
         </div>
-      </main>
+      )}
     </div>
   );
 }
