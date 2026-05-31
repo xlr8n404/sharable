@@ -275,7 +275,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
                   <AtSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" />
                   <input
                     type="text"
-                    placeholder="@sharable_id"
+                    placeholder="@username"
                     maxLength={15}
                     className={`w-full h-[56px] bg-neutral-100 dark:bg-neutral-900 border rounded-2xl pl-12 pr-12 focus:ring-0 transition-all placeholder:text-neutral-500 dark:placeholder:text-neutral-600 text-foreground ${
                       usernameStatus === 'taken'
@@ -412,7 +412,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
 
               <div className="text-center space-y-1">
                 <h3 className="text-xl font-bold text-foreground">{formData.fullName || 'Your Name'}</h3>
-                <p className="text-neutral-500">@{formData.username || 'sharable_id'}</p>
+                <p className="text-neutral-500">@{formData.username || 'username'}</p>
                 <span className={`inline-block mt-1 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full ${
                   isPersonal
                     ? 'bg-blue-500/10 text-blue-500'

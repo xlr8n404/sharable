@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       const hashedPassword = await hashPassword(password);
 
       const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-        email: `${username.toLowerCase()}@shareit.internal`,
+        email: `${username.toLowerCase()}@sharable.com`,
         password,
         email_confirm: true,
       });
