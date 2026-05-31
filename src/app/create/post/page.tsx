@@ -205,11 +205,14 @@ export default function CreatePostPage() {
       toast.success('Post shared!');
       // Notifications (non-blocking)
       const postId = postData?.id ?? null;
-      supabase.from('follows').select('follower_id').eq('following_id', profile.id).then(({ data: followers }) => {
-        if (!followers?.length) return;
-        supabase.from('notifications').insert(followers.map((f: any) => ({ user_id: f.follower_id, from_user_id: profile.id, type: 'post', post_id: postId, read: false })));
-        followers.forEach((f: any) => fetch('/api/push-notify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: f.follower_id, title: profile.full_name || profile.username || 'Someone', body: content.trim().slice(0, 100) || 'Shared a new post', url: `/post/${postId}` }) }).catch(() => {}));
-      }).catch(() => {});
+      void (async () => {
+        try {
+          const { data: followers } = await supabase.from('follows').select('follower_id').eq('following_id', profile!.id);
+          if (!followers?.length) return;
+          await supabase.from('notifications').insert(followers.map((f: any) => ({ user_id: f.follower_id, from_user_id: profile!.id, type: 'post', post_id: postId, read: false })));
+          followers.forEach((f: any) => fetch('/api/push-notify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: f.follower_id, title: profile!.full_name || profile!.username || 'Someone', body: content.trim().slice(0, 100) || 'Shared a new post', url: `/post/${postId}` }) }).catch(() => {}));
+        } catch { /* ignore */ }
+      })();
       router.push('/home');
     } catch (err) {
       console.error('[create-post]', err);
@@ -244,7 +247,7 @@ export default function CreatePostPage() {
       <header className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center gap-3 px-4 bg-background border-b border-black/5 dark:border-white/5">
         {/* Back arrow 24px */}
         <button
-          onClick={goBack}
+          onClick={() => goBack()}
           className="p-2 -ml-2 rounded-full text-foreground hover:bg-black/8 dark:hover:bg-white/8 transition-colors shrink-0"
         >
           <ArrowLeft className="w-6 h-6" />

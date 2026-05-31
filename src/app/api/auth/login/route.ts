@@ -62,11 +62,14 @@ export async function POST(request: Request) {
     }
 
     // Reactivate account if it was deactivated (best-effort, skip if offline)
-    supabaseAdmin
-      .from('profiles')
-      .update({ is_deactivated: false })
-      .eq('id', profile.id)
-      .catch(() => {});
+    void (async () => {
+      try {
+        await supabaseAdmin
+          .from('profiles')
+          .update({ is_deactivated: false })
+          .eq('id', profile!.id);
+      } catch { /* ignore */ }
+    })();
 
     const token = await createToken({
       userId: profile.id,
