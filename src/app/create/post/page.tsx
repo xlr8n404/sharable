@@ -38,6 +38,12 @@ export default function CreatePostPage() {
   const [mentionResults,setMentionResults]= useState<any[]>([]);
   const [showMentions,  setShowMentions]  = useState(false);
   const [showSettings,  setShowSettings]  = useState(false);
+  const [showStickers,  setShowStickers]  = useState(false);
+  const [showLocation,  setShowLocation]  = useState(false);
+  const [stickerTab,    setStickerTab]    = useState<'stickers' | 'gifs'>('stickers');
+  const [stickerSearch, setStickerSearch] = useState('');
+  const [location,      setLocation]      = useState('');
+  const [locationSearch,setLocationSearch]= useState('');
   const [audience,      setAudience]      = useState<Audience>('Anyone');
   const [commentPerm,   setCommentPerm]   = useState<CommentPerm>('Anyone');
   const [reviewReplies, setReviewReplies] = useState(false);
@@ -369,7 +375,7 @@ export default function CreatePostPage() {
         <input ref={fileInputRef}  type="file" accept="image/*,video/*" multiple onChange={handleFileSelect} className="hidden" />
         <input ref={audioInputRef} type="file" accept="audio/*"         multiple onChange={handleFileSelect} className="hidden" />
 
-        {/* Left side: Gallery, Stickers */}
+        {/* Left side: Gallery, Stickers, Music */}
         <div className="flex items-center gap-0 flex-1">
           {/* Gallery */}
           <button
@@ -384,29 +390,29 @@ export default function CreatePostPage() {
           {/* Stickers */}
           <button
             title="Stickers"
-            onClick={() => toast('Stickers coming soon')}
+            onClick={() => setShowStickers(true)}
             className="p-2.5 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-foreground hover:bg-black/8 dark:hover:bg-white/8 transition-colors"
           >
             <Sticker className="w-6 h-6" />
           </button>
-        </div>
 
-        {/* Center: Music */}
-        <button
-          onClick={() => audioInputRef.current?.click()}
-          disabled={mediaFiles.length >= 3}
-          title="Music"
-          className="p-2.5 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-foreground hover:bg-black/8 dark:hover:bg-white/8 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          <Music className="w-6 h-6" />
-        </button>
+          {/* Music */}
+          <button
+            onClick={() => audioInputRef.current?.click()}
+            disabled={mediaFiles.length >= 3}
+            title="Music"
+            className="p-2.5 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-foreground hover:bg-black/8 dark:hover:bg-white/8 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            <Music className="w-6 h-6" />
+          </button>
+        </div>
 
         {/* Right side: Location, Settings */}
         <div className="flex items-center gap-0 flex-1 justify-end">
           {/* Location */}
           <button
             title="Location"
-            onClick={() => toast('Location coming soon')}
+            onClick={() => setShowLocation(true)}
             className="p-2.5 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-foreground hover:bg-black/8 dark:hover:bg-white/8 transition-colors"
           >
             <MapPin className="w-6 h-6" />
@@ -519,6 +525,127 @@ export default function CreatePostPage() {
             <button
               onClick={() => setShowSettings(false)}
               className="w-full h-14 rounded-xl bg-black dark:bg-white text-white dark:text-black font-bold text-[16px] active:scale-95 transition-transform mt-6"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Stickers & GIFs Sheet ─────────────────────────────────────────── */}
+      {showStickers && (
+        <div className="fixed inset-0 z-[100] flex flex-col justify-end">
+          <div className="absolute inset-0 bg-black/40 dark:bg-black/60" onClick={() => setShowStickers(false)} />
+          <div className="relative bg-background rounded-t-2xl px-4 pt-4 pb-10 shadow-2xl max-h-[80vh] flex flex-col">
+            {/* Handle */}
+            <div className="w-10 h-1 rounded-full bg-black/20 dark:bg-white/20 mx-auto mb-4" />
+            
+            {/* Tabs */}
+            <div className="flex gap-4 mb-4 border-b border-black/5 dark:border-white/5">
+              <button
+                onClick={() => setStickerTab('stickers')}
+                className={`pb-3 font-medium text-[14px] transition-colors relative ${
+                  stickerTab === 'stickers'
+                    ? 'text-foreground'
+                    : 'text-zinc-500 dark:text-zinc-400'
+                }`}
+              >
+                Stickers
+                {stickerTab === 'stickers' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
+                )}
+              </button>
+              <button
+                onClick={() => setStickerTab('gifs')}
+                className={`pb-3 font-medium text-[14px] transition-colors relative ${
+                  stickerTab === 'gifs'
+                    ? 'text-foreground'
+                    : 'text-zinc-500 dark:text-zinc-400'
+                }`}
+              >
+                GIFs
+                {stickerTab === 'gifs' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
+                )}
+              </button>
+            </div>
+
+            {/* Search Bar */}
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder={`Search ${stickerTab === 'stickers' ? 'stickers' : 'GIFs'}...`}
+                value={stickerSearch}
+                onChange={(e) => setStickerSearch(e.target.value)}
+                className="w-full px-4 py-2.5 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-[14px] placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-foreground"
+              />
+            </div>
+
+            {/* Content Area */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="text-center py-8 text-zinc-500 dark:text-zinc-400">
+                <p className="text-[14px]">
+                  {stickerTab === 'stickers' 
+                    ? 'Stickers coming soon' 
+                    : 'GIFs coming soon'}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowStickers(false)}
+              className="w-full h-12 rounded-xl bg-black dark:bg-white text-white dark:text-black font-bold text-[15px] active:scale-95 transition-transform mt-4"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Location Sheet ──────────────────────────────────────────────────── */}
+      {showLocation && (
+        <div className="fixed inset-0 z-[100] flex flex-col justify-end">
+          <div className="absolute inset-0 bg-black/40 dark:bg-black/60" onClick={() => setShowLocation(false)} />
+          <div className="relative bg-background rounded-t-2xl px-4 pt-4 pb-10 shadow-2xl max-h-[80vh] flex flex-col">
+            {/* Handle */}
+            <div className="w-10 h-1 rounded-full bg-black/20 dark:bg-white/20 mx-auto mb-4" />
+            
+            <h3 className="text-[18px] font-bold mb-6">Add location</h3>
+
+            {/* Search Bar */}
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Search locations..."
+                value={locationSearch}
+                onChange={(e) => setLocationSearch(e.target.value)}
+                className="w-full px-4 py-2.5 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-[14px] placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-foreground"
+              />
+            </div>
+
+            {/* Location Display */}
+            {location && (
+              <div className="mb-4 p-3 bg-zinc-100 dark:bg-zinc-900 rounded-xl">
+                <p className="text-[14px] font-medium">{location}</p>
+                <button
+                  onClick={() => setLocation('')}
+                  className="text-[12px] text-zinc-500 hover:text-foreground mt-1"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
+
+            {/* Content Area */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="text-center py-8 text-zinc-500 dark:text-zinc-400">
+                <p className="text-[14px]">Location picker coming soon</p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowLocation(false)}
+              className="w-full h-12 rounded-xl bg-black dark:bg-white text-white dark:text-black font-bold text-[15px] active:scale-95 transition-transform mt-4"
             >
               Done
             </button>
