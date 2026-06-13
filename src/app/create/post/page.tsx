@@ -5,13 +5,15 @@ import { supabase } from '@/lib/supabase';
 import {
   ArrowLeft, Image as ImageIcon, Music, X, Type, AtSign,
   Smile, Sticker, Hash, MapPin, Settings2,
-  Users, UserCheck, Globe, MessageCircle,
+  Users, UserCheck, Globe, MessageCircle, Loader as LoaderIcon,
 } from 'lucide-react';
 import { Loader } from '@/components/ui/loader';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import imageCompression from 'browser-image-compression';
+import { searchGifs, insertStickerAtCursor, insertGifAtCursor, getAllStickers, getStickersByCategory, getStickerCategories, type StickerCategory, type GifResult } from '@/lib/sticker-utils';
+import { getCurrentLocation, reverseGeocode, searchLocations, type LocationResult } from '@/lib/location-utils';
 
 interface Profile {
   id: string;
@@ -40,13 +42,20 @@ export default function CreatePostPage() {
   const [showSettings,  setShowSettings]  = useState(false);
   const [showStickers,  setShowStickers]  = useState(false);
   const [showLocation,  setShowLocation]  = useState(false);
-  const [stickerTab,    setStickerTab]    = useState<'stickers' | 'gifs'>('stickers');
-  const [stickerSearch, setStickerSearch] = useState('');
-  const [location,      setLocation]      = useState('');
-  const [locationSearch,setLocationSearch]= useState('');
-  const [audience,      setAudience]      = useState<Audience>('Anyone');
-  const [commentPerm,   setCommentPerm]   = useState<CommentPerm>('Anyone');
-  const [reviewReplies, setReviewReplies] = useState(false);
+  const [stickerTab,      setStickerTab]      = useState<'stickers' | 'gifs'>('stickers');
+  const [stickerSearch,   setStickerSearch]   = useState('');
+  const [stickerCategory, setStickerCategory] = useState<StickerCategory>('smileys');
+  const [filteredStickers,setFilteredStickers]= useState<string[]>([]);
+  const [gifResults,      setGifResults]      = useState<GifResult[]>([]);
+  const [gifLoading,      setGifLoading]      = useState(false);
+  const [location,        setLocation]        = useState('');
+  const [locationSearch,  setLocationSearch]  = useState('');
+  const [locationResults, setLocationResults] = useState<LocationResult[]>([]);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [selectedCoords,  setSelectedCoords]  = useState<{ lat: number; lon: number } | null>(null);
+  const [audience,        setAudience]        = useState<Audience>('Anyone');
+  const [commentPerm,     setCommentPerm]     = useState<CommentPerm>('Anyone');
+  const [reviewReplies,   setReviewReplies]   = useState(false);
 
   const fileInputRef   = useRef<HTMLInputElement>(null);
   const audioInputRef  = useRef<HTMLInputElement>(null);
@@ -67,6 +76,60 @@ export default function CreatePostPage() {
       setLoading(false);
     })();
   }, [router]);
+
+  // ── Initialize stickers when sheet opens
+  useEffect(() => {
+    if (showStickers && stickerTab === 'stickers') {
+      const stickers = getStickersByCategory(stickerCategory);
+      setFilteredStickers(stickers);
+    }
+  }, [showStickers, stickerTab, stickerCategory]);
+
+  // ── Search stickers
+  useEffect(() => {
+    if (stickerTab === 'stickers' && showStickers) {
+      if (stickerSearch.trim()) {
+        const allStickers = getAllStickers();
+        setFilteredStickers(allStickers);
+      } else {
+        const stickers = getStickersByCategory(stickerCategory);
+        setFilteredStickers(stickers);
+      }
+    }
+  }, [stickerSearch, stickerTab, stickerCategory, showStickers]);
+
+  // ── Search GIFs
+  useEffect(() => {
+    if (stickerTab === 'gifs' && showStickers) {
+      const searchQuery = stickerSearch.trim();
+      if (searchQuery) {
+        setGifLoading(true);
+        searchGifs(searchQuery).then((results) => {
+          setGifResults(results);
+          setGifLoading(false);
+        });
+      } else {
+        setGifLoading(true);
+        searchGifs('').then((results) => {
+          setGifResults(results);
+          setGifLoading(false);
+        });
+      }
+    }
+  }, [stickerSearch, stickerTab, showStickers]);
+
+  // ── Search locations
+  useEffect(() => {
+    if (showLocation && locationSearch.trim()) {
+      setLocationLoading(true);
+      searchLocations(locationSearch).then((results) => {
+        setLocationResults(results);
+        setLocationLoading(false);
+      });
+    } else {
+      setLocationResults([]);
+    }
+  }, [locationSearch, showLocation]);
 
   const avatarSrc = profile?.avatar_url
     ? `/api/media/avatars/${profile.avatar_url}`
@@ -436,7 +499,16 @@ export default function CreatePostPage() {
           <div className="relative bg-background rounded-t-2xl px-4 pt-4 pb-10 space-y-0 shadow-2xl max-h-[90vh] overflow-y-auto">
             {/* Handle */}
             <div className="w-10 h-1 rounded-full bg-black/20 dark:bg-white/20 mx-auto mb-4" />
-            <h3 className="text-[18px] font-bold mb-6">Post options</h3>
+            
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-[18px] font-bold">Post options</h3>
+              <button
+                onClick={() => setShowSettings(false)}
+                className="px-5 py-1.5 rounded-full bg-black dark:bg-white text-white dark:text-black font-bold text-[14px] active:scale-95 transition-transform"
+              >
+                Done
+              </button>
+            </div>
 
             {/* Who can see this post */}
             <div className="mb-6">
@@ -494,40 +566,7 @@ export default function CreatePostPage() {
               </div>
             </div>
 
-            {/* Review and approve replies */}
-            <div className="mb-6">
-              <div className="flex items-center justify-between px-4 py-4 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
-                <span className="text-[16px] font-medium">Review and approve replies</span>
-                <button
-                  onClick={() => setReviewReplies(prev => !prev)}
-                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
-                    reviewReplies ? 'bg-black dark:bg-white' : 'bg-zinc-300 dark:bg-zinc-700'
-                  }`}
-                >
-                  <span className={`inline-block h-5 w-5 transform rounded-full bg-background shadow transition-transform ${
-                    reviewReplies ? 'translate-x-6' : 'translate-x-1'
-                  }`} />
-                </button>
-              </div>
-            </div>
 
-            {/* Audience section header */}
-            <div className="px-4 py-3 mb-2">
-              <p className="text-[13px] font-medium text-zinc-500">Audience</p>
-            </div>
-
-            {/* Also share on */}
-            <div className="flex items-center justify-between px-4 py-4 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
-              <span className="text-[16px] font-medium">Also share on</span>
-              <span className="text-[14px] text-zinc-500">Off</span>
-            </div>
-
-            <button
-              onClick={() => setShowSettings(false)}
-              className="w-full h-14 rounded-xl bg-black dark:bg-white text-white dark:text-black font-bold text-[16px] active:scale-95 transition-transform mt-6"
-            >
-              Done
-            </button>
           </div>
         </div>
       )}
@@ -581,16 +620,87 @@ export default function CreatePostPage() {
               />
             </div>
 
-            {/* Content Area */}
-            <div className="flex-1 overflow-y-auto">
-              <div className="text-center py-8 text-zinc-500 dark:text-zinc-400">
-                <p className="text-[14px]">
-                  {stickerTab === 'stickers' 
-                    ? 'Stickers coming soon' 
-                    : 'GIFs coming soon'}
-                </p>
+            {/* Stickers Tab */}
+            {stickerTab === 'stickers' && (
+              <div className="flex-1 overflow-y-auto">
+                <div className="flex gap-2 mb-4 pb-3 border-b border-black/5 dark:border-white/5 overflow-x-auto">
+                  {getStickerCategories().map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setStickerCategory(cat)}
+                      className={`px-3 py-1 rounded-full text-[12px] font-medium whitespace-nowrap transition-colors ${
+                        stickerCategory === cat
+                          ? 'bg-black dark:bg-white text-white dark:text-black'
+                          : 'bg-zinc-100 dark:bg-zinc-900 text-foreground hover:bg-zinc-200 dark:hover:bg-zinc-800'
+                      }`}
+                    >
+                      {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                    </button>
+                  ))}
+                </div>
+                {filteredStickers.length > 0 ? (
+                  <div className="grid grid-cols-6 gap-2">
+                    {filteredStickers.map((sticker, idx) => (
+                      <button
+                        key={`${stickerCategory}-${idx}`}
+                        onClick={() => {
+                          if (textareaRef.current) {
+                            insertStickerAtCursor(textareaRef.current, sticker, content, setContent);
+                            setShowStickers(false);
+                          }
+                        }}
+                        className="aspect-square flex items-center justify-center text-2xl hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-colors"
+                        title={`Insert ${sticker}`}
+                      >
+                        {sticker}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-zinc-500 dark:text-zinc-400">
+                    <p className="text-[14px]">No stickers found</p>
+                  </div>
+                )}
               </div>
-            </div>
+            )}
+            {stickerTab === 'gifs' && (
+              <div className="flex-1 overflow-y-auto">
+                {gifLoading ? (
+                  <div className="flex items-center justify-center h-32">
+                    <LoaderIcon className="w-6 h-6 animate-spin text-zinc-400" />
+                  </div>
+                ) : gifResults.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    {gifResults.map((gif) => (
+                      <button
+                        key={gif.id}
+                        onClick={() => {
+                          if (textareaRef.current) {
+                            insertGifAtCursor(textareaRef.current, gif.images.fixed_height.url, gif.title, content, setContent);
+                            setShowStickers(false);
+                          }
+                        }}
+                        className="relative group overflow-hidden rounded-lg aspect-video bg-zinc-100 dark:bg-zinc-900 hover:opacity-80 transition-opacity"
+                        title={gif.title}
+                      >
+                        <img
+                          src={gif.images.fixed_height.url}
+                          alt={gif.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                          <span className="text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">Add</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-zinc-500 dark:text-zinc-400">
+                    <p className="text-[14px]">No GIFs found</p>
+                  </div>
+                )}
+              </div>
+            )}
 
             <button
               onClick={() => setShowStickers(false)}
@@ -636,11 +746,59 @@ export default function CreatePostPage() {
               </div>
             )}
 
+            {/* Current Location Button */}
+            <button
+              onClick={async () => {
+                const coords = await getCurrentLocation();
+                if (coords) {
+                  const result = await reverseGeocode(coords.latitude, coords.longitude);
+                  if (result) {
+                    setLocation(result.name);
+                    setSelectedCoords({ lat: coords.latitude, lon: coords.longitude });
+                  }
+                } else {
+                  toast.error('Could not get your location');
+                }
+              }}
+              className="w-full mb-4 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-[14px] font-medium transition-colors"
+            >
+              Use Current Location
+            </button>
+
             {/* Content Area */}
             <div className="flex-1 overflow-y-auto">
-              <div className="text-center py-8 text-zinc-500 dark:text-zinc-400">
-                <p className="text-[14px]">Location picker coming soon</p>
-              </div>
+              {locationLoading ? (
+                <div className="flex items-center justify-center h-32">
+                  <LoaderIcon className="w-6 h-6 animate-spin text-zinc-400" />
+                </div>
+              ) : locationResults.length > 0 ? (
+                <div className="space-y-2">
+                  {locationResults.map((result, idx) => (
+                    <button
+                      key={`${result.latitude}-${result.longitude}-${idx}`}
+                      onClick={() => {
+                        setLocation(result.name);
+                        setSelectedCoords({ lat: result.latitude, lon: result.longitude });
+                        setLocationSearch('');
+                      }}
+                      className="w-full text-left px-4 py-3 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors border border-black/5 dark:border-white/5"
+                    >
+                      <p className="text-[14px] font-medium text-foreground">{result.name}</p>
+                      {result.display_name && (
+                        <p className="text-[12px] text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-1">{result.display_name}</p>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              ) : locationSearch.trim() ? (
+                <div className="text-center py-8 text-zinc-500 dark:text-zinc-400">
+                  <p className="text-[14px]">No locations found</p>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-zinc-500 dark:text-zinc-400">
+                  <p className="text-[14px]">Search for a location or use current location</p>
+                </div>
+              )}
             </div>
 
             <button
