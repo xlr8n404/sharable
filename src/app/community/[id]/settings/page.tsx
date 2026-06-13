@@ -361,7 +361,7 @@ export default function CommunitySettingsPage() {
           {/* Username — read only */}
           <div>
             <label className="block text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-2">
-              Sharable ID
+              Username
             </label>
             <input
               type="text"
@@ -369,7 +369,7 @@ export default function CommunitySettingsPage() {
               disabled
               className="w-full bg-zinc-200 dark:bg-zinc-800 text-zinc-500 px-4 py-3 rounded-xl border border-black/5 dark:border-white/5 outline-none cursor-not-allowed"
             />
-            <p className="text-xs text-zinc-400 dark:text-zinc-600 mt-1.5">Sharable ID cannot be changed</p>
+            <p className="text-xs text-zinc-400 dark:text-zinc-600 mt-1.5">Username cannot be changed</p>
           </div>
 
           {/* Description */}
