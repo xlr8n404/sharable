@@ -10,7 +10,7 @@ const supabaseAdmin = createClient(
 
 export async function POST(request: Request) {
   try {
-    const { username, password, fullName, dob, gender, avatarUrl, accountType, bio, description, since, orgType } = await request.json();
+    const { username, password, fullName, dob, gender, avatarUrl, bio } = await request.json();
     
     if (!username || !password) {
       return NextResponse.json({ error: 'Username and password required' }, { status: 400 });
@@ -65,15 +65,11 @@ export async function POST(request: Request) {
         id: userId,
         full_name: fullName,
         username: username.toLowerCase(),
-        account_type: accountType || 'personal',
+        account_type: 'personal',
         // Personal fields
-        date_of_birth: accountType === 'personal' ? (dob || null) : null,
-        gender: accountType === 'personal' ? (gender || null) : null,
-        bio: accountType === 'personal' ? (bio || null) : null,
-        // Brand fields
-        since: accountType === 'brand' ? (since || null) : null,
-        org_type: accountType === 'brand' ? (orgType || null) : null,
-        description: accountType === 'brand' ? (description || null) : null,
+        date_of_birth: dob || null,
+        gender: gender || null,
+        bio: bio || null,
         avatar_url: avatarUrl || '',
         password_hash: hashedPassword
       });

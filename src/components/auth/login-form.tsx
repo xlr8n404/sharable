@@ -81,7 +81,7 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
       <form onSubmit={handleLogin} className="w-full space-y-4">
         <div className="space-y-1.5 text-left">
           <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-[0.1em] ml-1">
-            SHARABLE ID
+            USERNAME
           </label>
             <div className="relative">
               <AtSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" />

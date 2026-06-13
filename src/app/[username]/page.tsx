@@ -273,7 +273,7 @@ export default function UserProfilePage() {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="ml-2 flex items-center gap-1.5 min-w-0">
-            <span className="font-[family-name:var(--font-syne)] font-bold text-lg truncate">Sharable ID</span>
+            <span className="font-[family-name:var(--font-syne)] font-bold text-lg truncate">Username</span>
             <VerifiedBadge username={username} className="w-3.5 h-3.5 text-white shrink-0" />
           </div>
         </header>
