@@ -268,6 +268,9 @@ export default function CreatePostPage() {
           media_type:  mediaTypes[0] ?? null,
           media_urls:  mediaUrls.length  ? mediaUrls  : null,
           media_types: mediaTypes.length ? mediaTypes : null,
+          location_name: location || null,
+          location_latitude: selectedCoords?.lat ?? null,
+          location_longitude: selectedCoords?.lon ?? null,
         })
         .select('id, post_number')
         .single();

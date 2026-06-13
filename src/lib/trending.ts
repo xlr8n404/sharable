@@ -17,6 +17,7 @@ const GRAVITY = 1.8;
 const LIKE_WEIGHT = 1;
 const COMMENT_WEIGHT = 2;
 const REPOST_WEIGHT = 3;
+const FRESHNESS_BONUS = 5; // Bonus points for posts less than 1 hour old
 
 export function trendingScore(post: {
   likes_count?: number;
@@ -34,7 +35,16 @@ export function trendingScore(post: {
   const ageMs = Date.now() - new Date(post.created_at).getTime();
   const ageHours = ageMs / (1000 * 60 * 60);
 
-  return engagementPoints / Math.pow(ageHours + 2, GRAVITY);
+  // Base score from engagement
+  let score = engagementPoints / Math.pow(ageHours + 2, GRAVITY);
+
+  // Add freshness bonus for brand-new posts (less than 1 hour old)
+  // This ensures new posts with zero engagement still appear in explore feed
+  if (ageHours < 1) {
+    score += FRESHNESS_BONUS;
+  }
+
+  return score;
 }
 
 /** Sort an array of posts in-place by trending score (highest first). */

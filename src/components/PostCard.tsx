@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Heart, MessageCircle, Share2, MoreHorizontal, Trash2, Bookmark, Copy, Repeat, CornerRightDown, Settings2, Play } from 'lucide-react';
+import { Heart, MessageCircle, Share2, MoreHorizontal, Trash2, Bookmark, Copy, Repeat, CornerRightDown, Settings2, Play, MapPin } from 'lucide-react';
 import { Loader } from '@/components/ui/loader';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
@@ -65,6 +65,10 @@ interface PostCardProps {
   initialSaved?: boolean;
   // Whether this card is visible in the viewport (for lazy media loading)
   isVisible?: boolean;
+  // Location information
+  location_name?: string | null;
+  location_latitude?: number | null;
+  location_longitude?: number | null;
 }
 
 interface CommentReply {
@@ -231,6 +235,9 @@ export function PostCard({
   initialReposted = false,
   initialSaved = false,
   isVisible = true,
+  location_name,
+  location_latitude,
+  location_longitude,
 }: PostCardProps) {
   const router = useRouter();
 
@@ -1269,10 +1276,19 @@ export function PostCard({
                   </>
                 )}
               </div>
-              <div className="flex items-center gap-1.5 text-zinc-500 text-[13px]">
+              <div className="flex items-center gap-1.5 text-zinc-500 text-[13px] flex-wrap">
                 <span className="font-medium">@{user.username || 'user'}</span>
                 <span className="text-zinc-300 dark:text-zinc-700">•</span>
                 <span>{created_at ? formatTime(created_at) : 'now'}</span>
+                {location_name && (
+                  <>
+                    <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                    <div className="flex items-center gap-1">
+                      <MapPin size={12} strokeWidth={2} />
+                      <span>{location_name}</span>
+                    </div>
+                  </>
+                )}
                 {community && (
                   <>
                     <span className="text-zinc-300 dark:text-zinc-700">•</span>
