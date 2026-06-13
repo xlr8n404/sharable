@@ -80,6 +80,26 @@ export default function Home() {
     checkSession();
   }, [router]);
 
+  const handleViewChange = (newView: View) => {
+    setView(newView);
+    if (newView !== 'landing') {
+      window.history.pushState({ view: newView }, '');
+    }
+  };
+
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      if (event.state?.view) {
+        setView(event.state.view);
+      } else {
+        setView('landing');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   if (checking) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-background">
@@ -101,7 +121,7 @@ export default function Home() {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
-                onClick={() => setView('landing')}
+                onClick={() => handleViewChange('landing')}
                 className="flex items-center justify-center p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors"
               >
                 <ArrowLeft className="w-6 h-6" />
@@ -160,13 +180,13 @@ export default function Home() {
               {/* Auth Buttons */}
               <div className="flex flex-col gap-4 w-full">
                 <button
-                  onClick={() => setView('login')}
+                  onClick={() => handleViewChange('login')}
                   className="flex items-center justify-center w-full h-[56px] bg-foreground text-background font-bold text-lg rounded-full transition-all hover:bg-neutral-200 dark:hover:bg-neutral-800"
                 >
                   Log in
                 </button>
                 <button
-                  onClick={() => setView('register')}
+                  onClick={() => handleViewChange('register')}
                   className="flex items-center justify-center w-full h-[56px] bg-neutral-100 dark:bg-neutral-900 text-foreground font-bold text-lg rounded-full border border-neutral-200 dark:border-neutral-800 transition-all hover:bg-neutral-200 dark:hover:bg-neutral-800"
                 >
                   Create Account

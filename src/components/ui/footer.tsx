@@ -10,10 +10,10 @@ export function Footer() {
         </div>
         
         <nav className="flex flex-wrap items-center justify-center gap-6 md:gap-8">
-          <Link href="/about" className="hover:text-black dark:hover:text-white transition-colors">About Us</Link>
-          <Link href="/contact" className="hover:text-black dark:hover:text-white transition-colors">Contact</Link>
-          <Link href="/privacy" className="hover:text-black dark:hover:text-white transition-colors">Privacy Policy</Link>
-          <Link href="/terms" className="hover:text-black dark:hover:text-white transition-colors">Terms of Service</Link>
+          <Link href="/about" className="text-zinc-500 hover:text-foreground dark:hover:text-foreground transition-colors">About Us</Link>
+          <Link href="/contact" className="text-zinc-500 hover:text-foreground dark:hover:text-foreground transition-colors">Contact</Link>
+          <Link href="/privacy" className="text-zinc-500 hover:text-foreground dark:hover:text-foreground transition-colors">Privacy Policy</Link>
+          <Link href="/terms" className="text-zinc-500 hover:text-foreground dark:hover:text-foreground transition-colors">Terms of Service</Link>
         </nav>
       </div>
     </footer>
