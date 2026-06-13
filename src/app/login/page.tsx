@@ -118,9 +118,9 @@ export default function LoginPage() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full mb-8"
+          className="w-full mb-4"
         >
-          <Logo size="md" />
+          <Logo size="md" showText={false} />
         </motion.div>
 
         <LoginForm

@@ -135,9 +135,9 @@ export default function Home() {
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
-                  className="mb-8"
+                  className="mb-4"
                 >
-                  <Logo size="md" />
+                  <Logo size="md" showText={false} />
                 </motion.div>
             )}
           </AnimatePresence>
