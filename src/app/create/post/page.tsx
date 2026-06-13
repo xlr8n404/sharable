@@ -40,6 +40,7 @@ export default function CreatePostPage() {
   const [showSettings,  setShowSettings]  = useState(false);
   const [audience,      setAudience]      = useState<Audience>('Anyone');
   const [commentPerm,   setCommentPerm]   = useState<CommentPerm>('Anyone');
+  const [reviewReplies, setReviewReplies] = useState(false);
 
   const fileInputRef   = useRef<HTMLInputElement>(null);
   const audioInputRef  = useRef<HTMLInputElement>(null);
@@ -364,61 +365,20 @@ export default function CreatePostPage() {
       </main>
 
       {/* ─── Bottom toolbar 64px ───────────────────────────────────────────── */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 h-16 flex items-center px-2 bg-background border-t border-black/5 dark:border-white/5">
+      <div className="fixed bottom-0 left-0 right-0 z-50 h-16 flex items-center px-2 bg-background">
         <input ref={fileInputRef}  type="file" accept="image/*,video/*" multiple onChange={handleFileSelect} className="hidden" />
         <input ref={audioInputRef} type="file" accept="audio/*"         multiple onChange={handleFileSelect} className="hidden" />
 
-        {/* Left icons */}
+        {/* Left side: Gallery, Stickers */}
         <div className="flex items-center gap-0 flex-1">
-          {/* Photo/Video */}
+          {/* Gallery */}
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={mediaFiles.length >= 3}
-            title="Photo / Video"
+            title="Gallery"
             className="p-2.5 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-foreground hover:bg-black/8 dark:hover:bg-white/8 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <ImageIcon className="w-6 h-6" />
-          </button>
-
-          {/* Audio */}
-          <button
-            onClick={() => audioInputRef.current?.click()}
-            disabled={mediaFiles.length >= 3}
-            title="Audio"
-            className="p-2.5 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-foreground hover:bg-black/8 dark:hover:bg-white/8 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            <Music className="w-6 h-6" />
-          </button>
-
-          {/* Heading */}
-          <button
-            onClick={toggleHeading}
-            title="Heading"
-            className={`p-2.5 rounded-full transition-colors ${
-              headingActive
-                ? 'text-foreground bg-black/10 dark:bg-white/10'
-                : 'text-zinc-500 dark:text-zinc-400 hover:text-foreground hover:bg-black/8 dark:hover:bg-white/8'
-            }`}
-          >
-            <Type className="w-6 h-6" />
-          </button>
-
-          {/* Mention */}
-          <button
-            onClick={insertMentionSymbol}
-            title="Mention someone"
-            className="p-2.5 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-foreground hover:bg-black/8 dark:hover:bg-white/8 transition-colors"
-          >
-            <AtSign className="w-6 h-6" />
-          </button>
-
-          {/* GIF */}
-          <button
-            title="GIF"
-            onClick={() => toast('GIF picker coming soon')}
-            className="p-2.5 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-foreground hover:bg-black/8 dark:hover:bg-white/8 transition-colors"
-          >
-            <Smile className="w-6 h-6" />
           </button>
 
           {/* Stickers */}
@@ -429,16 +389,20 @@ export default function CreatePostPage() {
           >
             <Sticker className="w-6 h-6" />
           </button>
+        </div>
 
-          {/* Topic */}
-          <button
-            title="Topic"
-            onClick={() => toast('Topic selection coming soon')}
-            className="p-2.5 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-foreground hover:bg-black/8 dark:hover:bg-white/8 transition-colors"
-          >
-            <Hash className="w-6 h-6" />
-          </button>
+        {/* Center: Music */}
+        <button
+          onClick={() => audioInputRef.current?.click()}
+          disabled={mediaFiles.length >= 3}
+          title="Music"
+          className="p-2.5 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-foreground hover:bg-black/8 dark:hover:bg-white/8 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          <Music className="w-6 h-6" />
+        </button>
 
+        {/* Right side: Location, Settings */}
+        <div className="flex items-center gap-0 flex-1 justify-end">
           {/* Location */}
           <button
             title="Location"
@@ -447,79 +411,114 @@ export default function CreatePostPage() {
           >
             <MapPin className="w-6 h-6" />
           </button>
-        </div>
 
-        {/* Post settings — right side */}
-        <button
-          onClick={() => setShowSettings(true)}
-          title="Post settings"
-          className="p-2.5 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-foreground hover:bg-black/8 dark:hover:bg-white/8 transition-colors"
-        >
-          <Settings2 className="w-6 h-6" />
-        </button>
+          {/* Post settings */}
+          <button
+            onClick={() => setShowSettings(true)}
+            title="Post settings"
+            className="p-2.5 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-foreground hover:bg-black/8 dark:hover:bg-white/8 transition-colors"
+          >
+            <Settings2 className="w-6 h-6" />
+          </button>
+        </div>
       </div>
 
       {/* ─── Settings bottom sheet ─────────────────────────────────────────── */}
       {showSettings && (
         <div className="fixed inset-0 z-[100] flex flex-col justify-end">
           <div className="absolute inset-0 bg-black/40 dark:bg-black/60" onClick={() => setShowSettings(false)} />
-          <div className="relative bg-background rounded-t-2xl px-4 pt-4 pb-10 space-y-5 shadow-2xl">
+          <div className="relative bg-background rounded-t-2xl px-4 pt-4 pb-10 space-y-0 shadow-2xl max-h-[90vh] overflow-y-auto">
             {/* Handle */}
-            <div className="w-10 h-1 rounded-full bg-black/20 dark:bg-white/20 mx-auto mb-1" />
-            <h3 className="text-[16px] font-bold">Post settings</h3>
+            <div className="w-10 h-1 rounded-full bg-black/20 dark:bg-white/20 mx-auto mb-4" />
+            <h3 className="text-[18px] font-bold mb-6">Post options</h3>
 
-            {/* Who can see */}
-            <div>
-              <p className="text-[12px] font-semibold text-zinc-500 uppercase tracking-wider mb-2">Who can see this post</p>
-              <div className="flex flex-col gap-1">
-                {(['Anyone', 'Followers', 'Following'] as Audience[]).map((opt) => {
-                  const icons: Record<Audience, React.ReactNode> = {
-                    Anyone:    <Globe      className="w-4 h-4" />,
-                    Followers: <Users      className="w-4 h-4" />,
-                    Following: <UserCheck  className="w-4 h-4" />,
-                  };
-                  return (
-                    <button
-                      key={opt}
-                      onClick={() => setAudience(opt)}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${
-                        audience === opt
-                          ? 'bg-black dark:bg-white text-white dark:text-black'
-                          : 'hover:bg-black/5 dark:hover:bg-white/5 text-foreground'
-                      }`}
-                    >
-                      {icons[opt]}
-                      {opt}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Who can comment */}
-            <div>
-              <p className="text-[12px] font-semibold text-zinc-500 uppercase tracking-wider mb-2">Who can comment</p>
-              <div className="flex flex-col gap-1">
-                {(['Anyone', 'Followers', 'Following', 'Mentioned'] as CommentPerm[]).map((opt) => (
+            {/* Who can see this post */}
+            <div className="mb-6">
+              <p className="text-[13px] font-medium text-zinc-500 mb-3">Who can see this post</p>
+              <div className="space-y-0">
+                {(['Anyone', 'Followers'] as Audience[]).map((opt) => (
                   <button
                     key={opt}
-                    onClick={() => setCommentPerm(opt)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${
-                      commentPerm === opt
-                        ? 'bg-black dark:bg-white text-white dark:text-black'
-                        : 'hover:bg-black/5 dark:hover:bg-white/5 text-foreground'
-                    }`}
+                    onClick={() => setAudience(opt)}
+                    className="w-full flex items-center justify-between px-4 py-4 hover:bg-black/5 dark:hover:bg-white/5 transition-colors border-b border-black/5 dark:border-white/5 last:border-b-0"
                   >
-                    <MessageCircle className="w-4 h-4" />
-                    {opt}
+                    <span className="text-[16px] font-medium">{opt === 'Followers' ? 'Your followers' : opt}</span>
+                    <div
+                      className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                        audience === opt
+                          ? 'bg-black dark:bg-white border-black dark:border-white'
+                          : 'border-zinc-300 dark:border-zinc-700'
+                      }`}
+                    >
+                      {audience === opt && (
+                        <div className="w-2 h-2 rounded-full bg-white dark:bg-black" />
+                      )}
+                    </div>
                   </button>
                 ))}
               </div>
             </div>
 
+            {/* Who can comment on this post */}
+            <div className="mb-6">
+              <p className="text-[13px] font-medium text-zinc-500 mb-3">Who can comment on this post</p>
+              <div className="space-y-0">
+                {(['Anyone', 'Followers', 'Following', 'Mentioned'] as CommentPerm[]).map((opt) => (
+                  <button
+                    key={opt}
+                    onClick={() => setCommentPerm(opt)}
+                    className="w-full flex items-center justify-between px-4 py-4 hover:bg-black/5 dark:hover:bg-white/5 transition-colors border-b border-black/5 dark:border-white/5 last:border-b-0"
+                  >
+                    <span className="text-[16px] font-medium">
+                      {opt === 'Followers' ? 'Your followers' : opt === 'Following' ? 'Profiles you follow' : opt === 'Mentioned' ? 'Profiles that you mention' : opt}
+                    </span>
+                    <div
+                      className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                        commentPerm === opt
+                          ? 'bg-black dark:bg-white border-black dark:border-white'
+                          : 'border-zinc-300 dark:border-zinc-700'
+                      }`}
+                    >
+                      {commentPerm === opt && (
+                        <div className="w-2 h-2 rounded-full bg-white dark:bg-black" />
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Review and approve replies */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between px-4 py-4 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+                <span className="text-[16px] font-medium">Review and approve replies</span>
+                <button
+                  onClick={() => setReviewReplies(prev => !prev)}
+                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
+                    reviewReplies ? 'bg-black dark:bg-white' : 'bg-zinc-300 dark:bg-zinc-700'
+                  }`}
+                >
+                  <span className={`inline-block h-5 w-5 transform rounded-full bg-background shadow transition-transform ${
+                    reviewReplies ? 'translate-x-6' : 'translate-x-1'
+                  }`} />
+                </button>
+              </div>
+            </div>
+
+            {/* Audience section header */}
+            <div className="px-4 py-3 mb-2">
+              <p className="text-[13px] font-medium text-zinc-500">Audience</p>
+            </div>
+
+            {/* Also share on */}
+            <div className="flex items-center justify-between px-4 py-4 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+              <span className="text-[16px] font-medium">Also share on</span>
+              <span className="text-[14px] text-zinc-500">Off</span>
+            </div>
+
             <button
               onClick={() => setShowSettings(false)}
-              className="w-full h-12 rounded-xl bg-black dark:bg-white text-white dark:text-black font-bold text-[15px] active:scale-95 transition-transform"
+              className="w-full h-14 rounded-xl bg-black dark:bg-white text-white dark:text-black font-bold text-[16px] active:scale-95 transition-transform mt-6"
             >
               Done
             </button>
