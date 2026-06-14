@@ -352,7 +352,7 @@ export default function CreatePostPage() {
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div 
-      className="bg-background text-foreground flex flex-col overflow-hidden"
+      className="bg-background text-foreground flex flex-col overflow-hidden fixed inset-0 touch-none"
       style={{ height: viewportHeight }}
     >
 
@@ -394,7 +394,7 @@ export default function CreatePostPage() {
       </header>
 
       {/* ─── Scrollable body ───────────────────────────────────────────────── */}
-      <main className="flex-1 pt-16 px-4 overflow-y-auto">
+      <main className="flex-1 pt-16 px-4 overflow-y-auto overscroll-contain touch-pan-y">
         {/* Heading field */}
         {headingActive && (
           <div className="pt-4 pb-1">
