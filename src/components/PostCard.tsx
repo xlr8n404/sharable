@@ -211,6 +211,7 @@ export function PostCard({
   id,
   user_id,
   post_number,
+  slug,
   user,
   content,
   media_url,
