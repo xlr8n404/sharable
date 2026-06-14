@@ -480,7 +480,7 @@ export default function HomePage() {
           ))}
         </div>
 
-        {mainMenuOpen && <MainMenu onClose={() => setMainMenuOpen(false)} />}
+        {mainMenuOpen && <MainMenu open={mainMenuOpen} onClose={() => setMainMenuOpen(false)} avatarSrc={currentUserProfile?.avatar_url || null} feedMode={feedMode} onFeedModeChange={(mode) => setFeedMode(mode)} />}
       </header>
 
       <main className="flex-1 max-w-2xl mx-auto w-full">
