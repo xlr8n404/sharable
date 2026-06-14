@@ -5,12 +5,13 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { PostCard } from '@/components/PostCard';
 import { BottomNav } from '@/components/BottomNav';
-import { Settings2, UserCircle } from 'lucide-react';
+import { Settings2, Share2, MessageCircle, UserCircle, Plus } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { MainMenu } from '@/components/MainMenu';
 import { Loader } from '@/components/ui/loader';
 import { PostSkeleton } from '@/components/PostSkeleton';
 import { toast } from 'sonner';
+import Link from 'next/link';
 import { useScrollDirection } from '@/hooks/use-scroll-direction';
 import { sortByTrending } from '@/lib/trending';
 import { useScrollRestoration } from '@/hooks/useScrollRestoration';
@@ -343,47 +344,40 @@ export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="flex items-center justify-between px-4 h-14">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setMainMenuOpen(true)}
-              className="p-1 hover:bg-accent rounded-full transition-colors"
-            >
-              {currentUserProfile?.avatar_url ? (
-                <img src={currentUserProfile.avatar_url} alt="Profile" className="w-8 h-8 rounded-full object-cover" />
-              ) : (
-                <UserCircle size={28} strokeWidth={1.5} className="text-zinc-500" />
-              )}
-            </button>
-            <h1 className="text-lg font-bold">Sharable</h1>
-          </div>
+        <div className="flex items-center justify-between px-4 h-16">
           <button
             onClick={() => setMainMenuOpen(true)}
             className="p-2 hover:bg-accent rounded-lg transition-colors"
           >
-            <Settings2 size={20} />
+            <Settings2 size={24} strokeWidth={1.5} className="text-zinc-500" />
+          </button>
+          <div className="flex items-center gap-2">
+            <Share2 size={24} strokeWidth={2} className="text-primary" />
+          </div>
+          <button
+            onClick={() => router.push('/messages')}
+            className="p-2 hover:bg-accent rounded-lg transition-colors"
+          >
+            <MessageCircle size={24} strokeWidth={1.5} className="text-zinc-500" />
           </button>
         </div>
 
-        <div className="flex border-b border-border">
-          {(['explore', 'following'] as const).map(mode => (
-            <button
-              key={mode}
-              onClick={() => {
-                setFeedMode(mode);
-                setOffset(0);
-                setPosts([]);
-              }}
-              className={`flex-1 py-3 text-sm font-bold transition-colors relative ${
-                feedMode === mode ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {mode.charAt(0).toUpperCase() + mode.slice(1)}
-              {feedMode === mode && (
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-primary rounded-full" />
-              )}
-            </button>
-          ))}
+        {/* Post create shortcut */}
+        <div className="h-16 flex items-center gap-3 px-4 border-t border-border">
+          <div className="shrink-0 w-10 h-10 rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
+            {currentUserProfile?.avatar_url ? (
+              <img src={currentUserProfile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              <UserCircle size={28} strokeWidth={1} className="text-zinc-500 dark:text-zinc-400" />
+            )}
+          </div>
+          <Link
+            href="/create/post"
+            className="flex-1 flex items-center justify-between h-11 bg-zinc-100 dark:bg-zinc-900 rounded-full px-4 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all"
+          >
+            <span className="text-sm font-medium text-zinc-500 dark:text-zinc-400 truncate">Anything sharable today?</span>
+            <Plus size={18} className="text-zinc-500 dark:text-zinc-400 shrink-0 ml-2" />
+          </Link>
         </div>
 
         {mainMenuOpen && (
