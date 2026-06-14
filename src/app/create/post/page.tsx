@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import imageCompression from 'browser-image-compression';
 import { searchGifs, insertStickerAtCursor, insertGifAtCursor, getAllStickers, getStickersByCategory, getStickerCategories, type StickerCategory, type GifResult } from '@/lib/sticker-utils';
 import { getCurrentLocation, reverseGeocode, searchLocations, type LocationResult } from '@/lib/location-utils';
+import { generateSlugFromContent, handleSlugCollision } from '@/lib/slug-utils';
 
 interface Profile {
   id: string;
@@ -259,6 +260,17 @@ export default function CreatePostPage() {
         mediaUrls.push(publicUrl);
         mediaTypes.push(file.type.startsWith('video/') ? 'video' : file.type.startsWith('audio/') ? 'audio' : 'image');
       }
+      // Generate slug from heading or content
+      const baseSlug = generateSlugFromContent(heading || content);
+      
+      // Check for existing slugs by this user to handle collisions
+      const { data: existingPosts } = await supabase
+        .from('posts')
+        .select('slug')
+        .eq('user_id', profile.id);
+      const existingSlugs = existingPosts?.map(p => p.slug) || [];
+      const finalSlug = handleSlugCollision(baseSlug, existingSlugs);
+
       const { data: postData, error: postError } = await supabase
         .from('posts')
         .insert({
@@ -271,8 +283,9 @@ export default function CreatePostPage() {
           location_name: location || null,
           location_latitude: selectedCoords?.lat ?? null,
           location_longitude: selectedCoords?.lon ?? null,
+          slug: finalSlug,
         })
-        .select('id, post_number')
+        .select('id, post_number, slug')
         .single();
       if (postError) throw postError;
       toast.success('Post shared!');
@@ -283,7 +296,7 @@ export default function CreatePostPage() {
           const { data: followers } = await supabase.from('follows').select('follower_id').eq('following_id', profile!.id);
           if (!followers?.length) return;
           await supabase.from('notifications').insert(followers.map((f: any) => ({ user_id: f.follower_id, from_user_id: profile!.id, type: 'post', post_id: postId, read: false })));
-          followers.forEach((f: any) => fetch('/api/push-notify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: f.follower_id, title: profile!.full_name || profile!.username || 'Someone', body: content.trim().slice(0, 100) || 'Shared a new post', url: `/post/${postId}` }) }).catch(() => {}));
+          followers.forEach((f: any) => fetch('/api/push-notify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: f.follower_id, title: profile!.full_name || profile!.username || 'Someone', body: content.trim().slice(0, 100) || 'Shared a new post', url: `/${profile!.username}/post/${postData!.slug}` }) }).catch(() => {}));
         } catch { /* ignore */ }
       })();
       router.push('/home');

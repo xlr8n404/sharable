@@ -11,6 +11,7 @@ import PresenceProvider from "@/components/PresenceProvider";
 import MediaContextMenuBlocker from "@/components/MediaContextMenuBlocker";
 import { NavigationHistoryProvider } from "@/components/NavigationHistoryProvider";
 import { ThemeColorMeta } from "@/components/ThemeColorMeta";
+import { CacheProvider } from "@/providers/CacheProvider";
 
 
 const APP_URL = 'https://sharableofc.vercel.app';
@@ -115,9 +116,10 @@ export default function RootLayout({
       <html lang="en" suppressHydrationWarning>
         <body className="antialiased font-sans bg-background text-foreground">
         <ThemeProvider>
-          <NavigationHistoryProvider>
-          <LanguageProvider>
-            <PresenceProvider>
+          <CacheProvider>
+            <NavigationHistoryProvider>
+              <LanguageProvider>
+                <PresenceProvider>
               <Script
                 id="orchids-browser-logs"
                 src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/scripts/orchids-browser-logs.js"
@@ -178,9 +180,10 @@ export default function RootLayout({
                 <RealtimeNotifications />
                 <VisualEditsMessenger />
                 <MediaContextMenuBlocker />
-            </PresenceProvider>
-            </LanguageProvider>
-          </NavigationHistoryProvider>
+                </PresenceProvider>
+                </LanguageProvider>
+              </NavigationHistoryProvider>
+            </CacheProvider>
           </ThemeProvider>
         </body>
       </html>

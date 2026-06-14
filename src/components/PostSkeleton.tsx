@@ -25,30 +25,7 @@ export function PostSkeleton({ mediaCount }: { mediaCount?: 1 | 2 | 3 }) {
           <Skeleton className="h-4 w-3/4 bg-zinc-100 dark:bg-zinc-900" />
         </div>
 
-        {/* Media skeleton — matches real PostCard layout */}
-        <div className="mb-3 rounded-2xl overflow-hidden border border-black/5 dark:border-white/10">
-          {count === 1 && (
-            // Single: 16:9 aspect ratio (common for photos/videos)
-            <Skeleton className="w-full bg-zinc-200 dark:bg-zinc-800" style={{ aspectRatio: '16/9' }} />
-          )}
-          {count === 2 && (
-            // Two side-by-side 1:1
-            <div className="grid grid-cols-2 gap-[2px]">
-              <Skeleton className="w-full bg-zinc-200 dark:bg-zinc-800 aspect-square" />
-              <Skeleton className="w-full bg-zinc-200 dark:bg-zinc-800 aspect-square" />
-            </div>
-          )}
-          {count === 3 && (
-            // Left large, right two stacked — square container
-            <div className="grid grid-cols-2 gap-[2px]" style={{ aspectRatio: '1/1' }}>
-              <Skeleton className="bg-zinc-200 dark:bg-zinc-800" style={{ height: '100%' }} />
-              <div className="flex flex-col gap-[2px]" style={{ height: '100%' }}>
-                <Skeleton className="bg-zinc-200 dark:bg-zinc-800" style={{ flex: 1 }} />
-                <Skeleton className="bg-zinc-200 dark:bg-zinc-800" style={{ flex: 1 }} />
-              </div>
-            </div>
-          )}
-        </div>
+
 
         {/* Interaction buttons */}
         <div className="flex items-center justify-between">
