@@ -71,7 +71,7 @@ export default function PostPage() {
         }
 
         // Verify username matches
-        if (postData.user?.username !== username) {
+        if ((postData.user as any)?.username !== username) {
           setError('Post not found');
           return;
         }
