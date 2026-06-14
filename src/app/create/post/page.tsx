@@ -57,11 +57,35 @@ export default function CreatePostPage() {
   const [audience,        setAudience]        = useState<Audience>('Anyone');
   const [commentPerm,     setCommentPerm]     = useState<CommentPerm>('Anyone');
   const [reviewReplies,   setReviewReplies]   = useState(false);
+  const [viewportHeight, setViewportHeight]  = useState('100vh');
 
   const fileInputRef   = useRef<HTMLInputElement>(null);
   const audioInputRef  = useRef<HTMLInputElement>(null);
   const textareaRef    = useRef<HTMLTextAreaElement>(null);
   const headingRef     = useRef<HTMLInputElement>(null);
+
+  // ── Handle Visual Viewport for Keyboard ─────────────────────────────────────
+  useEffect(() => {
+    if (!window.visualViewport) return;
+
+    const handleResize = () => {
+      if (window.visualViewport) {
+        // Use visualViewport.height to get the actual visible area (excluding keyboard)
+        setViewportHeight(`${window.visualViewport.height}px`);
+      }
+    };
+
+    window.visualViewport.addEventListener('resize', handleResize);
+    window.visualViewport.addEventListener('scroll', handleResize);
+    
+    // Initial call
+    handleResize();
+
+    return () => {
+      window.visualViewport?.removeEventListener('resize', handleResize);
+      window.visualViewport?.removeEventListener('scroll', handleResize);
+    };
+  }, []);
 
   // ── Fetch profile ───────────────────────────────────────────────────────────
   useEffect(() => {
@@ -327,7 +351,10 @@ export default function CreatePostPage() {
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div 
+      className="bg-background text-foreground flex flex-col overflow-hidden"
+      style={{ height: viewportHeight }}
+    >
 
       {/* ─── Top bar 64px ──────────────────────────────────────────────────── */}
       <header className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center gap-3 px-4 bg-background border-b border-black/5 dark:border-white/5">
@@ -367,7 +394,7 @@ export default function CreatePostPage() {
       </header>
 
       {/* ─── Scrollable body ───────────────────────────────────────────────── */}
-      <main className="flex-1 pt-16 pb-32 px-4 overflow-y-auto">
+      <main className="flex-1 pt-16 px-4 overflow-y-auto">
         {/* Heading field */}
         {headingActive && (
           <div className="pt-4 pb-1">
@@ -450,7 +477,7 @@ export default function CreatePostPage() {
       </main>
 
       {/* ─── Bottom toolbar 64px ───────────────────────────────────────────── */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 h-16 flex items-center px-2 bg-background">
+      <div className="flex items-center px-2 bg-background border-t border-black/5 dark:border-white/5 h-16 shrink-0">
         <input ref={fileInputRef}  type="file" accept="image/*,video/*" multiple onChange={handleFileSelect} className="hidden" />
         <input ref={audioInputRef} type="file" accept="audio/*"         multiple onChange={handleFileSelect} className="hidden" />
 
