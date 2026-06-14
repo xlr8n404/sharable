@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 
 // Tracks the in-app navigation history so back() stays within the app
 // and never falls off to whatever was in the browser history before.
+// Also intercepts hardware back button on mobile to prevent app closure.
 
 const NAV_STACK_KEY = 'app_nav_stack';
 
@@ -37,6 +38,41 @@ export function NavigationHistoryProvider({ children }: { children: React.ReactN
   const pathname = usePathname();
   const router = useRouter();
   const prevPathname = useRef<string | null>(null);
+  const contextRef = useRef<NavHistoryContextValue | null>(null);
+
+  // Handle hardware back button on mobile and browser back button
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      event.preventDefault();
+      // Prevent default browser behavior and use our custom back logic
+      if (contextRef.current) {
+        contextRef.current.goBack();
+      }
+    };
+
+    // Listen for popstate (browser/hardware back button)
+    window.addEventListener('popstate', handlePopState);
+    
+    // For Android WebView, also listen for backbutton event if available
+    const handleBackButton = () => {
+      if (contextRef.current) {
+        contextRef.current.goBack();
+      }
+      return true; // Prevent default
+    };
+    
+    // Check if we're in a WebView or mobile environment
+    if ((window as any).cordova || (window as any).phonegap || (window as any).device) {
+      document.addEventListener('backbutton', handleBackButton);
+    }
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      if ((window as any).cordova || (window as any).phonegap || (window as any).device) {
+        document.removeEventListener('backbutton', handleBackButton);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const stack = getStack();
@@ -81,14 +117,22 @@ export function NavigationHistoryProvider({ children }: { children: React.ReactN
   const goBack = (fallback = '/home') => {
     const stack = getStack();
     if (stack.length > 1) {
-      router.back();
+      // Pop from our stack and navigate to the previous route
+      const newStack = stack.slice(0, stack.length - 1);
+      setStack(newStack);
+      const previousRoute = newStack[newStack.length - 1];
+      router.push(previousRoute);
     } else {
+      // If no history, go to fallback
       router.push(fallback);
     }
   };
 
+  const contextValue: NavHistoryContextValue = { goBack, canGoBack };
+  contextRef.current = contextValue;
+
   return (
-    <NavHistoryContext.Provider value={{ goBack, canGoBack }}>
+    <NavHistoryContext.Provider value={contextValue}>
       {children}
     </NavHistoryContext.Provider>
   );

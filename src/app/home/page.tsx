@@ -14,6 +14,9 @@ import { toast } from 'sonner';
 import Link from 'next/link';
 import { useScrollDirection } from '@/hooks/use-scroll-direction';
 import { sortByTrending } from '@/lib/trending';
+import { useCachedPageData } from '@/hooks/useCachedPageData';
+import { useScrollRestoration } from '@/hooks/useScrollRestoration';
+import { useCache } from '@/providers/CacheProvider';
 
 type UserPostStatus = {
   liked: Set<string>;
@@ -48,8 +51,30 @@ type Profile = {
   [key: string]: unknown;
 };
 
+type HomePageState = {
+  posts: Post[];
+  offset: number;
+  hasMore: boolean;
+  feedMode: 'trending' | 'explore' | 'following' | 'sharable' | 'communities';
+  profile: Profile | null;
+  currentUser: { id: string } | null;
+  currentUserProfile: { full_name: string; avatar_url: string; username?: string } | null;
+  userPostStatus: UserPostStatus;
+  followingIds: Set<string>;
+};
+
 export default function HomePage() {
   const router = useRouter();
+  const cache = useCache();
+  const pathname = usePathname();
+  const isVisible = useScrollDirection();
+  
+  // Restore scroll position when returning to this page
+  useScrollRestoration();
+
+  // Initialize state from cache or defaults
+  const getCacheKey = (mode: string) => `home_page_state:${mode}`;
+  
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -65,11 +90,44 @@ export default function HomePage() {
   // Track which post indices are visible (for lazy video loading)
   const [visibleIndices, setVisibleIndices] = useState<Set<number>>(new Set([0, 1, 2]));
   const postRefs = useRef<Map<number, HTMLDivElement>>(new Map());
-  const pathname = usePathname();
-  const isVisible = useScrollDirection();
 
   const observer = useRef<IntersectionObserver | null>(null);
   const visibilityObserver = useRef<IntersectionObserver | null>(null);
+
+  // Load cached state on mount
+  useEffect(() => {
+    const cacheKey = getCacheKey(feedMode);
+    const cachedState = cache.getCached<HomePageState>(cacheKey);
+    
+    if (cachedState) {
+      setPosts(cachedState.posts);
+      setOffset(cachedState.offset);
+      setHasMore(cachedState.hasMore);
+      setProfile(cachedState.profile);
+      setCurrentUser(cachedState.currentUser);
+      setCurrentUserProfile(cachedState.currentUserProfile);
+      setUserPostStatus(cachedState.userPostStatus);
+      setFollowingIds(cachedState.followingIds);
+      setLoading(false);
+    }
+  }, [feedMode, cache]);
+
+  // Save state to cache whenever it changes
+  useEffect(() => {
+    const cacheKey = getCacheKey(feedMode);
+    const state: HomePageState = {
+      posts,
+      offset,
+      hasMore,
+      feedMode,
+      profile,
+      currentUser,
+      currentUserProfile,
+      userPostStatus,
+      followingIds,
+    };
+    cache.setCached(cacheKey, state);
+  }, [posts, offset, hasMore, feedMode, profile, currentUser, currentUserProfile, userPostStatus, followingIds, cache]);
 
   const handleDeletePost = (postId: string) => {
     setPosts(prev => prev.filter(p => p.id !== postId));
@@ -339,40 +397,19 @@ export default function HomePage() {
                 }));
                 return { ...post, media_urls: urls, media_types: types, is_community_post: true };
               });
-              fetchedPosts = [...fetchedPosts, ...formattedCommunityPosts].sort((a, b) => 
-                new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-              );
+              fetchedPosts = [...fetchedPosts, ...formattedCommunityPosts];
             }
           }
         }
 
       if (isLoadMore) {
         setPosts(prev => [...prev, ...fetchedPosts]);
-        setOffset(currentOffset + PAGE_SIZE);
       } else {
         setPosts(fetchedPosts);
-        setOffset(PAGE_SIZE);
-      }
-      setHasMore(fetchedPosts.length >= PAGE_SIZE);
-
-      // After fetching posts, fetch user's interactions for these posts
-      if (user && fetchedPosts.length > 0) {
-        const postIds = fetchedPosts.filter(p => !p.is_community_post).map(p => p.id);
-        if (postIds.length > 0) {
-          const [likesRes, repostsRes, savesRes] = await Promise.all([
-            supabase.from('post_likes').select('post_id').eq('user_id', user.id).in('post_id', postIds),
-            supabase.from('reposts').select('post_id').eq('user_id', user.id).in('post_id', postIds),
-            supabase.from('saved_posts').select('post_id').eq('user_id', user.id).in('post_id', postIds),
-          ]);
-
-          setUserPostStatus(prev => ({
-            liked: new Set([...prev.liked, ...(likesRes.data?.map(l => l.post_id) || [])]),
-            reposted: new Set([...prev.reposted, ...(repostsRes.data?.map(r => r.post_id) || [])]),
-            saved: new Set([...prev.saved, ...(savesRes.data?.map(s => s.post_id) || [])]),
-          }));
-        }
       }
 
+      // Determine if there are more posts to load
+      setHasMore(fetchedPosts.length === PAGE_SIZE);
     } catch (error) {
       console.error('Error fetching posts:', error);
       toast.error('Failed to load posts');
@@ -382,121 +419,72 @@ export default function HomePage() {
     }
   }, [currentUser, profile]);
 
+  // Fetch posts on mount or when feed mode changes
   useEffect(() => {
-    fetchPosts(0, feedMode);
-  }, [feedMode, fetchPosts]);
+    // Only fetch if we don't have cached data
+    if (posts.length === 0) {
+      fetchPosts(0, feedMode, false);
+    }
+  }, [feedMode, posts.length, fetchPosts]);
 
-  // Set up realtime listener for new posts
-  useEffect(() => {
-      const channel = supabase
-        .channel('public:posts')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'posts'
-        }, (payload) => {
-          if (payload.eventType === 'INSERT') {
-            // When a new post is added, refresh the first page
-            fetchPosts(0, feedMode);
-          } else if (payload.eventType === 'DELETE') {
-            // Remove deleted post from state
-            setPosts(prev => prev.filter(p => p.id !== payload.old.id));
-          } else if (payload.eventType === 'UPDATE') {
-            // Update modified post in state, then re-sort if in trending mode
-            setPosts(prev => {
-              const updated = prev.map(p => p.id === payload.new.id ? { ...p, ...payload.new } : p);
-              return feedMode === 'trending' ? sortByTrending([...updated]) : updated;
-            });
-          }
-        })
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }, [feedMode, fetchPosts]);
-
-  const loadMorePosts = useCallback(() => {
-    if (loadingMore || !hasMore) return;
-    fetchPosts(offset, feedMode, true);
-  }, [loadingMore, hasMore, offset, feedMode, fetchPosts]);
+  const handleLoadMore = useCallback(() => {
+    if (!loading && !loadingMore && hasMore) {
+      const newOffset = offset + PAGE_SIZE;
+      setOffset(newOffset);
+      fetchPosts(newOffset, feedMode, true);
+    }
+  }, [loading, loadingMore, hasMore, offset, feedMode, fetchPosts]);
 
   const lastPostRef = useCallback((node: HTMLDivElement | null) => {
-    if (loading || loadingMore) return;
     if (observer.current) observer.current.disconnect();
 
     observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
-        loadMorePosts();
+      if (entries[0].isIntersecting && hasMore && !loading && !loadingMore) {
+        handleLoadMore();
       }
     });
 
     if (node) observer.current.observe(node);
-  }, [loading, loadingMore, hasMore, loadMorePosts]);
-
-  const avatarSrc = profile?.avatar_url
-    ? (profile.avatar_url.startsWith('http')
-        ? (() => { const m = profile.avatar_url.match(/\/storage\/v1\/object\/public\/([^/]+)\/(.+)/); return m ? `/api/media/${m[1]}/${m[2]}` : profile.avatar_url; })()
-        : `/api/media/avatars/${profile.avatar_url}`)
-    : null;
+  }, [hasMore, loading, loadingMore, handleLoadMore]);
 
   return (
-    <div
-      className="min-h-screen bg-background text-foreground selection:bg-black dark:selection:bg-white selection:text-white dark:selection:text-black"
-    >
-      <MainMenu
-        open={mainMenuOpen}
-        onClose={() => setMainMenuOpen(false)}
-        avatarSrc={avatarSrc}
-        feedMode={feedMode}
-        onFeedModeChange={(mode) => setFeedMode(mode)}
-      />
-
-        <header className={`fixed top-0 left-0 right-0 h-16 z-50 px-4 bg-white dark:bg-black transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-        <div className="h-full flex items-center justify-between">
-          {/* Left: Settings */}
+    <div className="flex flex-col min-h-screen bg-background">
+      <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="flex items-center justify-between px-4 py-3">
+          <h1 className="text-xl font-bold">Sharable</h1>
           <button
-            onClick={() => setMainMenuOpen(true)}
-            className="p-2 text-foreground hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors"
+            onClick={() => setMainMenuOpen(!mainMenuOpen)}
+            className="p-2 hover:bg-accent rounded-lg transition-colors"
           >
-            <Settings2 size={24} strokeWidth={1.5} />
-          </button>
-
-          {/* Center: Share */}
-          <div className="flex-1 flex items-center justify-center">
-            <Share2 size={24} strokeWidth={1.5} className="text-foreground" />
-          </div>
-
-          {/* Right: Messages */}
-          <button
-            onClick={() => router.push('/messages')}
-            className="p-2 text-foreground hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors"
-          >
-            <MessageCircle size={24} strokeWidth={1.5} />
+            <Settings2 size={20} />
           </button>
         </div>
+
+        {/* Feed Mode Selector */}
+        <div className="flex gap-2 px-4 py-2 overflow-x-auto scrollbar-hide">
+          {(['explore', 'trending', 'following', 'sharable', 'communities'] as const).map(mode => (
+            <button
+              key={mode}
+              onClick={() => {
+                setFeedMode(mode);
+                setOffset(0);
+              }}
+              className={`px-4 py-2 rounded-full whitespace-nowrap transition-colors ${
+                feedMode === mode
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+              }`}
+            >
+              {mode.charAt(0).toUpperCase() + mode.slice(1)}
+            </button>
+          ))}
+        </div>
+
+        {mainMenuOpen && <MainMenu onClose={() => setMainMenuOpen(false)} />}
       </header>
 
-      <main
-        className="w-full pt-16 pb-20"
-      >
-        <div className="px-4 py-4 flex items-center gap-3">
-          <div className="shrink-0 w-10 h-10 rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
-            {avatarSrc ? (
-              <img src={avatarSrc} alt="Profile" className="w-full h-full object-cover" />
-            ) : (
-              <UserCircle size={28} strokeWidth={1} className="text-zinc-400 dark:text-zinc-600" />
-            )}
-          </div>
-          <Link
-            href="/create/post"
-            className="flex-1 h-11 bg-zinc-100 dark:bg-zinc-900 rounded-full flex items-center px-5 text-zinc-500 text-[15px] font-medium hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
-          >
-            Anything sharable today?
-          </Link>
-        </div>
-
-        <div className="flex flex-col">
+      <main className="flex-1 max-w-2xl mx-auto w-full">
+        <div className="divide-y divide-border">
           {posts.map((post, index) => (
             <div
               key={post.id}

@@ -12,6 +12,7 @@ import MediaContextMenuBlocker from "@/components/MediaContextMenuBlocker";
 import { NavigationHistoryProvider } from "@/components/NavigationHistoryProvider";
 import { ThemeColorMeta } from "@/components/ThemeColorMeta";
 import { CacheProvider } from "@/providers/CacheProvider";
+import { BackButtonHandler } from "@/components/BackButtonHandler";
 
 
 const APP_URL = 'https://sharableofc.vercel.app';
@@ -118,6 +119,7 @@ export default function RootLayout({
         <ThemeProvider>
           <CacheProvider>
             <NavigationHistoryProvider>
+              <BackButtonHandler />
               <LanguageProvider>
                 <PresenceProvider>
               <Script
