@@ -2,10 +2,10 @@
 
 import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Settings, Settings2, LogOut, Plus, Home, Bell, UserCircle, PlusSquare, Moon, Sun, BookOpen, Users, UserPlus, MessageCircle } from 'lucide-react';
+import { Search, Settings, Settings2, LogOut, Plus, Home, Bell, UserCircle, PlusSquare, Moon, Sun, BookOpen, UserPlus, MessageCircle } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
 interface MainMenuProps {
@@ -13,7 +13,7 @@ interface MainMenuProps {
   onClose: () => void;
   avatarSrc: string | null;
   feedMode?: string;
-  onFeedModeChange?: (mode: 'trending' | 'explore' | 'following' | 'sharable' | 'communities') => void;
+  onFeedModeChange?: (mode: 'explore' | 'following') => void;
 }
 
 export function MainMenu({ open, onClose, avatarSrc, feedMode, onFeedModeChange }: MainMenuProps) {
@@ -22,7 +22,6 @@ export function MainMenu({ open, onClose, avatarSrc, feedMode, onFeedModeChange 
   const { theme, setTheme } = useTheme();
   const [alertsEnabled, setAlertsEnabled] = useState(true);
 
-  // Prevent background scroll when menu is open
   useEffect(() => {
     if (open) {
       document.body.style.overflow = 'hidden';
@@ -59,9 +58,7 @@ export function MainMenu({ open, onClose, avatarSrc, feedMode, onFeedModeChange 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="absolute top-0 left-0 h-full w-[85%] max-w-[320px] bg-background shadow-2xl flex flex-col"
           >
-            {/* ── FULLY SCROLLABLE ── */}
             <div className="flex-1 overflow-y-auto">
-
               {/* Search bar */}
               <div className="h-16 flex items-center px-3">
                 <div
@@ -79,7 +76,7 @@ export function MainMenu({ open, onClose, avatarSrc, feedMode, onFeedModeChange 
                 </div>
               </div>
 
-              {/* Explore / Following pills (only on home feed) */}
+              {/* Explore / Following pills */}
               {onFeedModeChange && (
                 <div className="h-16 flex items-center gap-3 px-4">
                   <button
@@ -159,7 +156,7 @@ export function MainMenu({ open, onClose, avatarSrc, feedMode, onFeedModeChange 
                 <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-600">Shortcuts</p>
               </div>
 
-              {/* 1. Alerts toggle */}
+              {/* Alerts toggle */}
               <div className="mx-4 mb-2 px-4 py-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -180,7 +177,7 @@ export function MainMenu({ open, onClose, avatarSrc, feedMode, onFeedModeChange 
                 </div>
               </div>
 
-              {/* 2. Dark Mode toggle */}
+              {/* Dark Mode toggle */}
               <div className="mx-4 mb-2 px-4 py-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -204,7 +201,7 @@ export function MainMenu({ open, onClose, avatarSrc, feedMode, onFeedModeChange 
                 </div>
               </div>
 
-              {/* 3. Connect */}
+              {/* Connect */}
               <button
                 onClick={() => { onClose(); router.push('/connect'); }}
                 className="mx-4 mb-2 w-[calc(100%-2rem)] px-4 py-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center gap-3 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all text-left"
@@ -218,7 +215,7 @@ export function MainMenu({ open, onClose, avatarSrc, feedMode, onFeedModeChange 
                 </div>
               </button>
 
-              {/* 4. Stories */}
+              {/* Stories */}
               <button
                 onClick={() => { onClose(); router.push('/stories'); }}
                 className="mx-4 mb-2 w-[calc(100%-2rem)] px-4 py-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center gap-3 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all text-left"
@@ -232,7 +229,7 @@ export function MainMenu({ open, onClose, avatarSrc, feedMode, onFeedModeChange 
                 </div>
               </button>
 
-              {/* 5. Messages */}
+              {/* Messages */}
               <button
                 onClick={() => { onClose(); router.push('/messages'); }}
                 className="mx-4 mb-2 w-[calc(100%-2rem)] px-4 py-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center gap-3 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all text-left"
@@ -246,21 +243,7 @@ export function MainMenu({ open, onClose, avatarSrc, feedMode, onFeedModeChange 
                 </div>
               </button>
 
-              {/* 6. Communities */}
-              <button
-                onClick={() => { onClose(); router.push('/communities'); }}
-                className="mx-4 mb-2 w-[calc(100%-2rem)] px-4 py-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center gap-3 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all text-left"
-              >
-                <div className="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center shrink-0">
-                  <Users size={18} className="text-purple-600 dark:text-purple-400" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Communities</p>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Join &amp; explore communities</p>
-                </div>
-              </button>
-
-              {/* 7. Settings & More */}
+              {/* Settings & More */}
               <button
                 onClick={() => { onClose(); router.push('/settings'); }}
                 className="mx-4 mb-2 w-[calc(100%-2rem)] px-4 py-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center gap-3 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all text-left"
@@ -274,22 +257,19 @@ export function MainMenu({ open, onClose, avatarSrc, feedMode, onFeedModeChange 
                 </div>
               </button>
 
-              {/* 8. Log out */}
+              {/* Log out */}
               <button
                 onClick={handleLogout}
-                className="mx-4 mb-2 w-[calc(100%-2rem)] px-4 py-4 rounded-2xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 hover:bg-red-100 dark:hover:bg-red-950/40 transition-all flex items-center gap-3 text-left"
+                className="mx-4 mb-6 w-[calc(100%-2rem)] px-4 py-4 rounded-2xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 hover:bg-red-100 dark:hover:bg-red-950/40 transition-all text-left flex items-center gap-3"
               >
                 <div className="w-9 h-9 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0">
                   <LogOut size={18} className="text-red-600 dark:text-red-400" />
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-red-600 dark:text-red-400">Log out</p>
-                  <p className="text-xs text-red-400 dark:text-red-600 mt-0.5">Sign out of your account</p>
+                  <p className="text-xs text-red-500/70 dark:text-red-400/50 mt-0.5">Exit your account</p>
                 </div>
               </button>
-
-              {/* Bottom spacer */}
-              <div className="h-6 shrink-0" />
             </div>
           </motion.div>
         </div>
