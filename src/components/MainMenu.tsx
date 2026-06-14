@@ -41,7 +41,7 @@ export function MainMenu({ open, onClose, avatarSrc, feedMode, onFeedModeChange 
   return (
     <AnimatePresence>
       {open && (
-        <div key="main-menu-overlay" className="fixed inset-0 z-[70]">
+        <div key="main-menu-overlay" className="fixed inset-0 z-[100]">
           <motion.div
             key="main-menu-backdrop"
             initial={{ opacity: 0 }}
@@ -67,12 +67,6 @@ export function MainMenu({ open, onClose, avatarSrc, feedMode, onFeedModeChange 
                 >
                   <Search size={24} strokeWidth={1.5} className="text-zinc-400 shrink-0" />
                   <span className="flex-1 px-2 text-sm text-zinc-400 select-none">Search Sharable</span>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onClose(); router.push('/settings'); }}
-                    className="p-1 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors shrink-0"
-                  >
-                    <Settings2 size={24} strokeWidth={1.5} className="text-zinc-400" />
-                  </button>
                 </div>
               </div>
 

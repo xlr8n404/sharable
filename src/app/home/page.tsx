@@ -380,22 +380,23 @@ export default function HomePage() {
           </Link>
         </div>
 
-        {mainMenuOpen && (
-          <MainMenu 
-            open={mainMenuOpen} 
-            onClose={() => setMainMenuOpen(false)} 
-            avatarSrc={currentUserProfile?.avatar_url || null} 
-            feedMode={feedMode} 
-            onFeedModeChange={(mode) => {
-              if (mode === 'explore' || mode === 'following') {
-                setFeedMode(mode);
-                setOffset(0);
-                setPosts([]);
-              }
-            }} 
-          />
-        )}
       </header>
+
+      {mainMenuOpen && (
+        <MainMenu 
+          open={mainMenuOpen} 
+          onClose={() => setMainMenuOpen(false)} 
+          avatarSrc={currentUserProfile?.avatar_url || null} 
+          feedMode={feedMode} 
+          onFeedModeChange={(mode) => {
+            if (mode === 'explore' || mode === 'following') {
+              setFeedMode(mode);
+              setOffset(0);
+              setPosts([]);
+            }
+          }} 
+        />
+      )}
 
       <main className="flex-1 max-w-2xl mx-auto w-full">
         <div className="divide-y divide-border">
