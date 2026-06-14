@@ -33,6 +33,7 @@ interface PostCardProps {
   id: string;
   user_id?: string;
   post_number?: number;
+  slug?: string;
   user: {
     full_name: string;
     avatar_url?: string | null;
@@ -428,10 +429,13 @@ export function PostCard({
     }
   };
 
-    const generateShareLink = () => {
-      if (typeof window === 'undefined') return '';
-      return `${window.location.origin}/post/${id}`;
-    };
+const generateShareLink = () => {
+  if (typeof window === 'undefined') return '';
+  if (slug && user.username) {
+    return `${window.location.origin}/${user.username}/post/${slug}`;
+  }
+  return `${window.location.origin}/post/${id}`;
+};
 
     const handleSharePost = async () => {
       const shareLink = generateShareLink();
