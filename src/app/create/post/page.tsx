@@ -763,7 +763,15 @@ export default function CreatePostPage() {
             {/* Handle */}
             <div className="w-10 h-1 rounded-full bg-black/20 dark:bg-white/20 mx-auto mb-4" />
             
-            <h3 className="text-[18px] font-bold mb-6">Add location</h3>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-[18px] font-bold">Add location</h3>
+              <button
+                onClick={() => setShowLocation(false)}
+                className="px-5 py-1.5 rounded-full bg-black dark:bg-white text-white dark:text-black font-bold text-[14px] active:scale-95 transition-transform"
+              >
+                Done
+              </button>
+            </div>
 
             {/* Search Bar */}
             <div className="mb-4">
@@ -778,13 +786,17 @@ export default function CreatePostPage() {
 
             {/* Location Display */}
             {location && (
-              <div className="mb-4 p-3 bg-zinc-100 dark:bg-zinc-900 rounded-xl">
+              <div className="mb-4 p-3 bg-zinc-100 dark:bg-zinc-900 rounded-xl flex items-center justify-between">
                 <p className="text-[14px] font-medium">{location}</p>
                 <button
-                  onClick={() => setLocation('')}
-                  className="text-[12px] text-zinc-500 hover:text-foreground mt-1"
+                  onClick={() => {
+                    setLocation('');
+                    setSelectedCoords(null);
+                  }}
+                  className="p-1.5 rounded-full text-zinc-500 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                  title="Clear location"
                 >
-                  Clear
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             )}
@@ -844,12 +856,6 @@ export default function CreatePostPage() {
               )}
             </div>
 
-            <button
-              onClick={() => setShowLocation(false)}
-              className="w-full h-12 rounded-xl bg-black dark:bg-white text-white dark:text-black font-bold text-[15px] active:scale-95 transition-transform mt-4"
-            >
-              Done
-            </button>
           </div>
         </div>
       )}
