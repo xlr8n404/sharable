@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Heart, MessageCircle, Share2, MoreHorizontal, Trash2, Bookmark, Copy, Repeat, CornerRightDown, Settings2, Play, MapPin } from 'lucide-react';
+import { Heart, MessageCircle, Share2, MoreHorizontal, Trash2, Bookmark, Copy, Repeat, CornerRightDown, Settings2, Play, MapPin, Send, X } from 'lucide-react';
 import { Loader } from '@/components/ui/loader';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
@@ -1499,6 +1499,19 @@ const generateShareLink = () => {
   {/* Grabber — 8px below top border */}
   <div className="w-12 h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full mx-auto mt-3 mb-2 shrink-0" />
   
+  {/* Comment Sheet Header — Title and Close */}
+                                <div className="shrink-0 px-4 py-3 border-b border-black/5 dark:border-white/5">
+                                  <div className="flex items-center justify-between">
+                                    <h3 className="text-lg font-bold">Comments</h3>
+                                    <button
+                                      onClick={() => setShowComments(false)}
+                                      className="p-1 hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors"
+                                    >
+                                      <X className="w-6 h-6" strokeWidth={1.5} />
+                                    </button>
+                                  </div>
+                                </div>
+
   {/* Comment Sheet Header — interactions row */}
                                 <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-black/5 dark:border-white/5">
                                     {/* Left: Like+count, Comment+count, Share */}
@@ -1661,29 +1674,31 @@ const generateShareLink = () => {
                               />
                             </div>
                           )}
-                          <textarea
-                            ref={commentInputRef}
-                            rows={1}
-                            value={newComment}
-                            onChange={handleCommentChange}
-                            placeholder={replyingTo ? `Reply to ${replyingTo.name}...` : 'Add a comment...'}
-                            className="flex-1 bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white px-4 py-3 rounded-2xl text-[16px] outline-none placeholder-zinc-500 resize-none min-h-[40px] max-h-32 leading-snug overflow-y-auto"
-                          />
-                          <button
-                            onClick={handleSubmitComment}
-                            disabled={submittingComment || !newComment.trim()}
-                            className={`px-6 py-2 rounded-full font-medium transition-colors flex-shrink-0 text-sm ${
-                              submittingComment || !newComment.trim()
-                                ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-600'
-                                : 'bg-black dark:bg-white text-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-200'
-                            }`}
-                          >
-                            {submittingComment ? (
-                              <Loader centered={false} className="text-current" />
-                            ) : (
-                              'Send'
-                            )}
-                          </button>
+                          <div className="flex-1 flex items-end gap-2 bg-zinc-200 dark:bg-zinc-800 rounded-full px-4 py-2">
+                            <textarea
+                              ref={commentInputRef}
+                              rows={1}
+                              value={newComment}
+                              onChange={handleCommentChange}
+                              placeholder={replyingTo ? `Reply to ${replyingTo.name}...` : 'Add a comment...'}
+                              className="flex-1 bg-transparent text-black dark:text-white text-[16px] outline-none placeholder-zinc-500 resize-none min-h-[40px] max-h-[calc(1.5em*3)] leading-snug overflow-y-auto"
+                            />
+                            <button
+                              onClick={handleSubmitComment}
+                              disabled={submittingComment || !newComment.trim()}
+                              className={`p-2 rounded-full transition-colors flex-shrink-0 flex items-center justify-center ${
+                                submittingComment || !newComment.trim()
+                                  ? 'bg-zinc-300 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-500'
+                                  : 'bg-black dark:bg-white text-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-200'
+                              }`}
+                            >
+                              {submittingComment ? (
+                                <Loader centered={false} className="text-current w-5 h-5" />
+                              ) : (
+                                <Send className="w-5 h-5" strokeWidth={1.5} />
+                              )}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </motion.div>
