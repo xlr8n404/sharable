@@ -340,12 +340,10 @@ export default function CreatePostPage() {
       <div className="min-h-screen bg-background flex flex-col">
         {/* Top bar skeleton */}
         <header className="h-16 flex items-center justify-between px-4 border-b border-black/5 dark:border-white/5">
-          {/* Left side: back icon (24px) + gap (8px) + profile photo (40px) + gap (8px) + name (16px height, 80px width) */}
-          <div className="flex items-center gap-2">
+          {/* Left side: back icon (24px) + gap (4px) + profile photo (40px) + gap (4px) + name (16px height, 80px width) */}
+          <div className="flex items-center gap-1">
             <Skeleton className="w-6 h-6 rounded-md bg-zinc-200 dark:bg-zinc-800" />
-            <div className="w-2" />
             <Skeleton className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-800" />
-            <div className="w-2" />
             <Skeleton className="h-4 w-20 rounded-md bg-zinc-200 dark:bg-zinc-800" />
           </div>
           {/* Right side: Post button skeleton */}
@@ -374,7 +372,7 @@ export default function CreatePostPage() {
     >
 
       {/* ─── Top bar 64px ──────────────────────────────────────────────────── */}
-      <header className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center gap-3 px-4 bg-background border-b border-black/5 dark:border-white/5">
+      <header className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center gap-1 px-4 bg-background border-b border-black/5 dark:border-white/5">
         {/* Back arrow 24px */}
         <button
           onClick={() => goBack()}
@@ -394,7 +392,10 @@ export default function CreatePostPage() {
         </div>
 
         {/* Full name */}
-        <span className="flex-1 text-[15px] font-semibold truncate">{profile?.full_name}</span>
+        <span className="text-[15px] font-semibold truncate w-20">{profile?.full_name}</span>
+
+        {/* Spacer */}
+        <div className="flex-1" />
 
         {/* Post pill button */}
         <button
