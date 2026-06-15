@@ -98,11 +98,11 @@ export function MainMenu({ open, onClose, avatarSrc, feedMode, onFeedModeChange 
 
               {/* Post create shortcut */}
               <div className="h-16 flex items-center gap-3 px-4">
-                <div className="shrink-0 w-10 h-10 rounded-full overflow-hidden bg-zinc-300 dark:bg-zinc-700 flex items-center justify-center">
+                <div className="shrink-0 w-10 h-10 rounded-full overflow-hidden bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center border border-zinc-300 dark:border-zinc-700">
                   {avatarSrc ? (
                     <img src={avatarSrc} alt="Profile" className="w-full h-full object-cover" />
                   ) : (
-                    <UserCircle size={28} strokeWidth={1} className="text-zinc-500 dark:text-zinc-400" />
+                    <UserCircle size={24} strokeWidth={1.5} className="text-zinc-500 dark:text-zinc-400" />
                   )}
                 </div>
                 <Link

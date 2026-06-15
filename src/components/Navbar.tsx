@@ -76,7 +76,7 @@ export function Navbar() {
           href="/profile"
           className="flex items-center justify-center w-10 h-10 rounded-full overflow-hidden hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
         >
-          <div className="w-8 h-8 rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center border border-zinc-300 dark:border-zinc-700">
             {userAvatarUrl && !showFallback ? (
               <img
                 src={userAvatarUrl}
@@ -85,7 +85,7 @@ export function Navbar() {
                 onError={handleImageError}
               />
             ) : (
-              <UserCircle className="w-5 h-5 text-zinc-600 dark:text-zinc-400" strokeWidth={1.5} />
+              <UserCircle className="w-6 h-6 text-zinc-600 dark:text-zinc-400" strokeWidth={1.5} />
             )}
           </div>
         </Link>
