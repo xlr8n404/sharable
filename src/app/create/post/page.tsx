@@ -340,11 +340,13 @@ export default function CreatePostPage() {
       <div className="min-h-screen bg-background flex flex-col">
         {/* Top bar skeleton */}
         <header className="h-16 flex items-center justify-between px-4 border-b border-black/5 dark:border-white/5">
-          {/* Left side: back icon (24px) + gap (8px) + profile photo (40px) */}
+          {/* Left side: back icon (24px) + gap (8px) + profile photo (40px) + gap (8px) + name (16px height, 80px width) */}
           <div className="flex items-center gap-2">
             <Skeleton className="w-6 h-6 rounded-md bg-zinc-200 dark:bg-zinc-800" />
             <div className="w-2" />
             <Skeleton className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-800" />
+            <div className="w-2" />
+            <Skeleton className="h-4 w-20 rounded-md bg-zinc-200 dark:bg-zinc-800" />
           </div>
           {/* Right side: Post button skeleton */}
           <Skeleton className="h-9 w-16 rounded-full bg-zinc-200 dark:bg-zinc-800" />

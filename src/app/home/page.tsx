@@ -165,14 +165,19 @@ export default function HomePage() {
 
       if (!currentUser) setCurrentUser(user);
 
-      if (user && !profile && !isLoadMore) {
-        const [profileRes, followsRes, userProfileRes] = await Promise.all([
+      if (user && !isLoadMore) {
+        const [profileRes, followsRes] = await Promise.all([
           supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
           supabase.from('follows').select('following_id').eq('follower_id', user.id),
-          supabase.from('profiles').select('full_name, avatar_url, username').eq('id', user.id).maybeSingle(),
         ]);
-        if (profileRes.data) setProfile(profileRes.data);
-        if (userProfileRes.data) setCurrentUserProfile(userProfileRes.data);
+        if (profileRes.data) {
+          setProfile(profileRes.data);
+          setCurrentUserProfile({
+            full_name: profileRes.data.full_name || '',
+            avatar_url: profileRes.data.avatar_url || '',
+            username: profileRes.data.username || '',
+          });
+        }
         if (followsRes.data) {
           setFollowingIds(new Set(followsRes.data.map((f: any) => f.following_id)));
         }
@@ -343,44 +348,43 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <header className="fixed top-0 left-0 right-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-white dark:bg-zinc-950 border-b border-black/5 dark:border-white/5">
         <div className="flex items-center justify-between px-4 h-16">
           <button
             onClick={() => setMainMenuOpen(true)}
             className="p-2 hover:bg-accent rounded-lg transition-colors"
           >
-            <Settings2 size={24} strokeWidth={1.5} className="text-zinc-500" />
+            <Settings2 size={24} strokeWidth={1.5} className="text-zinc-500 dark:text-zinc-400" />
           </button>
           <div className="flex items-center gap-2">
-            <Share2 size={24} strokeWidth={2} className="text-primary" />
+            <Share2 size={24} strokeWidth={2} className="text-zinc-500 dark:text-zinc-400" />
           </div>
           <button
             onClick={() => router.push('/messages')}
             className="p-2 hover:bg-accent rounded-lg transition-colors"
           >
-            <MessageCircle size={24} strokeWidth={1.5} className="text-zinc-500" />
+            <MessageCircle size={24} strokeWidth={1.5} className="text-zinc-500 dark:text-zinc-400" />
           </button>
         </div>
-
-        {/* Post create shortcut */}
-        <div className="h-16 flex items-center gap-3 px-4">
-          <div className="shrink-0 w-10 h-10 rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
-            {currentUserProfile?.avatar_url ? (
-              <img src={currentUserProfile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
-            ) : (
-              <UserCircle size={28} strokeWidth={1} className="text-zinc-500 dark:text-zinc-400" />
-            )}
-          </div>
-          <Link
-            href="/create/post"
-            className="flex-1 flex items-center justify-between h-11 bg-zinc-100 dark:bg-zinc-900 rounded-full px-4 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all"
-          >
-            <span className="text-sm font-medium text-zinc-500 dark:text-zinc-400 truncate">Anything sharable today?</span>
-            <Plus size={18} className="text-zinc-500 dark:text-zinc-400 shrink-0 ml-2" />
-          </Link>
-        </div>
-
       </header>
+
+      {/* Post create shortcut - Fixed below topbar */}
+      <div className="fixed top-16 left-0 right-0 z-30 bg-white dark:bg-zinc-950 border-b border-black/5 dark:border-white/5 h-16 flex items-center gap-3 px-4">
+        {currentUserProfile?.avatar_url ? (
+          <img src={currentUserProfile.avatar_url} alt="Profile" className="shrink-0 w-10 h-10 rounded-full object-cover" />
+        ) : (
+          <div className="shrink-0 w-10 h-10 rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
+            <UserCircle size={28} strokeWidth={1} className="text-zinc-500 dark:text-zinc-400" />
+          </div>
+        )}
+        <Link
+          href="/create/post"
+          className="flex-1 flex items-center justify-between h-11 bg-zinc-100 dark:bg-zinc-900 rounded-full px-4 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all"
+        >
+          <span className="text-sm font-medium text-zinc-500 dark:text-zinc-400 truncate">Anything sharable today?</span>
+          <Plus size={18} className="text-zinc-500 dark:text-zinc-400 shrink-0 ml-2" />
+        </Link>
+      </div>
 
       {mainMenuOpen && (
         <MainMenu 
@@ -398,7 +402,7 @@ export default function HomePage() {
         />
       )}
 
-      <main className="flex-1 max-w-2xl mx-auto w-full pt-16">
+      <main className="flex-1 max-w-2xl mx-auto w-full pt-32">
         <div className="divide-y divide-border">
           {posts.map((post, index) => (
             <div
