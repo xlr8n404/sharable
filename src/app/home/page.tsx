@@ -368,23 +368,7 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* Post create shortcut - Fixed below topbar */}
-      <div className="fixed top-16 left-0 right-0 z-30 bg-white dark:bg-zinc-950 border-b border-black/5 dark:border-white/5 h-16 flex items-center gap-3 px-4">
-        {currentUserProfile?.avatar_url ? (
-          <img src={currentUserProfile.avatar_url} alt="Profile" className="shrink-0 w-10 h-10 rounded-full object-cover" />
-        ) : (
-          <div className="shrink-0 w-10 h-10 rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
-            <UserCircle size={28} strokeWidth={1} className="text-zinc-500 dark:text-zinc-400" />
-          </div>
-        )}
-        <Link
-          href="/create/post"
-          className="flex-1 flex items-center justify-between h-11 bg-zinc-100 dark:bg-zinc-900 rounded-full px-4 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all"
-        >
-          <span className="text-sm font-medium text-zinc-500 dark:text-zinc-400 truncate">Anything sharable today?</span>
-          <Plus size={18} className="text-zinc-500 dark:text-zinc-400 shrink-0 ml-2" />
-        </Link>
-      </div>
+
 
       {mainMenuOpen && (
         <MainMenu 
@@ -402,8 +386,25 @@ export default function HomePage() {
         />
       )}
 
-      <main className="flex-1 max-w-2xl mx-auto w-full pt-32">
-        <div className="divide-y divide-border">
+      <main className="flex-1 max-w-2xl mx-auto w-full pt-16">
+        {/* Post create shortcut */}
+        <div className="h-16 flex items-center gap-3 px-4 bg-background border-b border-black/5 dark:border-white/5">
+          {currentUserProfile?.avatar_url ? (
+            <img src={currentUserProfile.avatar_url} alt="Profile" className="shrink-0 w-10 h-10 rounded-full object-cover" />
+          ) : (
+            <div className="shrink-0 w-10 h-10 rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
+              <UserCircle size={28} strokeWidth={1} className="text-zinc-500 dark:text-zinc-400" />
+            </div>
+          )}
+          <Link
+            href="/create/post"
+            className="flex-1 flex items-center justify-between h-11 bg-zinc-100 dark:bg-zinc-900 rounded-full px-4 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all"
+          >
+            <span className="text-sm font-medium text-zinc-500 dark:text-zinc-400 truncate">Anything sharable today?</span>
+            <Plus size={18} className="text-zinc-500 dark:text-zinc-400 shrink-0 ml-2" />
+          </Link>
+        </div>
+        <div className="divide-y divide-border mt-0">
           {posts.map((post, index) => (
             <div
               key={post.id}
