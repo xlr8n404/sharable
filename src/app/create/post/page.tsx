@@ -337,14 +337,29 @@ export default function CreatePostPage() {
   // ── Loading skeleton ────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <header className="h-16 flex items-center justify-between px-4">
-          <div className="flex items-center gap-3">
+      <div className="min-h-screen bg-background flex flex-col">
+        {/* Top bar skeleton */}
+        <header className="h-16 flex items-center justify-between px-4 border-b border-black/5 dark:border-white/5">
+          {/* Left side: back icon (24px) + gap (8px) + profile photo (40px) */}
+          <div className="flex items-center gap-2">
+            <Skeleton className="w-6 h-6 rounded-md bg-zinc-200 dark:bg-zinc-800" />
+            <div className="w-2" />
             <Skeleton className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-800" />
-            <Skeleton className="h-4 w-24 bg-zinc-100 dark:bg-zinc-900" />
           </div>
-          <Skeleton className="h-9 w-20 rounded-full bg-zinc-200 dark:bg-zinc-800" />
+          {/* Right side: Post button skeleton */}
+          <Skeleton className="h-9 w-16 rounded-full bg-zinc-200 dark:bg-zinc-800" />
         </header>
+
+        {/* Main content area - spacer */}
+        <div className="flex-1" />
+
+        {/* Bottom bar skeleton */}
+        <div className="flex items-center justify-between px-4 h-16 border-t border-black/5 dark:border-white/5">
+          {/* Left side: 24px height, 160px width */}
+          <Skeleton className="h-6 w-40 rounded-md bg-zinc-200 dark:bg-zinc-800" />
+          {/* Right side: 24px height, 80px width */}
+          <Skeleton className="h-6 w-20 rounded-md bg-zinc-200 dark:bg-zinc-800" />
+        </div>
       </div>
     );
   }
