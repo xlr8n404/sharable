@@ -1,0 +1,6 @@
+Contact: security@sharable.com
+Expires: 2026-06-15T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://sharable.com/.well-known/security.txt
+Policy: https://sharable.com/security-policy
+Acknowledgments: https://sharable.com/security-acknowledgments
