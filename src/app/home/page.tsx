@@ -343,7 +343,7 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex items-center justify-between px-4 h-16">
           <button
             onClick={() => setMainMenuOpen(true)}
@@ -363,7 +363,7 @@ export default function HomePage() {
         </div>
 
         {/* Post create shortcut */}
-        <div className="h-16 flex items-center gap-3 px-4 border-t border-border">
+        <div className="h-16 flex items-center gap-3 px-4">
           <div className="shrink-0 w-10 h-10 rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
             {currentUserProfile?.avatar_url ? (
               <img src={currentUserProfile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
@@ -398,7 +398,7 @@ export default function HomePage() {
         />
       )}
 
-      <main className="flex-1 max-w-2xl mx-auto w-full">
+      <main className="flex-1 max-w-2xl mx-auto w-full pt-16">
         <div className="divide-y divide-border">
           {posts.map((post, index) => (
             <div
