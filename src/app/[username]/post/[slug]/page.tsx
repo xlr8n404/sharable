@@ -70,8 +70,9 @@ export default function PostPage() {
           return;
         }
 
-        // Verify username matches
-        if ((postData.user as any)?.username !== username) {
+        // Verify username matches - user might be an array from the join
+        const userData = Array.isArray(postData.user) ? postData.user[0] : postData.user;
+        if (userData?.username !== username) {
           setError('Post not found');
           return;
         }

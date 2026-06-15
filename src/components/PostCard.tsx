@@ -1500,19 +1500,6 @@ const generateShareLink = () => {
   {/* Grabber — 8px below top border */}
   <div className="w-12 h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full mx-auto mt-3 mb-2 shrink-0" />
   
-  {/* Comment Sheet Header — Title and Close */}
-                                <div className="shrink-0 px-4 py-3 border-b border-black/5 dark:border-white/5">
-                                  <div className="flex items-center justify-between">
-                                    <h3 className="text-lg font-bold">Comments</h3>
-                                    <button
-                                      onClick={() => setShowComments(false)}
-                                      className="p-1 hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors"
-                                    >
-                                      <X className="w-6 h-6" strokeWidth={1.5} />
-                                    </button>
-                                  </div>
-                                </div>
-
   {/* Comment Sheet Header — interactions row */}
                                 <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-black/5 dark:border-white/5">
                                     {/* Left: Like+count, Comment+count, Share */}
@@ -1520,86 +1507,41 @@ const generateShareLink = () => {
                                       <button
                                         onClick={handleLike}
                                         disabled={liking}
-                                        className={`flex items-center gap-1 text-sm transition-colors disabled:opacity-50 ${liked ? 'text-red-500' : 'text-zinc-500 hover:text-red-500 dark:hover:text-red-400'}`}
+                                        className={`flex items-center gap-1 transition-colors disabled:opacity-50 ${liked ? 'text-red-500' : 'text-zinc-500 hover:text-red-500 dark:hover:text-red-400'}`}
                                       >
-                                        <Heart className={`w-5 h-5 ${liked ? 'fill-current' : ''}`} strokeWidth={1.5} />
-                                        <span className="font-medium">{likesCount}</span>
+                                        <Heart className={`w-6 h-6 ${liked ? 'fill-current' : ''}`} strokeWidth={1.5} />
+                                        <span className="text-sm font-medium">{likesCount}</span>
                                       </button>
                                       <button
-                                        className="flex items-center gap-1 text-sm text-zinc-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+                                        className="flex items-center gap-1 text-zinc-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
                                       >
-                                        <MessageCircle className="w-5 h-5" strokeWidth={1.5} />
-                                        <span className="font-medium">{commentsCount}</span>
+                                        <MessageCircle className="w-6 h-6" strokeWidth={1.5} />
+                                        <span className="text-sm font-medium">{commentsCount}</span>
                                       </button>
                                       <button
                                         onClick={handleSharePost}
-                                        className="flex items-center text-sm text-zinc-500 hover:text-black dark:hover:text-white transition-colors"
+                                        className="flex items-center text-zinc-500 hover:text-black dark:hover:text-white transition-colors"
                                       >
-                                        <Share2 className="w-5 h-5" strokeWidth={1.5} />
+                                        <Share2 className="w-6 h-6" strokeWidth={1.5} />
                                       </button>
                                     </div>
                                     
-                                    {/* Right: Repost+count, Save, Sort */}
+                                    {/* Right: Repost+count, Save */}
                                     <div className="flex items-center gap-4">
                                       <button
                                         onClick={() => setShowRepostConfirm(true)}
                                         disabled={reposting}
-                                        className={`flex items-center gap-1 text-sm transition-colors disabled:opacity-50 ${reposted ? 'text-green-500' : 'text-zinc-500 hover:text-green-500 dark:hover:text-green-400'}`}
+                                        className={`flex items-center gap-1 transition-colors disabled:opacity-50 ${reposted ? 'text-green-500' : 'text-zinc-500 hover:text-green-500 dark:hover:text-green-400'}`}
                                       >
-                                        <Repeat className={`w-5 h-5 ${reposted ? 'stroke-[2.5px]' : ''}`} strokeWidth={1.5} />
-                                        <span className="font-medium">{repostsCount}</span>
+                                        <Repeat className={`w-6 h-6 ${reposted ? 'stroke-[2.5px]' : ''}`} strokeWidth={1.5} />
+                                        <span className="text-sm font-medium">{repostsCount}</span>
                                       </button>
                                       <button
                                         onClick={handleSavePost}
-                                        className={`flex items-center text-sm transition-colors ${isSaved ? 'text-black dark:text-white' : 'text-zinc-500 hover:text-black dark:hover:text-white'}`}
+                                        className={`flex items-center transition-colors ${isSaved ? 'text-black dark:text-white' : 'text-zinc-500 hover:text-black dark:hover:text-white'}`}
                                       >
-                                        <Bookmark className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`} strokeWidth={1.5} />
+                                        <Bookmark className={`w-6 h-6 ${isSaved ? 'fill-current' : ''}`} strokeWidth={1.5} />
                                       </button>
-                                      <div className="relative">
-                                        <button
-                                          onClick={() => setShowCommentSortMenu(prev => !prev)}
-                                          className={`p-1 rounded-full transition-colors ${showCommentSortMenu ? 'bg-black/10 dark:bg-white/10 text-black dark:text-white' : 'text-zinc-500 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'}`}
-                                        >
-                                          <Settings2 className="w-5 h-5" strokeWidth={1.5} />
-                                        </button>
-                                        <AnimatePresence>
-                                          {showCommentSortMenu && (
-                                            <>
-                                              <motion.div
-                                                initial={{ opacity: 0 }}
-                                                animate={{ opacity: 1 }}
-                                                exit={{ opacity: 0 }}
-                                                className="fixed inset-0 z-[5]"
-                                                onClick={() => setShowCommentSortMenu(false)}
-                                              />
-                                              <motion.div
-                                                initial={{ opacity: 0, scale: 0.92, y: -4 }}
-                                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                                exit={{ opacity: 0, scale: 0.92, y: -4 }}
-                                                transition={{ duration: 0.15 }}
-                                                className="absolute right-0 top-full mt-1 z-[10] min-w-[140px] bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl shadow-xl overflow-hidden"
-                                              >
-                                                {(['ranked', 'newest', 'oldest'] as const).map((option) => (
-                                                  <button
-                                                    key={option}
-                                                    onClick={() => { handleCommentSortChange(option); setShowCommentSortMenu(false); }}
-                                                    className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium transition-colors text-left ${
-                                                      commentSortOrder === option
-                                                        ? 'text-black dark:text-white bg-black/5 dark:bg-white/10'
-                                                        : 'text-zinc-600 dark:text-zinc-400 hover:bg-black/5 dark:hover:bg-white/5'
-                                                    }`}
-                                                  >
-                                                    <span>{option.charAt(0).toUpperCase() + option.slice(1)}</span>
-                                                    {commentSortOrder === option && (
-                                                      <span className="w-2 h-2 rounded-full bg-black dark:bg-white ml-3 shrink-0" />
-                                                    )}
-                                                  </button>
-                                                ))}
-                                              </motion.div>
-                                            </>
-                                          )}
-                                        </AnimatePresence>
-                                      </div>
                                     </div>
                                 </div>
                                 
@@ -1639,7 +1581,7 @@ const generateShareLink = () => {
                     </div>
 
                           <div className="bg-zinc-100 dark:bg-zinc-900 pb-[env(safe-area-inset-bottom,16px)]">
-                        <div className="flex items-end px-4 py-3 gap-3 relative">
+                        <div className="px-4 py-3 gap-3 relative">
                           {/* Mentions dropdown */}
                           {showMentions && (
                             <div className="absolute bottom-full left-0 right-0 mb-2 bg-zinc-100 dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded-xl shadow-2xl z-20 overflow-hidden">
@@ -1665,25 +1607,30 @@ const generateShareLink = () => {
                             </div>
                           )}
                           
-                          {/* Pill-shaped comment input container */}
-                          {currentUserProfile && (
-                            <div className="w-10 h-10 rounded-full overflow-hidden border border-black/10 dark:border-white/10 bg-zinc-200 dark:bg-zinc-800 flex-shrink-0">
-                              <img
-                                src={getAvatarUrl(currentUserProfile.avatar_url, currentUserProfile.full_name)}
-                                alt={currentUserProfile.full_name}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                          )}
-                          <div className="flex-1 flex items-end gap-2 bg-zinc-200 dark:bg-zinc-800 rounded-full px-4 py-2">
+                          {/* Three column layout: Profile Photo | Input Box | Send Icon */}
+                          <div className="flex items-end gap-3">
+                            {/* Left: Profile Photo 40px */}
+                            {currentUserProfile && (
+                              <div className="w-10 h-10 rounded-full overflow-hidden border border-black/10 dark:border-white/10 bg-zinc-200 dark:bg-zinc-800 flex-shrink-0">
+                                <img
+                                  src={getAvatarUrl(currentUserProfile.avatar_url, currentUserProfile.full_name)}
+                                  alt={currentUserProfile.full_name}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            )}
+                            
+                            {/* Center: Comment Input Box */}
                             <textarea
                               ref={commentInputRef}
                               rows={1}
                               value={newComment}
                               onChange={handleCommentChange}
                               placeholder={replyingTo ? `Reply to ${replyingTo.name}...` : 'Add a comment...'}
-                              className="flex-1 bg-transparent text-black dark:text-white text-[16px] outline-none placeholder-zinc-500 resize-none min-h-[40px] max-h-[calc(1.5em*3)] leading-snug overflow-y-auto"
+                              className="flex-1 bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white text-[16px] outline-none placeholder-zinc-500 resize-none min-h-[40px] max-h-[calc(1.5em*3)] leading-snug overflow-y-auto px-4 py-2 rounded-2xl"
                             />
+                            
+                            {/* Right: Send Icon */}
                             <button
                               onClick={handleSubmitComment}
                               disabled={submittingComment || !newComment.trim()}
@@ -1696,7 +1643,7 @@ const generateShareLink = () => {
                               {submittingComment ? (
                                 <Loader centered={false} className="text-current w-5 h-5" />
                               ) : (
-                                <Send className="w-5 h-5" strokeWidth={1.5} />
+                                <Send className="w-6 h-6" strokeWidth={1.5} />
                               )}
                             </button>
                           </div>
