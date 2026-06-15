@@ -37,7 +37,7 @@ export function CreateBottomSheet({ isOpen, onClose }: CreateBottomSheetProps) {
 
               {/* Title */}
               <h2 className="text-xl font-bold mb-2 text-foreground">Create</h2>
-              <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-6">Share your thoughts and stories with the community</p>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-6">Share your thoughts and stories with the world</p>
 
               {/* Options */}
               <div className="space-y-3 mb-6">
@@ -51,7 +51,7 @@ export function CreateBottomSheet({ isOpen, onClose }: CreateBottomSheetProps) {
                   </div>
                   <div className="flex-1">
                     <p className="font-semibold text-foreground">Create Post</p>
-                    <p className="text-sm text-neutral-500">Share your thoughts with the community</p>
+                    <p className="text-sm text-neutral-500">Share your thoughts with the world</p>
                   </div>
                 </Link>
 

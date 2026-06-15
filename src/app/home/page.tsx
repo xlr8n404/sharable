@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { PostCard } from '@/components/PostCard';
 import { BottomNav } from '@/components/BottomNav';
-import { Share2, MessageCircle, Settings2, UserCircle } from 'lucide-react';
+import { Settings2, Share2, MessageCircle, UserCircle, Plus } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { MainMenu } from '@/components/MainMenu';
 import { Loader } from '@/components/ui/loader';
@@ -14,7 +14,6 @@ import { toast } from 'sonner';
 import Link from 'next/link';
 import { useScrollDirection } from '@/hooks/use-scroll-direction';
 import { sortByTrending } from '@/lib/trending';
-import { useCachedPageData } from '@/hooks/useCachedPageData';
 import { useScrollRestoration } from '@/hooks/useScrollRestoration';
 import { useCache } from '@/providers/CacheProvider';
 
@@ -25,8 +24,6 @@ type UserPostStatus = {
 };
 
 const PAGE_SIZE = 10;
-// For trending mode we fetch a larger pool per page so the algorithm has
-// enough candidates to score and sort before slicing to PAGE_SIZE.
 const TRENDING_FETCH_MULTIPLIER = 3;
 
 type Post = {
@@ -55,7 +52,7 @@ type HomePageState = {
   posts: Post[];
   offset: number;
   hasMore: boolean;
-  feedMode: 'trending' | 'explore' | 'following' | 'sharable' | 'communities';
+  feedMode: 'explore' | 'following';
   profile: Profile | null;
   currentUser: { id: string } | null;
   currentUserProfile: { full_name: string; avatar_url: string; username?: string } | null;
@@ -69,10 +66,8 @@ export default function HomePage() {
   const pathname = usePathname();
   const isVisible = useScrollDirection();
   
-  // Restore scroll position when returning to this page
   useScrollRestoration();
 
-  // Initialize state from cache or defaults
   const getCacheKey = (mode: string) => `home_page_state:${mode}`;
   
   const [posts, setPosts] = useState<Post[]>([]);
@@ -81,20 +76,18 @@ export default function HomePage() {
   const [hasMore, setHasMore] = useState(true);
   const [offset, setOffset] = useState(0);
   const [mainMenuOpen, setMainMenuOpen] = useState(false);
-  const [feedMode, setFeedMode] = useState<'trending' | 'explore' | 'following' | 'sharable' | 'communities'>('explore');
+  const [feedMode, setFeedMode] = useState<'explore' | 'following'>('explore');
   const [profile, setProfile] = useState<Profile | null>(null);
   const [currentUser, setCurrentUser] = useState<{ id: string } | null>(null);
   const [currentUserProfile, setCurrentUserProfile] = useState<{ full_name: string; avatar_url: string; username?: string } | null>(null);
   const [userPostStatus, setUserPostStatus] = useState<UserPostStatus>({ liked: new Set(), reposted: new Set(), saved: new Set() });
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
-  // Track which post indices are visible (for lazy video loading)
   const [visibleIndices, setVisibleIndices] = useState<Set<number>>(new Set([0, 1, 2]));
   const postRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
   const observer = useRef<IntersectionObserver | null>(null);
   const visibilityObserver = useRef<IntersectionObserver | null>(null);
 
-  // Load cached state on mount
   useEffect(() => {
     const cacheKey = getCacheKey(feedMode);
     const cachedState = cache.getCached<HomePageState>(cacheKey);
@@ -112,7 +105,6 @@ export default function HomePage() {
     }
   }, [feedMode, cache]);
 
-  // Save state to cache whenever it changes
   useEffect(() => {
     const cacheKey = getCacheKey(feedMode);
     const state: HomePageState = {
@@ -133,7 +125,6 @@ export default function HomePage() {
     setPosts(prev => prev.filter(p => p.id !== postId));
   };
 
-  // Set up visibility observer for lazy media loading
   useEffect(() => {
     visibilityObserver.current = new IntersectionObserver(
       (entries) => {
@@ -145,15 +136,13 @@ export default function HomePage() {
             if (entry.isIntersecting) {
               next.add(idx);
             }
-            // Keep as visible once seen — don't unload loaded media
           });
           return next;
         });
       },
-      { rootMargin: '200px 0px' } // preload 200px before entering viewport
+      { rootMargin: '200px 0px' }
     );
 
-    // Observe already mounted post nodes
     postRefs.current.forEach((node) => {
       visibilityObserver.current?.observe(node);
     });
@@ -174,7 +163,6 @@ export default function HomePage() {
         return;
       }
 
-      // Store current user once
       if (!currentUser) setCurrentUser(user);
 
       if (user && !profile && !isLoadMore) {
@@ -192,116 +180,111 @@ export default function HomePage() {
 
       let fetchedPosts: Post[] = [];
 
-        if (mode === 'communities') {
-          // Fetch user's community posts
-          if (!user) {
-            setHasMore(false);
-            fetchedPosts = [];
-          } else {
-            // Get user's communities
-            const { data: userCommunities } = await supabase
-              .from('community_members')
-              .select('community_id')
-              .eq('user_id', user.id);
+      if (mode === 'explore') {
+        const fetchSize = PAGE_SIZE * TRENDING_FETCH_MULTIPLIER;
+        const { data, error } = await supabase
+          .from('posts')
+          .select('*, user:profiles(id, full_name, avatar_url, username, identity_tag)')
+          .order('created_at', { ascending: false })
+          .range(currentOffset, currentOffset + fetchSize - 1);
 
-            const communityIds = (userCommunities || []).map(m => m.community_id);
+        if (error) throw error;
 
-            if (communityIds.length === 0) {
-              fetchedPosts = [];
-            } else {
-              // Get posts from user's communities
-              const { data, error } = await supabase
-                .from('community_posts')
-                .select(`
-                  *,
-                  user:profiles(id, full_name, username, avatar_url, identity_tag),
-                  community:communities(id, name),
-                  likes:community_post_likes(count),
-                  comments:community_post_comments(count)
-                `)
-                .in('community_id', communityIds)
-                .order('created_at', { ascending: false })
-                .range(currentOffset, currentOffset + PAGE_SIZE - 1);
+        let mapped = (data || [])
+          .filter((post: any) => post.user)
+          .map((post: any) => {
+            const urls = post.media_urls || (post.media_url ? [post.media_url] : []);
+            const types = post.media_types || (post.media_type ? [post.media_type] : urls.map((u: string) => {
+              if (/\.(mp4|webm|mov|avi)$/i.test(u) || u.includes('video')) return 'video';
+              if (/\.(mp3|wav|ogg|aac|flac|m4a)$/i.test(u) || u.includes('audio')) return 'audio';
+              return 'image';
+            }));
+            return { ...post, media_urls: urls, media_types: types };
+          });
 
-              if (error) throw error;
-              fetchedPosts = (data || []).filter((post: any) => post.user).map((post: any) => {
-                const urls = post.media_urls || (post.media_url ? [post.media_url] : []);
-                const types = post.media_types || (post.media_type ? [post.media_type] : urls.map((u: string) => {
-                  if (/\.(mp4|webm|mov|avi)$/i.test(u) || u.includes('video')) return 'video';
-                  if (/\.(mp3|wav|ogg|aac|flac|m4a)$/i.test(u) || u.includes('audio')) return 'audio';
-                  return 'image';
-                }));
-                return { ...post, media_urls: urls, media_types: types, is_community_post: true };
-              });
-            }
-          }
-        } else if (mode === 'trending') {
-          // Fetch a wider pool (3× page size) so the scoring algorithm has
-          // enough candidates to compare. We fetch the most recent posts in
-          // the current window, score them client-side, then take PAGE_SIZE.
-          const fetchSize = PAGE_SIZE * TRENDING_FETCH_MULTIPLIER;
-          const { data, error } = await supabase
-            .from('posts')
-            .select('*, user:profiles(id, full_name, avatar_url, username, identity_tag)')
-            // Pull recent posts; the score function handles time-decay,
-            // so fetching newest-first gives us the right candidate pool.
-            .order('created_at', { ascending: false })
-            .range(currentOffset, currentOffset + fetchSize - 1);
+        const { data: communityData } = await supabase
+          .from('community_posts')
+          .select(`
+            *,
+            user:profiles(id, full_name, username, avatar_url, identity_tag),
+            community:communities(id, name),
+            likes:community_post_likes(count),
+            comments:community_post_comments(count)
+          `)
+          .order('created_at', { ascending: false })
+          .range(currentOffset, currentOffset + (fetchSize - 1));
 
-          if (error) throw error;
+        if (communityData) {
+          const formattedCommunityPosts = communityData.filter((post: any) => post.user).map((post: any) => {
+            const urls = post.media_urls || (post.media_url ? [post.media_url] : []);
+            const types = post.media_types || (post.media_type ? [post.media_type] : urls.map((u: string) => {
+              if (/\.(mp4|webm|mov|avi)$/i.test(u) || u.includes('video')) return 'video';
+              if (/\.(mp3|wav|ogg|aac|flac|m4a)$/i.test(u) || u.includes('audio')) return 'audio';
+              return 'image';
+            }));
+            return { ...post, media_urls: urls, media_types: types, is_community_post: true };
+          });
+          mapped = [...mapped, ...formattedCommunityPosts];
+        }
 
-          const mapped = (data || [])
-            .filter((post: any) => post.user)
+        fetchedPosts = sortByTrending(mapped).slice(0, PAGE_SIZE);
+      } else if (mode === 'following') {
+        let query = supabase
+          .from('posts')
+          .select('*, user:profiles(id, full_name, avatar_url, username, identity_tag)');
+
+        if (!user) {
+          query = query.order('created_at', { ascending: false });
+        } else {
+          const { data: followsData, error: followsError } = await supabase
+            .from('follows')
+            .select('following_id')
+            .eq('follower_id', user.id);
+
+          if (followsError) throw followsError;
+
+          const followingIds = (followsData || []).map(f => f.following_id);
+          query = query
+            .in('user_id', [...followingIds, user.id])
+            .order('created_at', { ascending: false });
+        }
+
+        query = query.range(currentOffset, currentOffset + PAGE_SIZE - 1);
+        const { data, error } = await query;
+        if (error) throw error;
+        fetchedPosts = (data || [])
+          .filter((post: any) => post.user)
+          .map((post: any) => {
+            const urls = post.media_urls || (post.media_url ? [post.media_url] : []);
+            const types = post.media_types || (post.media_type ? [post.media_type] : urls.map((u: string) => {
+              if (/\.(mp4|webm|mov|avi)$/i.test(u) || u.includes('video')) return 'video';
+              if (/\.(mp3|wav|ogg|aac|flac|m4a)$/i.test(u) || u.includes('audio')) return 'audio';
+              return 'image';
+            }));
+            return { ...post, media_urls: urls, media_types: types };
+          });
+
+        const { data: communityData } = await supabase
+          .from('community_posts')
+          .select(`
+            *,
+            user:profiles(id, full_name, username, avatar_url, identity_tag),
+            community:communities(id, name),
+            likes:community_post_likes(count),
+            comments:community_post_comments(count)
+          `)
+          .order('created_at', { ascending: false });
+
+        if (communityData) {
+          const { data: followsData } = await supabase
+            .from('follows')
+            .select('following_id')
+            .eq('follower_id', user?.id);
+
+          const followingIds = (followsData || []).map(f => f.following_id);
+          const formattedCommunityPosts = communityData
+            .filter((post: any) => post.user && (followingIds.includes(post.user_id) || post.user_id === user?.id))
             .map((post: any) => {
-              const urls = post.media_urls || (post.media_url ? [post.media_url] : []);
-              const types = post.media_types || (post.media_type ? [post.media_type] : urls.map((u: string) => {
-                if (/\.(mp4|webm|mov|avi)$/i.test(u) || u.includes('video')) return 'video';
-                if (/\.(mp3|wav|ogg|aac|flac|m4a)$/i.test(u) || u.includes('audio')) return 'audio';
-                return 'image';
-              }));
-              return { ...post, media_urls: urls, media_types: types };
-            });
-
-          // Score & sort: likes×1 + comments×2 + reposts×3, decayed by age^1.8
-          fetchedPosts = sortByTrending(mapped).slice(0, PAGE_SIZE);
-        } else if (mode === 'explore') {
-          // Explore: Fetch a wider pool and score by trending
-          const fetchSize = PAGE_SIZE * TRENDING_FETCH_MULTIPLIER;
-          const { data, error } = await supabase
-            .from('posts')
-            .select('*, user:profiles(id, full_name, avatar_url, username, identity_tag)')
-            .order('created_at', { ascending: false })
-            .range(currentOffset, currentOffset + fetchSize - 1);
-
-          if (error) throw error;
-
-          let mapped = (data || [])
-            .filter((post: any) => post.user)
-            .map((post: any) => {
-              const urls = post.media_urls || (post.media_url ? [post.media_url] : []);
-              const types = post.media_types || (post.media_type ? [post.media_type] : urls.map((u: string) => {
-                if (/\.(mp4|webm|mov|avi)$/i.test(u) || u.includes('video')) return 'video';
-                if (/\.(mp3|wav|ogg|aac|flac|m4a)$/i.test(u) || u.includes('audio')) return 'audio';
-                return 'image';
-              }));
-              return { ...post, media_urls: urls, media_types: types };
-            });
-
-          // Fetch community posts for explore
-          const { data: communityData } = await supabase
-            .from('community_posts')
-            .select(`
-              *,
-              user:profiles(id, full_name, username, avatar_url, identity_tag),
-              community:communities(id, name),
-              likes:community_post_likes(count),
-              comments:community_post_comments(count)
-            `)
-            .order('created_at', { ascending: false })
-            .range(currentOffset, currentOffset + (fetchSize - 1));
-
-          if (communityData) {
-            const formattedCommunityPosts = communityData.filter((post: any) => post.user).map((post: any) => {
               const urls = post.media_urls || (post.media_url ? [post.media_url] : []);
               const types = post.media_types || (post.media_type ? [post.media_type] : urls.map((u: string) => {
                 if (/\.(mp4|webm|mov|avi)$/i.test(u) || u.includes('video')) return 'video';
@@ -310,97 +293,11 @@ export default function HomePage() {
               }));
               return { ...post, media_urls: urls, media_types: types, is_community_post: true };
             });
-            mapped = [...mapped, ...formattedCommunityPosts];
-          }
-
-          // Score & sort by trending
-          fetchedPosts = sortByTrending(mapped).slice(0, PAGE_SIZE);
-        } else {
-          // Following / Sharable modes
-          let query = supabase
-            .from('posts')
-            .select('*, user:profiles(id, full_name, avatar_url, username, identity_tag)');
-
-          if (mode === 'following') {
-            if (!user) {
-              query = query.order('created_at', { ascending: false });
-            } else {
-              const { data: followsData, error: followsError } = await supabase
-                .from('follows')
-                .select('following_id')
-                .eq('follower_id', user.id);
-
-              if (followsError) throw followsError;
-
-              const followingIds = (followsData || []).map(f => f.following_id);
-              query = query
-                .in('user_id', [...followingIds, user.id])
-                .order('created_at', { ascending: false });
-            }
-          } else {
-            // Sharable - show newest posts
-            query = query.order('created_at', { ascending: false });
-          }
-
-          query = query.range(currentOffset, currentOffset + PAGE_SIZE - 1);
-          const { data, error } = await query;
-          if (error) throw error;
-          fetchedPosts = (data || [])
-            .filter((post: any) => {
-              if (!post.user) return false;
-              if (mode === 'sharable' && post.user.username !== 'sharable') return false;
-              return true;
-            })
-            .map((post: any) => {
-              const urls = post.media_urls || (post.media_url ? [post.media_url] : []);
-              const types = post.media_types || (post.media_type ? [post.media_type] : urls.map((u: string) => {
-                if (/\.(mp4|webm|mov|avi)$/i.test(u) || u.includes('video')) return 'video';
-                if (/\.(mp3|wav|ogg|aac|flac|m4a)$/i.test(u) || u.includes('audio')) return 'audio';
-                return 'image';
-              }));
-              return { ...post, media_urls: urls, media_types: types };
-            });
-
-          // Also fetch community posts for following mode
-          if (mode === 'following') {
-            let communityQuery = supabase
-              .from('community_posts')
-              .select(`
-                *,
-                user:profiles(id, full_name, username, avatar_url, identity_tag),
-                community:communities(id, name),
-                likes:community_post_likes(count),
-                comments:community_post_comments(count)
-              `);
-
-            if (user) {
-              // For following mode, only show community posts from people you follow
-              const { data: followsData } = await supabase
-                .from('follows')
-                .select('following_id')
-                .eq('follower_id', user.id);
-              const followingIds = (followsData || []).map(f => f.following_id);
-              communityQuery = communityQuery.in('user_id', [...followingIds, user.id]);
-            }
-
-            const { data: communityData } = await communityQuery
-              .order('created_at', { ascending: false })
-              .range(currentOffset, currentOffset + PAGE_SIZE - 1);
-
-            if (communityData) {
-              const formattedCommunityPosts = communityData.filter((post: any) => post.user).map((post: any) => {
-                const urls = post.media_urls || (post.media_url ? [post.media_url] : []);
-                const types = post.media_types || (post.media_type ? [post.media_type] : urls.map((u: string) => {
-                  if (/\.(mp4|webm|mov|avi)$/i.test(u) || u.includes('video')) return 'video';
-                  if (/\.(mp3|wav|ogg|aac|flac|m4a)$/i.test(u) || u.includes('audio')) return 'audio';
-                  return 'image';
-                }));
-                return { ...post, media_urls: urls, media_types: types, is_community_post: true };
-              });
-              fetchedPosts = [...fetchedPosts, ...formattedCommunityPosts];
-            }
-          }
+          fetchedPosts = [...fetchedPosts, ...formattedCommunityPosts]
+            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+            .slice(0, PAGE_SIZE);
         }
+      }
 
       if (isLoadMore) {
         setPosts(prev => [...prev, ...fetchedPosts]);
@@ -408,7 +305,6 @@ export default function HomePage() {
         setPosts(fetchedPosts);
       }
 
-      // Determine if there are more posts to load
       setHasMore(fetchedPosts.length === PAGE_SIZE);
     } catch (error) {
       console.error('Error fetching posts:', error);
@@ -419,9 +315,7 @@ export default function HomePage() {
     }
   }, [currentUser, profile]);
 
-  // Fetch posts on mount or when feed mode changes
   useEffect(() => {
-    // Only fetch if we don't have cached data
     if (posts.length === 0) {
       fetchPosts(0, feedMode, false);
     }
@@ -450,38 +344,59 @@ export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="flex items-center justify-between px-4 py-3">
-          <h1 className="text-xl font-bold">Sharable</h1>
+        <div className="flex items-center justify-between px-4 h-16">
           <button
-            onClick={() => setMainMenuOpen(!mainMenuOpen)}
+            onClick={() => setMainMenuOpen(true)}
             className="p-2 hover:bg-accent rounded-lg transition-colors"
           >
-            <Settings2 size={20} />
+            <Settings2 size={24} strokeWidth={1.5} className="text-zinc-500" />
+          </button>
+          <div className="flex items-center gap-2">
+            <Share2 size={24} strokeWidth={2} className="text-primary" />
+          </div>
+          <button
+            onClick={() => router.push('/messages')}
+            className="p-2 hover:bg-accent rounded-lg transition-colors"
+          >
+            <MessageCircle size={24} strokeWidth={1.5} className="text-zinc-500" />
           </button>
         </div>
 
-        {/* Feed Mode Selector */}
-        <div className="flex gap-2 px-4 py-2 overflow-x-auto scrollbar-hide">
-          {(['explore', 'trending', 'following', 'sharable', 'communities'] as const).map(mode => (
-            <button
-              key={mode}
-              onClick={() => {
-                setFeedMode(mode);
-                setOffset(0);
-              }}
-              className={`px-4 py-2 rounded-full whitespace-nowrap transition-colors ${
-                feedMode === mode
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-              }`}
-            >
-              {mode.charAt(0).toUpperCase() + mode.slice(1)}
-            </button>
-          ))}
+        {/* Post create shortcut */}
+        <div className="h-16 flex items-center gap-3 px-4 border-t border-border">
+          <div className="shrink-0 w-10 h-10 rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
+            {currentUserProfile?.avatar_url ? (
+              <img src={currentUserProfile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              <UserCircle size={28} strokeWidth={1} className="text-zinc-500 dark:text-zinc-400" />
+            )}
+          </div>
+          <Link
+            href="/create/post"
+            className="flex-1 flex items-center justify-between h-11 bg-zinc-100 dark:bg-zinc-900 rounded-full px-4 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all"
+          >
+            <span className="text-sm font-medium text-zinc-500 dark:text-zinc-400 truncate">Anything sharable today?</span>
+            <Plus size={18} className="text-zinc-500 dark:text-zinc-400 shrink-0 ml-2" />
+          </Link>
         </div>
 
-        {mainMenuOpen && <MainMenu open={mainMenuOpen} onClose={() => setMainMenuOpen(false)} avatarSrc={currentUserProfile?.avatar_url || null} feedMode={feedMode} onFeedModeChange={(mode) => setFeedMode(mode)} />}
       </header>
+
+      {mainMenuOpen && (
+        <MainMenu 
+          open={mainMenuOpen} 
+          onClose={() => setMainMenuOpen(false)} 
+          avatarSrc={currentUserProfile?.avatar_url || null} 
+          feedMode={feedMode} 
+          onFeedModeChange={(mode) => {
+            if (mode === 'explore' || mode === 'following') {
+              setFeedMode(mode);
+              setOffset(0);
+              setPosts([]);
+            }
+          }} 
+        />
+      )}
 
       <main className="flex-1 max-w-2xl mx-auto w-full">
         <div className="divide-y divide-border">
@@ -490,9 +405,7 @@ export default function HomePage() {
               key={post.id}
               data-post-index={index}
               ref={(node) => {
-                // Attach to lastPostRef for infinite scroll
                 if (index === posts.length - 1) lastPostRef(node);
-                // Track for visibility
                 if (node) {
                   postRefs.current.set(index, node);
                   visibilityObserver.current?.observe(node);
