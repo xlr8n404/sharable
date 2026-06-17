@@ -344,7 +344,8 @@ export default function CreatePostPage() {
           <div className="flex items-center gap-1">
             <Skeleton className="w-6 h-6 rounded-md bg-zinc-200 dark:bg-zinc-800" />
             <Skeleton className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-800" />
-            <Skeleton className="h-4 w-20 rounded-md bg-zinc-200 dark:bg-zinc-800" />
+            <div className="w-2" />
+            <Skeleton className="h-4 w-32 rounded-md bg-zinc-200 dark:bg-zinc-800" />
           </div>
           {/* Right side: Post button skeleton */}
           <Skeleton className="h-9 w-16 rounded-full bg-zinc-200 dark:bg-zinc-800" />
@@ -391,8 +392,11 @@ export default function CreatePostPage() {
           />
         </div>
 
+        {/* Gap 8px */}
+        <div className="w-2" />
+
         {/* Full name */}
-        <span className="text-[15px] font-semibold truncate w-20">{profile?.full_name}</span>
+        <span className="text-[15px] font-semibold">{profile?.full_name}</span>
 
         {/* Spacer */}
         <div className="flex-1" />
