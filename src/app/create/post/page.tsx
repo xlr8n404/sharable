@@ -343,6 +343,7 @@ export default function CreatePostPage() {
           {/* Left side: back icon (24px) + gap (4px) + profile photo (40px) + gap (4px) + name (16px height, 80px width) */}
           <div className="flex items-center gap-1">
             <Skeleton className="w-6 h-6 rounded-md bg-zinc-200 dark:bg-zinc-800" />
+            <div className="w-2" />
             <Skeleton className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-800" />
             <div className="w-2" />
             <Skeleton className="h-4 w-32 rounded-md bg-zinc-200 dark:bg-zinc-800" />
@@ -381,6 +382,9 @@ export default function CreatePostPage() {
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
+
+        {/* Gap 4px */}
+        <div className="w-1" />
 
         {/* Avatar 40px */}
         <div className="w-10 h-10 rounded-full overflow-hidden border border-black/10 dark:border-white/10 bg-zinc-100 dark:bg-zinc-900 shrink-0">
