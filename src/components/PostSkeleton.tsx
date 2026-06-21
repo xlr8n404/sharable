@@ -11,8 +11,8 @@ export function PostSkeleton({ mediaCount }: { mediaCount?: 1 | 2 | 3 }) {
             <div className="w-[40px] h-[40px] shrink-0">
               <Skeleton className="w-full h-full rounded-full bg-zinc-200 dark:bg-zinc-800" />
             </div>
-            {/* Full name: 16px height, 160px width (Updated) */}
-            <Skeleton className="h-[16px] w-[160px] bg-zinc-200 dark:bg-zinc-800" />
+            {/* Full name: 16px height, 120px width (Updated) */}
+            <Skeleton className="h-[16px] w-[120px] bg-zinc-200 dark:bg-zinc-800" />
           </div>
           {/* Right side: Three dot icon 24x24 px */}
           <div className="w-[24px] h-[24px] shrink-0">
@@ -29,7 +29,7 @@ export function PostSkeleton({ mediaCount }: { mediaCount?: 1 | 2 | 3 }) {
 
         {/* Interaction buttons */}
         <div className="flex items-center justify-between mt-6">
-          {/* Left side: 160px width, 24px height (Updated) */}
+          {/* Left side: 160px width, 24px height */}
           <Skeleton className="h-[24px] w-[160px] bg-zinc-100 dark:bg-zinc-900" />
           {/* Right side: 80px width, 24px height */}
           <Skeleton className="h-[24px] w-[80px] bg-zinc-100 dark:bg-zinc-900" />
