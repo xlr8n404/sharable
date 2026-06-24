@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import {
   ArrowLeft, Image as ImageIcon, Music, X, Type, AtSign,
-  Smile, Sticker, Hash, MapPin, Settings2,
+  Smile, Sticker, Hash, MapPin, Settings2, Tag,
   Users, UserCheck, Globe, MessageCircle, Loader as LoaderIcon,
 } from 'lucide-react';
 import { Loader } from '@/components/ui/loader';
@@ -25,6 +25,7 @@ interface Profile {
 
 type Audience    = 'Anyone' | 'Followers' | 'Following';
 type CommentPerm = 'Anyone' | 'Followers' | 'Following' | 'Mentioned';
+type Topic = 'News' | 'Politics' | 'Games' | 'Football' | 'Cricket' | 'Memes' | 'Rumour' | 'Entertainment' | 'Sports' | 'Technology';
 
 export default function CreatePostPage() {
   const router = useRouter();
@@ -58,6 +59,10 @@ export default function CreatePostPage() {
   const [commentPerm,     setCommentPerm]     = useState<CommentPerm>('Anyone');
   const [reviewReplies,   setReviewReplies]   = useState(false);
   const [viewportHeight, setViewportHeight]  = useState('100vh');
+  const [showTopicSheet, setShowTopicSheet]  = useState(false);
+  const [selectedTopic,  setSelectedTopic]   = useState<Topic | null>(null);
+
+  const TOPIC_OPTIONS: Topic[] = ['News', 'Politics', 'Games', 'Football', 'Cricket', 'Memes', 'Rumour', 'Entertainment', 'Sports', 'Technology'];
 
   const fileInputRef   = useRef<HTMLInputElement>(null);
   const audioInputRef  = useRef<HTMLInputElement>(null);
@@ -307,6 +312,7 @@ export default function CreatePostPage() {
           location_name: location || null,
           location_latitude: selectedCoords?.lat ?? null,
           location_longitude: selectedCoords?.lon ?? null,
+          topic: selectedTopic || null,
           slug: finalSlug,
         })
         .select('id, post_number, slug')
@@ -539,8 +545,21 @@ export default function CreatePostPage() {
           </button>
         </div>
 
-        {/* Right side: Location, Settings */}
+        {/* Right side: Topic, Location, Settings */}
         <div className="flex items-center gap-0 flex-1 justify-end">
+          {/* Topic */}
+          <button
+            title="Topic"
+            onClick={() => setShowTopicSheet(true)}
+            className={`p-2.5 rounded-full transition-colors ${
+              selectedTopic
+                ? 'text-foreground hover:bg-black/8 dark:hover:bg-white/8'
+                : 'text-zinc-500 dark:text-zinc-400 hover:text-foreground hover:bg-black/8 dark:hover:bg-white/8'
+            }`}
+          >
+            <Tag className="w-6 h-6" />
+          </button>
+
           {/* Location */}
           <button
             title="Location"
@@ -777,6 +796,56 @@ export default function CreatePostPage() {
             >
               Done
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Topic Sheet ──────────────────────────────────────────────────── */}
+      {showTopicSheet && (
+        <div className="fixed inset-0 z-[100] flex flex-col justify-end">
+          <div className="absolute inset-0 bg-black/40 dark:bg-black/60" onClick={() => setShowTopicSheet(false)} />
+          <div className="relative bg-background rounded-t-2xl px-4 pt-4 pb-10 shadow-2xl max-h-[80vh] flex flex-col">
+            {/* Handle */}
+            <div className="w-10 h-1 rounded-full bg-black/20 dark:bg-white/20 mx-auto mb-4" />
+            
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-[18px] font-bold">Choose a topic</h3>
+              <button
+                onClick={() => setShowTopicSheet(false)}
+                className="px-5 py-1.5 rounded-full bg-black dark:bg-white text-white dark:text-black font-bold text-[14px] active:scale-95 transition-transform"
+              >
+                Done
+              </button>
+            </div>
+
+            {/* Clear selection button */}
+            {selectedTopic && (
+              <button
+                onClick={() => setSelectedTopic(null)}
+                className="mb-4 px-3 py-1.5 rounded-full text-sm font-medium bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
+              >
+                Clear selection
+              </button>
+            )}
+
+            {/* Topics Grid */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="flex flex-wrap gap-3">
+                {TOPIC_OPTIONS.map((topic) => (
+                  <button
+                    key={topic}
+                    onClick={() => setSelectedTopic(topic)}
+                    className={`px-5 py-2.5 rounded-full font-medium text-[15px] transition-all ${
+                      selectedTopic === topic
+                        ? 'bg-black dark:bg-white text-white dark:text-black shadow-md'
+                        : 'bg-zinc-100 dark:bg-zinc-900 text-foreground hover:bg-zinc-200 dark:hover:bg-zinc-800'
+                    }`}
+                  >
+                    {topic}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}
