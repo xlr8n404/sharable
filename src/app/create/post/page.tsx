@@ -312,7 +312,6 @@ export default function CreatePostPage() {
           location_name: location || null,
           location_latitude: selectedCoords?.lat ?? null,
           location_longitude: selectedCoords?.lon ?? null,
-          topic: selectedTopic || null,
           slug: finalSlug,
         })
         .select('id, post_number, slug')
