@@ -325,17 +325,17 @@ function MessagesContent() {
     try {
       if (showLoading) setMessagesLoading(true);
       const response = await fetch(`/api/messages?conversation_id=${conversationId}`);
-      console.log("[v0] fetchMessages response status:", response.status);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch messages: ${response.status}`);
+      }
       const data = await response.json();
-      console.log("[v0] fetchMessages data:", data);
       if (data.data) {
-        console.log("[v0] setting messages:", data.data);
         setMessages(data.data);
-      } else {
-        console.log("[v0] no data.data found");
+      } else if (data.error) {
+        console.error('API Error:', data.error);
       }
     } catch (error) {
-      console.error('[v0] Error fetching messages:', error);
+      console.error('Error fetching messages:', error);
     } finally {
       if (showLoading) setMessagesLoading(false);
     }
