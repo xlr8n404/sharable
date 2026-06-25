@@ -325,9 +325,14 @@ function MessagesContent() {
     try {
       if (showLoading) setMessagesLoading(true);
       const response = await fetch(`/api/messages?conversation_id=${conversationId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch messages: ${response.status}`);
+      }
       const data = await response.json();
       if (data.data) {
         setMessages(data.data);
+      } else if (data.error) {
+        console.error('API Error:', data.error);
       }
     } catch (error) {
       console.error('Error fetching messages:', error);
@@ -468,7 +473,7 @@ function MessagesContent() {
           <>
             {/* Header for Chat List - 64px (approx 64dp) */}
                 <header className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 bg-background">
-                    <h1 className="text-xl font-bold font-[family-name:var(--font-syne)]">Message</h1>
+                    <h1 className="text-[24px] font-bold font-[family-name:var(--font-syne)]">Messages</h1>
                     <button
                       onClick={() => setShowFilters(!showFilters)}
                       className="p-2 text-foreground hover:bg-accent rounded-full transition-colors"
