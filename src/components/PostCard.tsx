@@ -759,32 +759,6 @@ export function PostCard({
           )}
         </div>
 
-        {/* User Details: Username, Time, Location, Community */}
-        <div className="mb-3">
-          <div className="flex items-center gap-1.5 text-zinc-500 text-[13px] flex-wrap">
-            <span className="font-medium">@{user.username || 'user'}</span>
-            <span className="text-zinc-300 dark:text-zinc-700">•</span>
-            <span>{created_at ? formatTime(created_at) : 'now'}</span>
-            {location_name && (
-              <>
-                <span className="text-zinc-300 dark:text-zinc-700">•</span>
-                <div className="flex items-center gap-1">
-                  <MapPin size={12} strokeWidth={2} />
-                  <span>{location_name}</span>
-                </div>
-              </>
-            )}
-            {community && (
-              <>
-                <span className="text-zinc-300 dark:text-zinc-700">•</span>
-                <Link href={`/community/${community.id}`} className="text-blue-500 hover:underline font-medium">
-                  {community.name}
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-
         {/* Content */}
         <div className="mb-3">
           <p className="text-[16px] text-zinc-800 dark:text-zinc-200 leading-normal whitespace-pre-wrap break-words">
@@ -854,6 +828,32 @@ export function PostCard({
             )}
           </div>
         )}
+
+        {/* User Details: Username, Time, Location, Community */}
+        <div className="mb-3">
+          <div className="flex items-center gap-1.5 text-zinc-500 text-[13px] flex-wrap">
+            <span className="font-medium">@{user.username || 'user'}</span>
+            <span className="text-zinc-300 dark:text-zinc-700">•</span>
+            <span>{created_at ? formatTime(created_at) : 'now'}</span>
+            {location_name && (
+              <>
+                <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                <div className="flex items-center gap-1">
+                  <MapPin size={12} strokeWidth={2} />
+                  <span>{location_name}</span>
+                </div>
+              </>
+            )}
+            {community && (
+              <>
+                <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                <Link href={`/community/${community.id}`} className="text-blue-500 hover:underline font-medium">
+                  {community.name}
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
 
             <div className="flex items-center justify-between pt-0 pb-1">
               <div className="flex items-center gap-2">
