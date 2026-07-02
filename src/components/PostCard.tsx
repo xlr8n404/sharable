@@ -421,258 +421,16 @@ export function PostCard({
       } else {
         await supabase
           .from('saved_posts')
-          .upsert({ user_id: currentUserId, post_id: id });
+          .upsert({ 
+            user_id: currentUserId,
+            post_id: id,
+          });
         toast.success('Post saved');
       }
     } catch (error) {
       setIsSaved(wasSaved);
-      toast.error('Failed to update saved status');
+      toast.error('Failed to save post');
     }
-  };
-
-const generateShareLink = () => {
-  if (typeof window === 'undefined') return '';
-  if (slug && user.username) {
-    return `${window.location.origin}/${user.username}/post/${slug}`;
-  }
-  return `${window.location.origin}/post/${id}`;
-};
-
-    const handleSharePost = async () => {
-      const shareLink = generateShareLink();
-      const shareData = {
-        title: 'Sharable Post',
-        text: 'Check out this post on Sharable',
-        url: shareLink,
-      };
-
-      try {
-        if (navigator.share) {
-          await navigator.share(shareData);
-        } else {
-          await navigator.clipboard.writeText(shareLink);
-          toast.success('Link copied to clipboard');
-        }
-      } catch (err) {
-        console.error('Error sharing:', err);
-      }
-      setShowPostMenuSheet(false);
-    };
-
-    const handleDownloadMedia = async () => {
-      if (!hasMedia) return;
-      
-      try {
-        toast.info('Starting download...');
-        for (let i = 0; i < finalMediaUrls.length; i++) {
-          const url = finalMediaUrls[i];
-          const type = finalMediaTypes[i];
-          const response = await fetch(url);
-          const blob = await response.blob();
-          const blobUrl = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = blobUrl;
-          a.download = `sharable-${id}-${i + 1}.${type === 'video' ? 'mp4' : type === 'audio' ? 'mp3' : 'jpg'}`;
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(blobUrl);
-          document.body.removeChild(a);
-        }
-        toast.success('Download completed');
-      } catch (err) {
-        toast.error('Failed to download media');
-      }
-      setShowPostMenuSheet(false);
-    };
-
-        const shouldTruncate = content.length > 115;
-        const displayedContent = isExpanded || !shouldTruncate ? content : content.slice(0, 115);
-
-  const getAvatarUrl = (avatarPath: string | null | undefined, name: string) => {
-    if (avatarPath) {
-      // If already a full URL (e.g. old data), route through proxy by extracting the path
-      if (avatarPath.startsWith('http')) {
-        const match = avatarPath.match(/\/storage\/v1\/object\/public\/([^/]+)\/(.+)/);
-        if (match) return `${MEDIA_PROXY_BASE}/${match[1]}/${match[2]}`;
-      }
-      return `${MEDIA_PROXY_BASE}/avatars/${avatarPath}`;
-    }
-    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name || 'User')}`;
-  };
-
-  const avatarSrc = user?.avatar_url 
-    ? getAvatarUrl(user.avatar_url, user.full_name) 
-    : getAvatarUrl(null, user?.full_name || 'User');
-
-  useEffect(() => {
-    // If parent already passed currentUserId + statuses, skip the per-card queries entirely
-    if (propCurrentUserId !== undefined) return;
-
-    async function checkStatus() {
-      if (!id) return;
-      try {
-        const { data: { user: authUser } } = await supabase.auth.getUser();
-        if (!authUser) return;
-
-        setCurrentUserId(authUser.id);
-
-        if (!propCurrentUserProfile) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('full_name, avatar_url, username')
-            .eq('id', authUser.id)
-            .maybeSingle();
-          if (profile) setCurrentUserProfile(profile);
-        }
-
-        // Batch like/repost/save checks in parallel
-        const [likeRes, repostRes, saveRes] = await Promise.all([
-          supabase.from('likes').select('id').eq('user_id', authUser.id).eq('post_id', id).maybeSingle(),
-          supabase.from('reposts').select('id').eq('user_id', authUser.id).eq('post_id', id).maybeSingle(),
-          supabase.from('saved_posts').select('id').eq('user_id', authUser.id).eq('post_id', id).maybeSingle(),
-        ]);
-
-        setLiked(!!likeRes.data);
-        setReposted(!!repostRes.data);
-        setIsSaved(!!saveRes.data);
-      } catch (err) {
-        console.error('Error in checkStatus:', err);
-      }
-    }
-
-    checkStatus();
-  }, [id, propCurrentUserId]);
-
-  // Per-card realtime subscriptions removed — the feed-level channel in home/page.tsx
-  // already handles UPDATE events and syncs counts without spawning N WebSocket channels.
-
-  useEffect(() => {
-    if (!id || !showComments) return;
-
-    const channel = supabase
-      .channel(`post-comments:${id}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'comments',
-        filter: `post_id=eq.${id}`
-      }, () => {
-        loadComments();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [id, showComments]);
-
-  const loadComments = async () => {
-    setLoadingComments(true);
-    let query = supabase
-      .from('comments')
-      .select(`
-        id,
-        content,
-        created_at,
-        user_id,
-        parent_id,
-        user:profiles(full_name, avatar_url, username)
-      `)
-      .eq('post_id', id);
-    
-    if (commentSortOrder === 'newest') {
-      query = query.order('created_at', { ascending: false });
-    } else if (commentSortOrder === 'oldest') {
-      query = query.order('created_at', { ascending: true });
-    } else {
-      // Ranked - order by most voted (oldest first, but will be reordered by vote count after fetching)
-      query = query.order('created_at', { ascending: true });
-    }
-    
-    const { data, error } = await query;
-    
-    if (!error && data) {
-      // Fetch vote counts for all comments
-      const commentIds = data.map((c: any) => c.id);
-      const { data: votesData } = await supabase
-        .from('comment_votes')
-        .select('comment_id')
-        .in('comment_id', commentIds);
-      
-      // Count votes per comment
-      const voteCountMap: Record<string, number> = {};
-      if (votesData) {
-        for (const vote of votesData) {
-          voteCountMap[vote.comment_id] = (voteCountMap[vote.comment_id] || 0) + 1;
-        }
-      }
-
-      // Check which comments the current user has voted on
-      if (currentUserId) {
-        const { data: userVotes } = await supabase
-          .from('comment_votes')
-          .select('comment_id')
-          .eq('user_id', currentUserId)
-          .in('comment_id', commentIds);
-        
-        if (userVotes) {
-          setVotedComments(new Set(userVotes.map(v => v.comment_id)));
-        }
-      }
-
-      const topLevel: Comment[] = [];
-      const repliesMap: Record<string, CommentReply[]> = {};
-
-      for (const c of data as any[]) {
-        if (c.parent_id) {
-          if (!repliesMap[c.parent_id]) repliesMap[c.parent_id] = [];
-          repliesMap[c.parent_id].push({
-            id: c.id,
-            content: c.content,
-            created_at: c.created_at,
-            user_id: c.user_id,
-            user: c.user,
-          });
-        } else {
-          topLevel.push({
-            id: c.id,
-            content: c.content,
-            created_at: c.created_at,
-            user_id: c.user_id,
-            user: c.user,
-            replies: [],
-            votes_count: voteCountMap[c.id] || 0,
-          });
-        }
-      }
-
-      for (const comment of topLevel) {
-        comment.replies = repliesMap[comment.id] || [];
-      }
-
-      // Sort comments based on selected order
-      if (commentSortOrder === 'newest') {
-        // Newest: newest first
-        topLevel.sort((a, b) => {
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-        });
-      } else if (commentSortOrder === 'oldest') {
-        // Oldest: oldest first
-        topLevel.sort((a, b) => {
-          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-        });
-      } else {
-        // Ranked: by votes (highest first), then by created_at (oldest first)
-        topLevel.sort((a, b) => {
-          const voteDiff = (b.votes_count || 0) - (a.votes_count || 0);
-          if (voteDiff !== 0) return voteDiff;
-          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-        });
-      }
-
-      setComments(topLevel);
-    }
-    setLoadingComments(false);
   };
 
   const handleLike = async () => {
@@ -680,66 +438,52 @@ const generateShareLink = () => {
       toast.error('Please login to like posts');
       return;
     }
-    if (liking) return;
-    setLiking(true);
+
     const wasLiked = liked;
     setLiked(!liked);
-    setLikesCount(prev => wasLiked ? prev - 1 : prev + 1);
+    setLikesCount(liked ? likesCount - 1 : likesCount + 1);
+    setLiking(true);
+
     try {
       if (wasLiked) {
         await supabase
-          .from('likes')
+          .from('post_likes')
           .delete()
           .eq('user_id', currentUserId)
           .eq('post_id', id);
-        await supabase
-          .from('posts')
-          .update({ likes_count: likesCount - 1 })
-          .eq('id', id);
       } else {
-          // Check if already liked in DB to prevent duplicates
-          const { data: existingLike } = await supabase
-            .from('likes')
-            .select('id')
-            .eq('user_id', currentUserId)
-            .eq('post_id', id)
-            .maybeSingle();
-          if (existingLike) {
-            // Already liked — sync local state and bail
-            setLiked(true);
-            setLikesCount(prev => prev); // no change
-            setLiking(false);
-            return;
-          }
-          await supabase
-            .from('likes')
-            .upsert({ user_id: currentUserId, post_id: id }, { onConflict: 'user_id,post_id', ignoreDuplicates: true });
-          // Sync like to Drive
-          const driveFormData = new FormData();
-          driveFormData.append('type', 'interactions');
-          driveFormData.append('metadata', JSON.stringify({ type: 'like', post_id: id, timestamp: new Date().toISOString() }));
-          fetch('/api/drive/sync', { method: 'POST', body: driveFormData }).catch(console.error);
-          await supabase
-            .from('posts')
-            .update({ likes_count: likesCount + 1 })
-            .eq('id', id);
-        if (user_id !== currentUserId) {
-          await supabase
-            .from('notifications')
-            .insert({
-              user_id: user_id,
-              from_user_id: currentUserId,
-              type: 'like',
-              post_id: id,
-            });
-        }
+        await supabase
+          .from('post_likes')
+          .insert({ user_id: currentUserId, post_id: id });
       }
     } catch (error) {
       setLiked(wasLiked);
-      setLikesCount(prev => wasLiked ? prev + 1 : prev - 1);
-      toast.error('Failed to update like');
+      setLikesCount(wasLiked ? likesCount + 1 : likesCount - 1);
+      toast.error('Failed to like post');
     } finally {
       setLiking(false);
+    }
+  };
+
+  const handleSharePost = async () => {
+    const postUrl = `${window.location.origin}/post/${id}`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Post by ${user.full_name}`,
+          text: content.substring(0, 100),
+          url: postUrl,
+        });
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          navigator.clipboard.writeText(postUrl);
+          toast.success('Link copied to clipboard');
+        }
+      }
+    } else {
+      navigator.clipboard.writeText(postUrl);
+      toast.success('Link copied to clipboard');
     }
   };
 
@@ -748,62 +492,122 @@ const generateShareLink = () => {
       toast.error('Please login to repost');
       return;
     }
-    if (reposting) return;
+
     setReposting(true);
     try {
       if (reposted) {
-        const res = await fetch('/api/repost', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id: currentUserId, post_id: id })
-        });
-        const data = await res.json();
-        if (data.success) {
-          setReposted(false);
-          setRepostsCount(prev => prev - 1);
-          toast.success('Repost removed');
-        } else {
-          throw new Error(data.error);
-        }
+        await supabase
+          .from('reposts')
+          .delete()
+          .eq('user_id', currentUserId)
+          .eq('post_id', id);
+        setReposted(false);
+        setRepostsCount(Math.max(0, repostsCount - 1));
+        toast.success('Repost removed');
       } else {
-        const res = await fetch('/api/repost', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id: currentUserId, post_id: id })
-        });
-        const data = await res.json();
-          if (data.success) {
-            setReposted(true);
-            setRepostsCount(prev => prev + 1);
-            // Sync repost to Drive
-            const driveFormData = new FormData();
-            driveFormData.append('type', 'interactions');
-            driveFormData.append('metadata', JSON.stringify({ type: 'repost', post_id: id, timestamp: new Date().toISOString() }));
-            fetch('/api/drive/sync', { method: 'POST', body: driveFormData }).catch(console.error);
-            toast.success('Reposted successfully');
-          } else {
-          throw new Error(data.error);
-        }
+        await supabase
+          .from('reposts')
+          .insert({ user_id: currentUserId, post_id: id });
+        setReposted(true);
+        setRepostsCount(repostsCount + 1);
+        toast.success('Reposted!');
       }
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to update repost');
+      setShowRepostConfirm(false);
+    } catch (error) {
+      toast.error('Failed to repost');
     } finally {
       setReposting(false);
-      setShowRepostConfirm(false);
     }
   };
 
-  const handleOpenComments = () => {
-    setShowComments(true);
-    loadComments();
+  const handleOpenComments = async () => {
+    setShowComments(!showComments);
+    if (!showComments && comments.length === 0) {
+      setLoadingComments(true);
+      try {
+        const { data, error } = await supabase
+          .from('comments')
+          .select(`
+            id,
+            content,
+            created_at,
+            user_id,
+            votes_count,
+            user:profiles(full_name, avatar_url, username),
+            replies:comment_replies(
+              id,
+              content,
+              created_at,
+              user_id,
+              votes_count,
+              user:profiles(full_name, avatar_url, username)
+            )
+          `)
+          .eq('post_id', id)
+          .order('votes_count', { ascending: false });
+
+        if (error) throw error;
+        setComments(data || []);
+      } catch (error) {
+        toast.error('Failed to load comments');
+      } finally {
+        setLoadingComments(false);
+      }
+    }
   };
 
-  const handleCommentSortChange = (order: 'ranked' | 'newest' | 'oldest') => {
-    setCommentSortOrder(order);
-    // Reload comments with new sort order
-    setTimeout(() => {
-      loadComments();
-    }, 0);
+  const handleSubmitComment = async () => {
+    if (!newComment.trim() || !currentUserId) {
+      toast.error('Please enter a comment');
+      return;
+    }
+
+    setSubmittingComment(true);
+    try {
+      const { data, error } = await supabase
+        .from('comments')
+        .insert({
+          post_id: id,
+          user_id: currentUserId,
+          content: newComment,
+        })
+        .select(`
+          id,
+          content,
+          created_at,
+          user_id,
+          votes_count,
+          user:profiles(full_name, avatar_url, username)
+        `)
+        .single();
+
+      if (error) throw error;
+
+      setComments([data, ...comments]);
+      setNewComment('');
+      setCommentsCount(commentsCount + 1);
+      toast.success('Comment posted!');
+    } catch (error) {
+      toast.error('Failed to post comment');
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    try {
+      await supabase
+        .from('comments')
+        .delete()
+        .eq('id', commentId);
+
+      setComments(comments.filter(c => c.id !== commentId));
+      setCommentsCount(Math.max(0, commentsCount - 1));
+      toast.success('Comment deleted');
+      setDeletingCommentId(null);
+    } catch (error) {
+      toast.error('Failed to delete comment');
+    }
   };
 
   const handleVoteComment = async (commentId: string) => {
@@ -813,249 +617,45 @@ const generateShareLink = () => {
     }
 
     const hasVoted = votedComments.has(commentId);
-    
+    const newVoted = new Set(votedComments);
+
     if (hasVoted) {
-      // Remove vote
-      const { error } = await supabase
-        .from('comment_votes')
-        .delete()
-        .eq('comment_id', commentId)
-        .eq('user_id', currentUserId);
-
-      if (!error) {
-        setVotedComments(prev => {
-          const next = new Set(prev);
-          next.delete(commentId);
-          return next;
-        });
-        // Update comments (top-level and replies)
-        setComments(prev => prev.map(c => {
-          if (c.id === commentId) {
-            return { ...c, votes_count: Math.max(0, (c.votes_count || 0) - 1) };
-          }
-          // Also update votes in replies
-          if (c.replies) {
-            return {
-              ...c,
-              replies: c.replies.map(r => 
-                r.id === commentId ? { ...r, votes_count: Math.max(0, (r.votes_count || 0) - 1) } : r
-              )
-            };
-          }
-          return c;
-        }));
-        toast.success('Vote removed');
-      } else {
-        toast.error(error.message || 'Could not remove vote');
-      }
+      newVoted.delete(commentId);
     } else {
-      // Add vote
-      const { error } = await supabase
-        .from('comment_votes')
-        .insert({ comment_id: commentId, user_id: currentUserId });
-
-      if (!error) {
-        setVotedComments(prev => new Set([...prev, commentId]));
-        // Update comments (top-level and replies)
-        setComments(prev => {
-          const updated = prev.map(c => {
-            if (c.id === commentId) {
-              return { ...c, votes_count: (c.votes_count || 0) + 1 };
-            }
-            // Also update votes in replies
-            if (c.replies) {
-              return {
-                ...c,
-                replies: c.replies.map(r =>
-                  r.id === commentId ? { ...r, votes_count: (r.votes_count || 0) + 1 } : r
-                )
-              };
-            }
-            return c;
-          });
-          // Re-sort comments: by votes (highest first), then by created_at (newest first)
-          updated.sort((a, b) => {
-            const voteDiff = (b.votes_count || 0) - (a.votes_count || 0);
-            if (voteDiff !== 0) return voteDiff;
-            return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-          });
-          return updated;
-        });
-        toast.success('Vote added');
-      } else {
-        toast.error(error.message || 'Could not add vote');
-      }
-    }
-  };
-
-  const handleSubmitComment = async () => {
-    if (!currentUserId) {
-      toast.error('Please login to comment');
-      return;
+      newVoted.add(commentId);
     }
 
-    if (!newComment.trim()) return;
-
-    setSubmittingComment(true);
-    try {
-      const { data, error } = await supabase
-        .from('comments')
-        .insert({
-          post_id: id,
-          user_id: currentUserId,
-          content: newComment.trim(),
-          parent_id: replyingTo?.id || null,
-        })
-        .select(`
-          id,
-          content,
-          created_at,
-          user_id,
-          parent_id,
-          user:profiles(full_name, avatar_url, username)
-        `)
-        .single();
-
-      if (error) throw error;
-
-      if (data) {
-        if (replyingTo) {
-          setComments(prev => prev.map(c => {
-            if (c.id === replyingTo.id) {
-              return { ...c, replies: [...(c.replies || []), data as any] };
-            }
-            return c;
-          }));
-          setExpandedReplies(prev => new Set([...prev, replyingTo.id]));
-        } else {
-          setComments(prev => [data as any, ...prev]);
-        }
-        setNewComment('');
-        setReplyingTo(null);
-        setCommentsCount(prev => prev + 1);
-        toast.success('Comment added');
-        
-        // Notify post owner
-        if (user_id !== currentUserId) {
-          await supabase
-            .from('notifications')
-            .insert({
-              user_id: user_id,
-              from_user_id: currentUserId,
-              type: 'comment',
-              post_id: id,
-              comment_id: data.id,
-            });
-        }
-      }
-    } catch (error) {
-      toast.error('Failed to add comment');
-    } finally {
-      setSubmittingComment(false);
-    }
-  };
-
-  const handleDeleteComment = async (commentId: string, isReply: boolean = false, parentId?: string) => {
-    if (!currentUserId) return;
+    setVotedComments(newVoted);
 
     try {
-      const { error } = await supabase
-        .from('comments')
-        .delete()
-        .eq('id', commentId)
-        .eq('user_id', currentUserId);
-
-      if (error) throw error;
-
-      if (isReply && parentId) {
-        setComments(prev => prev.map(c => {
-          if (c.id === parentId) {
-            return { ...c, replies: c.replies?.filter(r => r.id !== commentId) };
-          }
-          return c;
-        }));
+      if (hasVoted) {
+        await supabase
+          .from('comment_votes')
+          .delete()
+          .eq('user_id', currentUserId)
+          .eq('comment_id', commentId);
       } else {
-        setComments(prev => prev.filter(c => c.id !== commentId));
+        await supabase
+          .from('comment_votes')
+          .insert({ user_id: currentUserId, comment_id: commentId });
       }
-      setCommentsCount(prev => prev - 1);
-      toast.success('Comment deleted');
     } catch (error) {
-      toast.error('Failed to delete comment');
+      setVotedComments(votedComments);
+      toast.error('Failed to vote');
     }
-  };
-
-  const toggleReplies = (commentId: string) => {
-    setExpandedReplies(prev => {
-      const next = new Set(prev);
-      if (next.has(commentId)) next.delete(commentId);
-      else next.add(commentId);
-      return next;
-    });
-  };
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-
-    if (minutes < 1) return 'now';
-    if (minutes < 60) return `${minutes}m`;
-    if (hours < 24) return `${hours}h`;
-    return `${days}d`;
-  };
-
-  const formatFullDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
   };
 
   const handleDelete = async () => {
-    if (!currentUserId || currentUserId !== user_id) {
-      toast.error('You can only delete your own posts');
-      return;
-    }
-
     setDeleting(true);
     try {
-      // Delete media from storage first
-      if (finalMediaUrls.length > 0) {
-        const filePaths = finalMediaUrls.map(url => {
-          // Proxy URLs look like /api/media/posts/user-id/file.jpg
-          const proxyMatch = url.match(/^\/api\/media\/posts\/(.+)/);
-          if (proxyMatch) return proxyMatch[1];
-          // Legacy direct Supabase URL
-          const parts = url.split('/public/posts/');
-          return parts.length > 1 ? parts[1] : null;
-        }).filter(Boolean) as string[];
-
-        if (filePaths.length > 0) {
-          await supabase.storage.from('posts').remove(filePaths);
-        }
-      }
-
-      const { error } = await supabase
+      await supabase
         .from('posts')
         .delete()
         .eq('id', id);
-
-      if (error) throw error;
-
+      
       toast.success('Post deleted');
-      setShowPostMenuSheet(false);
-      if (onDelete) {
-        onDelete(id);
-      } else {
-        router.refresh();
-      }
+      onDelete?.(id);
+      setShowDeleteConfirm(false);
     } catch (error) {
       toast.error('Failed to delete post');
     } finally {
@@ -1063,154 +663,25 @@ const generateShareLink = () => {
     }
   };
 
-  function CommentItem({ comment, isReply, parentId, currentUserId, getAvatarUrl, formatTime, deletingCommentId, setDeletingCommentId, handleDeleteComment, setReplyingTo, setNewComment, commentInputRef, handleVoteComment, votedComments, showCommentMenu, setShowCommentMenu, replies, expandedReplies, toggleReplies }: any) {
-    const [isExpanded, setIsExpanded] = useState(false);
-    const content = comment.content || '';
-    const shouldTruncate = content.length > 115;
-    const displayedContent = isExpanded || !shouldTruncate ? content : content.slice(0, 115);
-    const hasVoted = votedComments?.has(comment.id);
-    const avatarSize = isReply ? 'w-8 h-8' : 'w-10 h-10';
+  // Get avatar source
+  const avatarSrc = user.avatar_url 
+    ? (user.avatar_url.startsWith('http') 
+        ? user.avatar_url 
+        : `${MEDIA_PROXY_BASE}/avatars/${user.avatar_url}`)
+    : `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.full_name || 'User')}`;
 
-    return (
-      <div className={`flex gap-3 ${isReply ? '' : ''}`}>
-        {/* Avatar */}
-        <div className={`${avatarSize} rounded-full overflow-hidden border border-black/10 dark:border-white/10 bg-zinc-200 dark:bg-zinc-800 flex-shrink-0`}>
-          <img 
-            src={getAvatarUrl(comment.user.avatar_url, comment.user.full_name)} 
-            alt={comment.user.full_name || 'User'}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(comment.user.full_name || 'User')}`;
-            }}
-          />
-        </div>
-        
-        <div className="flex-1 min-w-0">
-          {/* Header: Name, Timing, Three-dot Menu */}
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className={`font-bold ${isReply ? 'text-base' : 'text-base'}`}>{comment.user.full_name || comment.user.username || 'User'}</span>
-              <span className="text-zinc-500 text-sm">{formatTime(comment.created_at)}</span>
-            </div>
-            
-            {/* Three-dot Menu */}
-            <div className="relative flex-shrink-0">
-              {deletingCommentId === comment.id ? (
-                <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2 duration-200">
-                  <button
-                    onClick={() => setDeletingCommentId(null)}
-                    className="text-xs font-medium text-zinc-500 hover:text-black dark:hover:text-white"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => {
-                      handleDeleteComment(comment.id, isReply, parentId);
-                      setDeletingCommentId(null);
-                    }}
-                    className="text-xs font-medium text-red-500 hover:text-red-600"
-                  >
-                    Confirm
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setSelectedCommentMenu(comment.id)}
-                  className="p-1 text-zinc-400 hover:text-black dark:hover:text-white rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-                >
-                  <MoreHorizontal className="w-4 h-4" strokeWidth={1.5} />
-                </button>
-              )}
-            </div>
-          </div>
+  // Format time helper
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-          {/* Content */}
-          <div 
-            onClick={() => shouldTruncate && setIsExpanded(!isExpanded)}
-            className={`${shouldTruncate ? 'cursor-pointer' : ''} group/comment-content mt-1`}
-          >
-            <p className="text-base text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap">
-              <MentionText text={displayedContent} />
-              {shouldTruncate && !isExpanded && <span>...</span>}
-              {shouldTruncate && (
-                <span className="ml-1 font-bold text-black dark:text-white group-hover/comment-content:underline">
-                  {isExpanded ? ' See less' : ' See more'}
-                </span>
-              )}
-            </p>
-          </div>
-
-          {/* Actions row */}
-          <div className="flex items-center gap-4 mt-2">
-            {/* Left: Reply, Replies */}
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => {
-                  const username = (comment.user as any)?.username;
-                  setReplyingTo({
-                    id: isReply ? (parentId || comment.id) : comment.id,
-                    name: username ? `@${username}` : (comment.user?.full_name || 'User')
-                  });
-                  setNewComment(username ? `@${username} ` : '');
-                }}
-                className="text-sm text-zinc-500 hover:text-black dark:hover:text-white transition-colors"
-              >
-                Reply
-              </button>
-
-              {/* Replies toggle — only for main comments with replies */}
-              {!isReply && replies && replies.length > 0 && (
-                <button
-                  onClick={() => toggleReplies(comment.id)}
-                  className="text-sm text-zinc-500 hover:text-black dark:hover:text-white transition-colors"
-                >
-                  {expandedReplies?.has(comment.id) ? 'Hide' : `${replies.length} ${replies.length === 1 ? 'Reply' : 'Replies'}`}
-                </button>
-              )}
-            </div>
-
-            {/* Right: Like button */}
-            <div className="ml-auto">
-              <button
-                onClick={() => handleVoteComment(comment.id)}
-                className={`flex items-center text-sm transition-colors ${hasVoted ? 'text-red-500' : 'text-zinc-500 hover:text-red-500'}`}
-              >
-                <Heart className={`w-4 h-4 ${hasVoted ? 'fill-current' : ''}`} strokeWidth={1.5} />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const renderComment = (comment: Comment | CommentReply, isReply: boolean = false, parentId?: string) => {
-    if (!comment || !comment.user) return null;
-    const commentWithReplies = comment as Comment;
-    return (
-      <CommentItem
-        key={comment.id}
-        comment={comment}
-        isReply={isReply}
-        parentId={parentId}
-        currentUserId={currentUserId}
-        getAvatarUrl={getAvatarUrl}
-        formatTime={formatTime}
-        deletingCommentId={deletingCommentId}
-        setDeletingCommentId={setDeletingCommentId}
-        handleDeleteComment={handleDeleteComment}
-        setReplyingTo={setReplyingTo}
-        setNewComment={setNewComment}
-        commentInputRef={commentInputRef}
-        handleVoteComment={handleVoteComment}
-        votedComments={votedComments}
-        showCommentMenu={showCommentMenu}
-        setShowCommentMenu={setShowCommentMenu}
-        replies={commentWithReplies.replies}
-        expandedReplies={expandedReplies}
-        toggleReplies={toggleReplies}
-      />
-    );
+    if (diffInSeconds < 60) return 'now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d`;
+    
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
   if (reposted_id && !isNested) {
@@ -1239,10 +710,6 @@ const generateShareLink = () => {
           isNested={true} 
           currentUserId={currentUserId}
           currentUserProfile={currentUserProfile}
-          initialLiked={initialLiked}
-          initialReposted={initialReposted}
-          initialSaved={initialSaved}
-          isVisible={isVisible}
         />
       </div>
     );
@@ -1251,20 +718,36 @@ const generateShareLink = () => {
   return (
     <div className={`flex flex-col ${isNested ? 'bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl mx-4 mb-2 border border-black/5 dark:border-white/5' : 'border-b border-black/5 dark:border-white/5'}`}>
       <div className="flex flex-col p-4 pb-2">
-        {/* Header: Avatar and More button */}
+        {/* Header: Avatar, Name, and More button */}
         <div className="flex items-start justify-between mb-3">
-          <Link href={`/${user.username || user_id}`} className="shrink-0">
-            <div className="rounded-full overflow-hidden border border-black/5 dark:border-white/10 bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center" style={{ width: avatarSize, height: avatarSize }}>
-              <img 
-                src={avatarSrc} 
-                alt={user.full_name} 
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.full_name || 'User')}`;
-                }}
-              />
+          <div className="flex items-center gap-3 flex-1">
+            <Link href={`/${user.username || user_id}`} className="shrink-0">
+              <div className="rounded-full overflow-hidden border border-black/5 dark:border-white/10 bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center" style={{ width: avatarSize, height: avatarSize }}>
+                <img 
+                  src={avatarSrc} 
+                  alt={user.full_name} 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.full_name || 'User')}`;
+                  }}
+                />
+              </div>
+            </Link>
+            <div className="flex items-center gap-1.5">
+              <Link href={`/${user.username || user_id}`} className="font-bold text-[16px] hover:underline leading-tight">
+                {user.full_name}
+              </Link>
+              {user.identity_tag && (
+                <VerifiedBadge identity_tag={user.identity_tag} />
+              )}
+              {isFollower && !isNested && (
+                <>
+                  <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                  <span className="text-[13px] font-medium text-zinc-400">Following</span>
+                </>
+              )}
             </div>
-          </Link>
+          </div>
           {!isNested && (
             <button
               onClick={() => setShowPostMenuSheet(true)}
@@ -1276,22 +759,8 @@ const generateShareLink = () => {
           )}
         </div>
 
-        {/* User Details: Name, Username, Time, Location, Community */}
+        {/* User Details: Username, Time, Location, Community */}
         <div className="mb-3">
-          <div className="flex items-center gap-1.5 mb-1">
-            <Link href={`/${user.username || user_id}`} className="font-bold text-[16px] hover:underline leading-tight">
-              {user.full_name}
-            </Link>
-            {user.identity_tag && (
-              <VerifiedBadge identity_tag={user.identity_tag} />
-            )}
-            {isFollower && !isNested && (
-              <>
-                <span className="text-zinc-300 dark:text-zinc-700">•</span>
-                <span className="text-[13px] font-medium text-zinc-400">Following</span>
-              </>
-            )}
-          </div>
           <div className="flex items-center gap-1.5 text-zinc-500 text-[13px] flex-wrap">
             <span className="font-medium">@{user.username || 'user'}</span>
             <span className="text-zinc-300 dark:text-zinc-700">•</span>
@@ -1458,251 +927,249 @@ const generateShareLink = () => {
                   <button
                     onClick={handleRepost}
                     disabled={reposting}
-                    className={`flex-1 px-4 py-3 text-base font-bold text-white rounded-2xl transition-colors flex items-center justify-center gap-2 ${
-                      reposted ? 'bg-red-500 hover:bg-red-600' : 'bg-black dark:bg-white dark:text-black hover:bg-zinc-800'
-                    }`}
+                    className="flex-1 px-4 py-3 text-base font-bold bg-green-500 text-white rounded-2xl hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
                   >
                     {reposting ? <Loader centered={false} className="text-current" /> : (reposted ? 'Remove' : 'Repost')}
                   </button>
                 </div>
               </div>
-            </div>
-          </DrawerContent>
-        </Drawer>
+              </DrawerContent>
+            </Drawer>
 
-          <AnimatePresence>
-              {showComments && (
-                <motion.div
-                  key={`comment-overlay-${id}`}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="fixed inset-0 bg-background z-[60] flex items-end justify-center overflow-hidden"
-                  onClick={() => { setShowComments(false); setReplyingTo(null); }}
-                  style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
-                >                        <motion.div
-                      drag="y"
-                      dragConstraints={{ top: 0, bottom: 0 }}
-                      dragElastic={0.05}
-                        onDragEnd={(_, info) => {
-                          if (info.offset.y > 100 || info.velocity.y > 300) {
-                            setShowComments(false);
-                            setReplyingTo(null);
-                          }
-                        }}
-                        initial={{ y: '100%' }}
-                        animate={{ y: 0 }}
-                        exit={{ y: '100%' }}
-                        transition={{ type: 'tween', duration: 0.3, ease: 'easeOut' }}
-                        onClick={(e) => e.stopPropagation()}
-                          style={{ height: viewportHeight ? `${viewportHeight}px` : '90dvh', WebkitOverflowScrolling: 'touch' }}
-                            className="w-full max-w-xl bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white flex flex-col relative rounded-t-[24px] overflow-hidden shadow-2xl will-change-transform" onTouchMove={(e) => e.preventDefault()}
-  >
-  {/* Grabber — 8px below top border */}
-  <div className="w-12 h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full mx-auto mt-3 mb-2 shrink-0" />
-  
-  {/* Comment Sheet Header — interactions row */}
-                                <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-black/5 dark:border-white/5">
-                                    {/* Left: Like+count, Comment+count, Share */}
-                                    <div className="flex items-center gap-4">
-                                      <button
-                                        onClick={handleLike}
-                                        disabled={liking}
-                                        className={`flex items-center gap-1 transition-colors disabled:opacity-50 ${liked ? 'text-red-500' : 'text-zinc-500 hover:text-red-500 dark:hover:text-red-400'}`}
-                                      >
-                                        <Heart className={`w-6 h-6 ${liked ? 'fill-current' : ''}`} strokeWidth={1.5} />
-                                        <span className="text-sm font-medium">{likesCount}</span>
-                                      </button>
-                                      <button
-                                        className="flex items-center gap-1 text-zinc-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
-                                      >
-                                        <MessageCircle className="w-6 h-6" strokeWidth={1.5} />
-                                        <span className="text-sm font-medium">{commentsCount}</span>
-                                      </button>
-                                      <button
-                                        onClick={handleSharePost}
-                                        className="flex items-center text-zinc-500 hover:text-black dark:hover:text-white transition-colors"
-                                      >
-                                        <Share2 className="w-6 h-6" strokeWidth={1.5} />
-                                      </button>
-                                    </div>
-                                    
-                                    {/* Right: Repost+count, Save */}
-                                    <div className="flex items-center gap-4">
-                                      <button
-                                        onClick={() => setShowRepostConfirm(true)}
-                                        disabled={reposting}
-                                        className={`flex items-center gap-1 transition-colors disabled:opacity-50 ${reposted ? 'text-green-500' : 'text-zinc-500 hover:text-green-500 dark:hover:text-green-400'}`}
-                                      >
-                                        <Repeat className={`w-6 h-6 ${reposted ? 'stroke-[2.5px]' : ''}`} strokeWidth={1.5} />
-                                        <span className="text-sm font-medium">{repostsCount}</span>
-                                      </button>
-                                      <button
-                                        onClick={handleSavePost}
-                                        className={`flex items-center transition-colors ${isSaved ? 'text-black dark:text-white' : 'text-zinc-500 hover:text-black dark:hover:text-white'}`}
-                                      >
-                                        <Bookmark className={`w-6 h-6 ${isSaved ? 'fill-current' : ''}`} strokeWidth={1.5} />
-                                      </button>
-                                    </div>
-                                </div>
-                                
-                                {/* HR separator */}
-                                <div className="h-px bg-black/5 dark:bg-white/5" />
-
-                        <div className="flex-1 overflow-y-auto px-4 py-2 space-y-4 overscroll-contain touch-pan-y custom-scrollbar" onPointerDownCapture={(e) => e.stopPropagation()}>
-                      {loadingComments ? (
-                        <Loader />
-                      ) : comments.length > 0 ? (
-                        comments.map((comment) => (
-                          <div key={comment.id} className="space-y-2">
-                            {renderComment(comment)}
-                            {comment.replies && comment.replies.length > 0 && expandedReplies.has(comment.id) && (
-                              <div className="ml-8 space-y-3">
-                                {comment.replies.map((reply) => renderComment(reply, true, comment.id))}
-                              </div>
-                            )}
-                          </div>
-                        ))
-                      ) : (
-                        <div className="flex flex-col items-center gap-2 py-10 text-zinc-500">
-                          <div className="w-12 h-12 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center">
-                            <MessageCircle className="w-6 h-6 text-zinc-400" strokeWidth={1.5} />
-                          </div>
-                          <p className="text-sm font-semibold text-zinc-500">No comments yet</p>
-                          <p className="text-xs text-zinc-400">Be the first to share your thoughts!</p>
+      {showComments && (
+        <div className="border-t border-black/5 dark:border-white/5 bg-white dark:bg-zinc-950">
+          <div className="max-h-[60vh] overflow-y-auto">
+            {loadingComments ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader centered={true} />
+              </div>
+            ) : comments.length > 0 ? (
+              comments.map((comment) => {
+                const hasVoted = votedComments.has(comment.id);
+                return (
+                  <div key={comment.id} className="border-b border-black/5 dark:border-white/5 p-4">
+                    <div className="flex gap-3">
+                      <div className="shrink-0">
+                        <div className="w-8 h-8 rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
+                          <img 
+                            src={comment.user.avatar_url ? `${MEDIA_PROXY_BASE}/avatars/${comment.user.avatar_url}` : `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(comment.user.full_name || 'User')}`}
+                            alt={comment.user.full_name}
+                            className="w-full h-full object-cover"
+                          />
                         </div>
-                      )}
-                      {comments.length > 0 && (
-                        <div className="flex items-center gap-2 py-4 px-2 justify-center">
-                          <MessageCircle className="w-4 h-4 text-zinc-400" strokeWidth={1.5} />
-                          <span className="text-xs text-zinc-400 font-medium">Join the conversation — add your comment below</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className="font-bold text-sm">{comment.user.full_name}</span>
+                          <span className="text-zinc-400 text-xs">@{comment.user.username}</span>
+                          <span className="text-zinc-400 text-xs">{formatTime(comment.created_at)}</span>
                         </div>
-                      )}
-                      <div ref={commentsEndRef} />
-                    </div>
-
-                          <div className="bg-zinc-100 dark:bg-zinc-900 pb-[env(safe-area-inset-bottom,16px)]">
-                        <div className="px-4 py-3 gap-3 relative">
-                          {/* Mentions dropdown */}
-                          {showMentions && (
-                            <div className="absolute bottom-full left-0 right-0 mb-2 bg-zinc-100 dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded-xl shadow-2xl z-20 overflow-hidden">
-                              {mentionResults.map((user) => (
-                                <button
-                                  key={user.username}
-                                  onClick={() => selectMention(user.username)}
-                                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-left"
-                                >
-                                  <div className="w-8 h-8 rounded-full overflow-hidden border border-black/10 dark:border-white/10 bg-zinc-200 dark:bg-zinc-900">
-                                    <img
-                                      src={getAvatarUrl(user.avatar_url, user.full_name)}
-                                      alt={user.full_name}
+                        <p className="text-sm text-zinc-800 dark:text-zinc-200 break-words">{comment.content}</p>
+                        {comment.replies && comment.replies.length > 0 && (
+                          <button
+                            onClick={() => {
+                              const newExpanded = new Set(expandedReplies);
+                              if (newExpanded.has(comment.id)) {
+                                newExpanded.delete(comment.id);
+                              } else {
+                                newExpanded.add(comment.id);
+                              }
+                              setExpandedReplies(newExpanded);
+                            }}
+                            className="text-xs text-blue-500 hover:underline mt-2"
+                          >
+                            {expandedReplies.has(comment.id) ? 'Hide' : 'Show'} {comment.replies.length} {comment.replies.length === 1 ? 'reply' : 'replies'}
+                          </button>
+                        )}
+                        {expandedReplies.has(comment.id) && comment.replies && (
+                          <div className="mt-3 space-y-3 pl-3 border-l border-zinc-200 dark:border-zinc-800">
+                            {comment.replies.map((reply) => (
+                              <div key={reply.id} className="flex gap-2">
+                                <div className="shrink-0">
+                                  <div className="w-6 h-6 rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
+                                    <img 
+                                      src={reply.user.avatar_url ? `${MEDIA_PROXY_BASE}/avatars/${reply.user.avatar_url}` : `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(reply.user.full_name || 'User')}`}
+                                      alt={reply.user.full_name}
                                       className="w-full h-full object-cover"
                                     />
                                   </div>
-                                  <div className="flex flex-col">
-                                    <span className="text-base font-bold">{user.full_name}</span>
-                                    <span className="text-base text-zinc-500">@{user.username}</span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-1 mb-1">
+                                    <span className="font-bold text-xs">{reply.user.full_name}</span>
+                                    <span className="text-zinc-400 text-xs">@{reply.user.username}</span>
+                                    <span className="text-zinc-400 text-xs">{formatTime(reply.created_at)}</span>
                                   </div>
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                          
-                          {/* Three column layout: Profile Photo | Input Box | Send Icon */}
-                          <div className="flex items-end gap-3">
-                            {/* Left: Profile Photo 40px */}
-                            {currentUserProfile && (
-                              <div className="w-10 h-10 rounded-full overflow-hidden border border-black/10 dark:border-white/10 bg-zinc-200 dark:bg-zinc-800 flex-shrink-0">
-                                <img
-                                  src={getAvatarUrl(currentUserProfile.avatar_url, currentUserProfile.full_name)}
-                                  alt={currentUserProfile.full_name}
-                                  className="w-full h-full object-cover"
-                                />
+                                  <p className="text-xs text-zinc-800 dark:text-zinc-200 break-words">{reply.content}</p>
+                                </div>
                               </div>
-                            )}
-                            
-                            {/* Center: Comment Input Box */}
-                            <textarea
-                              ref={commentInputRef}
-                              rows={1}
-                              value={newComment}
-                              onChange={handleCommentChange}
-                              placeholder={replyingTo ? `Reply to ${replyingTo.name}...` : 'Add a comment...'}
-                              className="flex-1 bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white text-[16px] outline-none placeholder-zinc-500 resize-none min-h-[40px] max-h-[calc(1.5em*3)] leading-snug overflow-y-auto px-4 py-2 rounded-2xl"
-                            />
-                            
-                            {/* Right: Send Icon */}
-                            <button
-                              onClick={handleSubmitComment}
-                              disabled={submittingComment || !newComment.trim()}
-                              className={`p-2 rounded-full transition-colors flex-shrink-0 flex items-center justify-center ${
-                                submittingComment || !newComment.trim()
-                                  ? 'bg-zinc-300 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-500'
-                                  : 'bg-black dark:bg-white text-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-200'
-                              }`}
-                            >
-                              {submittingComment ? (
-                                <Loader centered={false} className="text-current w-5 h-5" />
-                              ) : (
-                                <Send className="w-6 h-6" strokeWidth={1.5} />
-                              )}
-                            </button>
+                            ))}
                           </div>
-                        </div>
+                        )}
                       </div>
-                    </motion.div>
-                  </motion.div>
-              )}
-          </AnimatePresence>
-
-          {/* Post Options Bottom Sheet */}
-          <AnimatePresence>
-            {showPostMenuSheet && (
-              <>
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-[70] bg-black/20 dark:bg-black/40 backdrop-blur-sm"
-                  onClick={() => setShowPostMenuSheet(false)}
-                />
-                <motion.div
-                  initial={{ opacity: 0, y: 100 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 100 }}
-                  className="fixed bottom-0 left-0 right-0 z-[80] bg-white dark:bg-zinc-900 rounded-t-3xl shadow-2xl overflow-hidden pb-[env(safe-area-inset-bottom,16px)]"
-                >
-                  <div className="w-12 h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full mx-auto mt-3 mb-2" />
-                  <div className="px-2 py-2">
-                    <button
-                      onClick={handleSharePost}
-                      className="w-full flex items-center gap-3 px-4 py-4 text-base font-medium hover:bg-black/5 dark:hover:bg-white/5 transition-colors rounded-2xl"
-                    >
-                      <Copy size={20} strokeWidth={1.5} />
-                      Copy Link
-                    </button>
-                    <button
-                      onClick={handleDownloadMedia}
-                      disabled={!hasMedia}
-                      className="w-full flex items-center gap-3 px-4 py-4 text-base font-medium hover:bg-black/5 dark:hover:bg-white/5 transition-colors rounded-2xl disabled:opacity-50"
-                    >
-                      <CornerRightDown size={20} strokeWidth={1.5} />
-                      Download
-                    </button>
-                    {currentUserId === user_id && (
+                      <div className="ml-auto">
+                        <button
+                          onClick={() => handleVoteComment(comment.id)}
+                          className={`flex items-center text-sm transition-colors ${hasVoted ? 'text-red-500' : 'text-zinc-500 hover:text-red-500'}`}
+                        >
+                          <Heart className={`w-4 h-4 ${hasVoted ? 'fill-current' : ''}`} strokeWidth={1.5} />
+                        </button>
+                      </div>
+                    </div>
+                    {deletingCommentId === comment.id && (
+                      <div className="mt-2 flex gap-2">
+                        <button
+                          onClick={() => setDeletingCommentId(null)}
+                          className="text-xs px-2 py-1 bg-zinc-200 dark:bg-zinc-800 rounded hover:bg-zinc-300 dark:hover:bg-zinc-700"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => handleDeleteComment(comment.id)}
+                          className="text-xs px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                        >
+                          Confirm Delete
+                        </button>
+                      </div>
+                    )}
+                    {currentUserId === comment.user_id && !deletingCommentId && (
                       <button
-                        onClick={() => { setShowDeleteConfirm(true); setShowPostMenuSheet(false); }}
-                        className="w-full flex items-center gap-3 px-4 py-4 text-base font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors rounded-2xl"
+                        onClick={() => setDeletingCommentId(comment.id)}
+                        className="text-xs text-red-500 hover:underline mt-2"
                       >
-                        <Trash2 size={20} strokeWidth={1.5} />
-                        Delete Post
+                        Delete
                       </button>
                     )}
                   </div>
-                </motion.div>
-              </>
+                );
+              })
+            ) : (
+              <div className="flex flex-col items-center gap-2 py-10 text-zinc-500">
+                <div className="w-12 h-12 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center">
+                  <MessageCircle className="w-6 h-6 text-zinc-400" strokeWidth={1.5} />
+                </div>
+                <p className="text-sm font-semibold text-zinc-500">No comments yet</p>
+                <p className="text-xs text-zinc-400">Be the first to share your thoughts!</p>
+              </div>
             )}
-          </AnimatePresence>
+            {comments.length > 0 && (
+              <div className="flex items-center gap-2 py-4 px-2 justify-center">
+                <MessageCircle className="w-4 h-4 text-zinc-400" strokeWidth={1.5} />
+                <span className="text-xs text-zinc-400 font-medium">Join the conversation — add your comment below</span>
+              </div>
+            )}
+            <div ref={commentsEndRef} />
+          </div>
+
+          {/* Comment input */}
+          <div className="border-t border-black/5 dark:border-white/5 p-4 bg-zinc-50 dark:bg-zinc-900">
+            <div className="flex gap-3">
+              <div className="shrink-0">
+                <div className="w-8 h-8 rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
+                  {currentUserProfile?.avatar_url && (
+                    <img 
+                      src={currentUserProfile.avatar_url.startsWith('http') ? currentUserProfile.avatar_url : `${MEDIA_PROXY_BASE}/avatars/${currentUserProfile.avatar_url}`}
+                      alt={currentUserProfile.full_name}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </div>
+              </div>
+              <div className="flex-1 flex flex-col gap-2">
+                <textarea
+                  ref={commentInputRef}
+                  value={newComment}
+                  onChange={handleCommentChange}
+                  placeholder="Add a comment..."
+                  className="w-full bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded-2xl px-4 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows={1}
+                />
+                {showMentions && mentionResults.length > 0 && (
+                  <div className="bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded-2xl overflow-hidden">
+                    {mentionResults.map((result) => (
+                      <button
+                        key={result.username}
+                        onClick={() => selectMention(result.username)}
+                        className="w-full flex items-center gap-2 px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-left"
+                      >
+                        <div className="w-6 h-6 rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center shrink-0">
+                          {result.avatar_url && (
+                            <img 
+                              src={`${MEDIA_PROXY_BASE}/avatars/${result.avatar_url}`}
+                              alt={result.full_name}
+                              className="w-full h-full object-cover"
+                            />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold">{result.full_name}</p>
+                          <p className="text-xs text-zinc-500">@{result.username}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <button
+                  onClick={handleSubmitComment}
+                  disabled={submittingComment || !newComment.trim()}
+                  className="self-end px-4 py-2 bg-blue-500 text-white rounded-full text-sm font-bold hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {submittingComment ? <Loader centered={false} className="text-current" /> : <Send size={16} />}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <AnimatePresence>
+        {showPostMenuSheet && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[60] bg-black/20 dark:bg-black/40 backdrop-blur-sm"
+              onClick={() => setShowPostMenuSheet(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, y: 100 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 100 }}
+              className="fixed bottom-0 left-0 right-0 z-[70] max-w-xl mx-auto bg-white dark:bg-zinc-900 rounded-t-3xl shadow-2xl overflow-hidden pb-[env(safe-area-inset-bottom,16px)]"
+            >
+              <div className="w-12 h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full mx-auto mt-3 mb-2" />
+              <div className="px-2 py-2">
+                {currentUserId === user_id && (
+                  <>
+                    <button 
+                      onClick={() => {
+                        setShowDeleteConfirm(true);
+                        setShowPostMenuSheet(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-4 text-base font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors rounded-2xl"
+                    >
+                      <Trash2 size={20} strokeWidth={1.5} />
+                      Delete Post
+                    </button>
+                  </>
+                )}
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(content);
+                    toast.success('Post text copied');
+                    setShowPostMenuSheet(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-4 text-base font-medium hover:bg-black/5 dark:hover:bg-white/5 transition-colors rounded-2xl"
+                >
+                  <Copy size={20} strokeWidth={1.5} />
+                  Copy Text
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
           <Drawer open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
             <DrawerContent className="bg-zinc-100 dark:bg-zinc-900 border-black/10 dark:border-white/10 pb-8 rounded-t-3xl">
