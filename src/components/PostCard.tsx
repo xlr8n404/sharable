@@ -1251,68 +1251,69 @@ const generateShareLink = () => {
   return (
     <div className={`flex flex-col ${isNested ? 'bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl mx-4 mb-2 border border-black/5 dark:border-white/5' : 'border-b border-black/5 dark:border-white/5'}`}>
       <div className="flex flex-col p-4 pb-2">
-        {/* Header: Avatar, Name, Community, More */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <Link href={`/${user.username || user_id}`} className="shrink-0">
-              <div className="rounded-full overflow-hidden border border-black/5 dark:border-white/10 bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center" style={{ width: avatarSize, height: avatarSize }}>
-                <img 
-                  src={avatarSrc} 
-                  alt={user.full_name} 
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.full_name || 'User')}`;
-                  }}
-                />
-              </div>
-            </Link>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-1.5">
-                <Link href={`/${user.username || user_id}`} className="font-bold text-[16px] hover:underline leading-tight">
-                  {user.full_name}
-                </Link>
-                {user.identity_tag && (
-                  <VerifiedBadge identity_tag={user.identity_tag} />
-                )}
-                {isFollower && !isNested && (
-                  <>
-                    <span className="text-zinc-300 dark:text-zinc-700">•</span>
-                    <span className="text-[13px] font-medium text-zinc-400">Following</span>
-                  </>
-                )}
-              </div>
-              <div className="flex items-center gap-1.5 text-zinc-500 text-[13px] flex-wrap">
-                <span className="font-medium">@{user.username || 'user'}</span>
-                <span className="text-zinc-300 dark:text-zinc-700">•</span>
-                <span>{created_at ? formatTime(created_at) : 'now'}</span>
-                {location_name && (
-                  <>
-                    <span className="text-zinc-300 dark:text-zinc-700">•</span>
-                    <div className="flex items-center gap-1">
-                      <MapPin size={12} strokeWidth={2} />
-                      <span>{location_name}</span>
-                    </div>
-                  </>
-                )}
-                {community && (
-                  <>
-                    <span className="text-zinc-300 dark:text-zinc-700">•</span>
-                    <Link href={`/community/${community.id}`} className="text-blue-500 hover:underline font-medium">
-                      {community.name}
-                    </Link>
-                  </>
-                )}
-              </div>
+        {/* Header: Avatar and More button */}
+        <div className="flex items-start justify-between mb-3">
+          <Link href={`/${user.username || user_id}`} className="shrink-0">
+            <div className="rounded-full overflow-hidden border border-black/5 dark:border-white/10 bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center" style={{ width: avatarSize, height: avatarSize }}>
+              <img 
+                src={avatarSrc} 
+                alt={user.full_name} 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.full_name || 'User')}`;
+                }}
+              />
             </div>
-          </div>
+          </Link>
           {!isNested && (
             <button
               onClick={() => setShowPostMenuSheet(true)}
-              className="p-2 text-zinc-400 hover:text-black dark:hover:text-white rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+              className="p-3 text-zinc-400 hover:text-black dark:hover:text-white rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+              style={{ width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
-              <MoreHorizontal size={20} strokeWidth={1.5} />
+              <MoreHorizontal size={24} strokeWidth={1.5} />
             </button>
           )}
+        </div>
+
+        {/* User Details: Name, Username, Time, Location, Community */}
+        <div className="mb-3">
+          <div className="flex items-center gap-1.5 mb-1">
+            <Link href={`/${user.username || user_id}`} className="font-bold text-[16px] hover:underline leading-tight">
+              {user.full_name}
+            </Link>
+            {user.identity_tag && (
+              <VerifiedBadge identity_tag={user.identity_tag} />
+            )}
+            {isFollower && !isNested && (
+              <>
+                <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                <span className="text-[13px] font-medium text-zinc-400">Following</span>
+              </>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5 text-zinc-500 text-[13px] flex-wrap">
+            <span className="font-medium">@{user.username || 'user'}</span>
+            <span className="text-zinc-300 dark:text-zinc-700">•</span>
+            <span>{created_at ? formatTime(created_at) : 'now'}</span>
+            {location_name && (
+              <>
+                <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                <div className="flex items-center gap-1">
+                  <MapPin size={12} strokeWidth={2} />
+                  <span>{location_name}</span>
+                </div>
+              </>
+            )}
+            {community && (
+              <>
+                <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                <Link href={`/community/${community.id}`} className="text-blue-500 hover:underline font-medium">
+                  {community.name}
+                </Link>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Content */}
