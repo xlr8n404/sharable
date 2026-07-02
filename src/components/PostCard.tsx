@@ -718,9 +718,22 @@ export function PostCard({
   return (
     <div className={`flex flex-col ${isNested ? 'bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl mx-4 mb-2 border border-black/5 dark:border-white/5' : 'border-b border-black/5 dark:border-white/5'}`}>
       <div className="flex flex-col p-4 pb-2">
-        {/* Header: Avatar, Name, and More button */}
+        {/* Header: Full Name and Avatar on right side */}
         <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-3 flex-1">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <Link href={`/${user.username || user_id}`} className="font-bold text-[16px] hover:underline leading-tight">
+                {user.full_name}
+              </Link>
+              {user.identity_tag && (
+                <VerifiedBadge identity_tag={user.identity_tag} />
+              )}
+            </div>
+            {isFollower && !isNested && (
+              <span className="text-[13px] font-medium text-zinc-400">Following</span>
+            )}
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
             <Link href={`/${user.username || user_id}`} className="shrink-0">
               <div className="rounded-full overflow-hidden border border-black/5 dark:border-white/10 bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center" style={{ width: avatarSize, height: avatarSize }}>
                 <img 
@@ -733,30 +746,16 @@ export function PostCard({
                 />
               </div>
             </Link>
-            <div className="flex items-center gap-1.5">
-              <Link href={`/${user.username || user_id}`} className="font-bold text-[16px] hover:underline leading-tight">
-                {user.full_name}
-              </Link>
-              {user.identity_tag && (
-                <VerifiedBadge identity_tag={user.identity_tag} />
-              )}
-              {isFollower && !isNested && (
-                <>
-                  <span className="text-zinc-300 dark:text-zinc-700">•</span>
-                  <span className="text-[13px] font-medium text-zinc-400">Following</span>
-                </>
-              )}
-            </div>
+            {!isNested && (
+              <button
+                onClick={() => setShowPostMenuSheet(true)}
+                className="p-3 text-zinc-400 hover:text-black dark:hover:text-white rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                style={{ width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <MoreHorizontal size={24} strokeWidth={1.5} />
+              </button>
+            )}
           </div>
-          {!isNested && (
-            <button
-              onClick={() => setShowPostMenuSheet(true)}
-              className="p-3 text-zinc-400 hover:text-black dark:hover:text-white rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-              style={{ width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            >
-              <MoreHorizontal size={24} strokeWidth={1.5} />
-            </button>
-          )}
         </div>
 
         {/* User Details: Username, Time, Location, Community */}
@@ -854,58 +853,64 @@ export function PostCard({
             )}
           </div>
         )}
-
-            <div className="flex items-center justify-between pt-0 pb-1">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleLike}
-                  className={`flex items-center gap-1.5 p-2 rounded-full group transition-colors ${
-                    liked ? 'text-red-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10'
-                  }`}
-                >
-                  <Heart
-                    className={`w-6 h-6 group-active:scale-125 transition-transform ${liked ? 'fill-current' : ''}`}
-                      strokeWidth={1.5}
-                    />
-                    <span className="text-base font-medium">{likesCount}</span>
-                  </button>
-                <button
-                  onClick={handleOpenComments}
-                  className="flex items-center gap-1.5 p-2 rounded-full group text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
-                >
-                    <MessageCircle className="w-6 h-6 group-active:scale-125 transition-transform" strokeWidth={1.5} />
-                    <span className="text-base font-medium">{commentsCount}</span>
-                  </button>
-                <button
-                  onClick={handleSharePost}
-                  className="flex items-center gap-1.5 p-2 rounded-full group text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
-                >
-                    <Share2 className="w-6 h-6 group-active:scale-125 transition-transform" strokeWidth={1.5} />
-                  </button>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowRepostConfirm(true)}
-                  className={`flex items-center gap-1.5 p-2 rounded-full group transition-colors ${
-                    reposted ? 'text-green-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10'
-                  }`}
-                >
-                  <Repeat className={`w-6 h-6 group-active:rotate-180 transition-transform ${reposted ? 'stroke-[2.5px]' : ''}`} strokeWidth={1.5} />
-                  <span className="text-base font-medium">{repostsCount}</span>
-                </button>
-                <button
-                  onClick={handleSavePost}
-                  className={`flex items-center p-2 rounded-full group transition-colors ${
-                    isSaved ? 'text-yellow-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10'
-                  }`}
-                >
-                  <Bookmark className={`w-6 h-6 group-active:scale-125 transition-transform ${isSaved ? 'fill-current' : ''}`} strokeWidth={1.5} />
-                </button>
-              </div>
-            </div>
       </div>
 
-            <Drawer open={showRepostConfirm} onOpenChange={setShowRepostConfirm}>
+      {/* Interactions section - below media/content */}
+      <div className="px-4 py-2 flex items-center justify-between border-t border-black/5 dark:border-white/5">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleLike}
+            className={`flex items-center gap-1.5 p-2 rounded-full group transition-colors ${
+              liked ? 'text-red-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10'
+            }`}
+          >
+            <Heart
+              className={`w-6 h-6 group-active:scale-125 transition-transform ${liked ? 'fill-current' : ''}`}
+              strokeWidth={1.5}
+            />
+            <span className="text-base font-medium">{likesCount}</span>
+          </button>
+          <button
+            onClick={handleOpenComments}
+            className="flex items-center gap-1.5 p-2 rounded-full group text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+          >
+            <MessageCircle className="w-6 h-6 group-active:scale-125 transition-transform" strokeWidth={1.5} />
+            <span className="text-base font-medium">{commentsCount}</span>
+          </button>
+          <button
+            onClick={handleSharePost}
+            className="flex items-center gap-1.5 p-2 rounded-full group text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+          >
+            <Share2 className="w-6 h-6 group-active:scale-125 transition-transform" strokeWidth={1.5} />
+          </button>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowRepostConfirm(true)}
+            className={`flex items-center gap-1.5 p-2 rounded-full group transition-colors ${
+              reposted ? 'text-green-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10'
+            }`}
+          >
+            <Repeat className={`w-6 h-6 group-active:rotate-180 transition-transform ${reposted ? 'stroke-[2.5px]' : ''}`} strokeWidth={1.5} />
+            <span className="text-base font-medium">{repostsCount}</span>
+          </button>
+          <button
+            onClick={handleSavePost}
+            className={`flex items-center p-2 rounded-full group transition-colors ${
+              isSaved ? 'text-yellow-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10'
+            }`}
+          >
+            <Bookmark className={`w-6 h-6 group-active:scale-125 transition-transform ${isSaved ? 'fill-current' : ''}`} strokeWidth={1.5} />
+          </button>
+        </div>
+      </div>
+
+      {/* Bottom username section */}
+      <div className="px-4 py-2 text-zinc-500 text-[13px]">
+        <span className="font-medium">@{user.username || 'user'}</span>
+      </div>
+
+      <Drawer open={showRepostConfirm} onOpenChange={setShowRepostConfirm}>
               <DrawerContent className="bg-zinc-100 dark:bg-zinc-900 border-black/10 dark:border-white/10 pb-8 rounded-t-[8px]">
               <div className="mx-auto w-full max-w-xl">
                 <div className="py-6 px-4 space-y-4">
